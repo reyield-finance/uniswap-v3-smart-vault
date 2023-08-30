@@ -12,6 +12,7 @@ interface IIdleLiquidityModule {
     ///@param collectedFee1 amount of token1 collected
     event positionRebalanced(
         address indexed positionManager,
+        uint256 positionId,
         uint256 closedTokenId,
         uint256 mintedTokenId,
         uint256 collectedFee0,

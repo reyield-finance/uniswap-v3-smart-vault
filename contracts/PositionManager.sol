@@ -234,14 +234,13 @@ contract PositionManager is IPositionManager, ERC721Holder, Initializable {
         uint256 amount0Leftover,
         uint256 amount1Leftover
     ) external override onlyWhitelisted positionRunning(positionId) {
-        PositionInfo storage pInfo = positions[positionId];
-        pInfo.tokenId = newTokenId;
-        pInfo.tickLowerDiff = tickLowerDiff;
-        pInfo.tickUpperDiff = tickUpperDiff;
-        pInfo.amount0CollectedFee = amount0CollectedFee;
-        pInfo.amount1CollectedFee = amount1CollectedFee;
-        pInfo.amount0Leftover = amount0Leftover;
-        pInfo.amount1Leftover = amount1Leftover;
+        positions[positionId].tokenId = newTokenId;
+        positions[positionId].tickLowerDiff = tickLowerDiff;
+        positions[positionId].tickUpperDiff = tickUpperDiff;
+        positions[positionId].amount0CollectedFee = amount0CollectedFee;
+        positions[positionId].amount1CollectedFee = amount1CollectedFee;
+        positions[positionId].amount0Leftover = amount0Leftover;
+        positions[positionId].amount1Leftover = amount1Leftover;
 
         _pushTokenId(newTokenId);
     }
@@ -249,15 +248,14 @@ contract PositionManager is IPositionManager, ERC721Holder, Initializable {
     ///@notice middleware function to update position info for withdraw
     ///@param input MiddlewareWithdrawInput struct
     function middlewareWithdraw(MiddlewareWithdrawInput memory input) external override onlyWhitelisted {
-        PositionInfo storage pInfo = positions[input.positionId];
-        pInfo.amount0CollectedFee = input.amount0CollectedFee;
-        pInfo.amount1CollectedFee = input.amount1CollectedFee;
-        pInfo.amount0Returned = input.amount0Returned;
-        pInfo.amount1Returned = input.amount1Returned;
-        pInfo.amount0ReturnedUsdValue = input.amount0ReturnedUsdValue;
-        pInfo.amount1ReturnedUsdValue = input.amount1ReturnedUsdValue;
-        pInfo.amount0Leftover = 0;
-        pInfo.amount1Leftover = 0;
+        positions[input.positionId].amount0CollectedFee = input.amount0CollectedFee;
+        positions[input.positionId].amount1CollectedFee = input.amount1CollectedFee;
+        positions[input.positionId].amount0Returned = input.amount0Returned;
+        positions[input.positionId].amount1Returned = input.amount1Returned;
+        positions[input.positionId].amount0ReturnedUsdValue = input.amount0ReturnedUsdValue;
+        positions[input.positionId].amount1ReturnedUsdValue = input.amount1ReturnedUsdValue;
+        positions[input.positionId].amount0Leftover = 0;
+        positions[input.positionId].amount1Leftover = 0;
         _closePosition(input.positionId);
     }
 

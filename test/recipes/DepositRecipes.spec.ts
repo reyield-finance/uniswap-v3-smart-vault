@@ -913,5 +913,366 @@ describe("DepositRecipes.sol", function () {
       expect(positionInfoIncreased.amount0ReturnedUsdValue).to.be.equal(0);
       expect(positionInfoIncreased.amount1ReturnedUsdValue).to.be.equal(0);
     });
+
+    it("should fail to deposit when the recipes is paused", async function () {
+      // give pool some liquidity
+      await providePoolLiquidity();
+
+      const strategyId = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16);
+      const token0 = tokenOP.address < tokenUSDT.address ? tokenOP : tokenUSDT;
+      const token1 = tokenOP.address < tokenUSDT.address ? tokenUSDT : tokenOP;
+      const amount0Desired: BigNumber = BigNumber.from(10n * 10n ** 18n);
+      const amount1Desired: BigNumber = BigNumber.from(2n * 10n ** 18n);
+      const tickLowerDiff = 0n - 120n;
+      const tickUpperDiff = 0n + 120n;
+      const user0BalanceBefore = await token0.balanceOf(user.address);
+      const user1BalanceBefore = await token1.balanceOf(user.address);
+
+      // user2 add strategy
+      const user2WalltAddress = await strategyProviderWalletFactory.providerToWallet(user2.address);
+      const user2Wallet = (await ethers.getContractAt(
+        "StrategyProviderWallet",
+        user2WalltAddress,
+      )) as StrategyProviderWallet;
+
+      await user2Wallet
+        .connect(user2)
+        .addStrategy(
+          strategyId,
+          token0.address,
+          token1.address,
+          3000,
+          "2000",
+          "0x0000000000000000000000000000000000000000",
+          "3",
+        );
+
+      const txDeposit = await depositRecipes.connect(user).depositListedStrategy({
+        token0: token0.address,
+        token1: token1.address,
+        fee: 3000,
+        tickLowerDiff: tickLowerDiff,
+        tickUpperDiff: tickUpperDiff,
+        amount0Desired: amount0Desired,
+        amount1Desired: amount1Desired,
+        strategyId: strategyId,
+        strategyProvider: user2.address,
+      });
+
+      const receipt = await txDeposit.wait();
+      const events: any = receipt.events;
+      const fromInLog = events[events.length - 1].args.from;
+      const positionIdInLog = events[events.length - 1].args.positionId;
+      const strategyIdInLog = events[events.length - 1].args.strategyId;
+      const strategyProviderInLog = events[events.length - 1].args.strategyProvider;
+
+      expect(fromInLog).to.be.equal(user.address);
+      expect(positionIdInLog).to.be.equal(1);
+      expect(strategyIdInLog).to.be.equal(strategyId);
+      expect(strategyProviderInLog).to.be.equal(user2.address);
+
+      let amount0Deposited: BigNumber = BigNumber.from(0);
+      let amount1Deposited: BigNumber = BigNumber.from(0);
+      let tokenIdInLog: BigNumber = BigNumber.from(0);
+      let count = 0;
+      for (let i = 0; i < events.length; i++) {
+        if (events[i].address === positionManager.address) {
+          count++;
+
+          const eventData = parseEventData(events[i].data);
+          tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
+          amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
+          amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+        }
+      }
+      expect(count).to.be.equal(1);
+
+      // user
+      expect(await token0.balanceOf(user.address)).to.equal(user0BalanceBefore.sub(amount0Deposited));
+      expect(await token1.balanceOf(user.address)).to.equal(user1BalanceBefore.sub(amount1Deposited));
+
+      // positionManager
+      expect(await token0.balanceOf(positionManager.address)).to.equal(0);
+      expect(await token1.balanceOf(positionManager.address)).to.equal(0);
+
+      const positionInfo = await positionManager.getPositionInfo(positionIdInLog);
+      expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
+      expect(positionInfo.strategyProvider).to.be.equal(user2.address);
+      expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
+      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0CollectedFee).to.be.equal(0);
+      expect(positionInfo.amount1CollectedFee).to.be.equal(0);
+      expect(positionInfo.amount0Leftover).to.be.equal(0);
+      expect(positionInfo.amount1Leftover).to.be.equal(0);
+      expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
+      expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
+      expect(positionInfo.amount0Returned).to.be.equal(0);
+      expect(positionInfo.amount1Returned).to.be.equal(0);
+      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+
+      // single token increase liquidity
+      const user0BalanceBeforeIncrease = await token0.balanceOf(user.address);
+      const user1BalanceBeforeIncrease = await token1.balanceOf(user.address);
+      const amount0Increase: BigNumber = BigNumber.from(3n * 10n ** 18n);
+      // const amount1Increase: BigNumber = BigNumber.from(4n * 10n ** 18n);
+
+      const isToken0In = true;
+      // pause deposit recipes
+      await depositRecipes.connect(deployer).pause();
+
+      await expect(
+        depositRecipes.connect(user).singleTokenIncreaseLiquidity(positionIdInLog, isToken0In, amount0Increase),
+      ).to.be.revertedWith("Pausable: paused");
+
+      // unpause deposit recipes
+      await depositRecipes.connect(deployer).unpause();
+
+      const txIncreased = await depositRecipes
+        .connect(user)
+        .singleTokenIncreaseLiquidity(positionIdInLog, isToken0In, amount0Increase);
+      const receiptIncreased = await txIncreased.wait();
+      const eventsIncreased: any = receiptIncreased.events;
+      const fromInLogIncreased = eventsIncreased[eventsIncreased.length - 1].args.from;
+      const positionIdInLogIncreased = eventsIncreased[eventsIncreased.length - 1].args.positionId;
+
+      expect(fromInLogIncreased).to.be.equal(user.address);
+      expect(positionIdInLogIncreased).to.be.equal(positionIdInLog);
+      let amountInInLog: BigNumber = BigNumber.from(0);
+      let amount0Increased: BigNumber = BigNumber.from(0);
+      // let amount1Increased: BigNumber = BigNumber.from(0);
+      let tokenIdIncreasedInLog: BigNumber = BigNumber.from(0);
+      let amount0LeftoverInLog: BigNumber = BigNumber.from(0);
+      let amount1LeftoverInLog: BigNumber = BigNumber.from(0);
+      let countIncreased = 0;
+      for (let i = 0; i < eventsIncreased.length; i++) {
+        if (eventsIncreased[i].address === positionManager.address) {
+          countIncreased++;
+
+          const eventData = parseEventData(eventsIncreased[i].data);
+          tokenIdIncreasedInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
+          amountInInLog = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          amount0Increased = BigNumber.from(hexToInt256(hexToBn(eventData[3])));
+          // amount1Increased = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
+          amount0LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[5])));
+          amount1LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[6])));
+        }
+      }
+      expect(countIncreased).to.be.equal(1);
+      expect(tokenIdIncreasedInLog).to.be.equal(tokenIdInLog);
+      expect(amountInInLog).to.be.equal(amount0Increase);
+
+      expect(await token0.balanceOf(user.address)).to.lessThan(user0BalanceBeforeIncrease.sub(amount0Increased));
+      expect(await token1.balanceOf(user.address)).to.equal(user1BalanceBeforeIncrease);
+      expect(await token0.balanceOf(positionManager.address)).to.equal(amount0LeftoverInLog);
+      expect(await token1.balanceOf(positionManager.address)).to.equal(amount1LeftoverInLog);
+
+      const positionInfoIncreased = await positionManager.getPositionInfo(positionIdInLogIncreased);
+      expect(positionInfoIncreased.tokenId).to.be.equal(tokenIdInLog);
+      expect(positionInfoIncreased.strategyProvider).to.be.equal(user2.address);
+      expect(positionInfoIncreased.strategyId).to.be.equal(strategyIdInLog);
+      expect(positionInfoIncreased.totalDepositUSDValue).to.be.greaterThan(positionInfo.totalDepositUSDValue);
+      expect(positionInfoIncreased.amount0CollectedFee).to.be.equal(0);
+      expect(positionInfoIncreased.amount1CollectedFee).to.be.equal(0);
+      expect(positionInfoIncreased.amount0Leftover).to.be.equal(amount0LeftoverInLog);
+      expect(positionInfoIncreased.amount1Leftover).to.be.equal(amount1LeftoverInLog);
+      expect(positionInfoIncreased.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
+      expect(positionInfoIncreased.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
+      expect(positionInfoIncreased.amount0Returned).to.be.equal(0);
+      expect(positionInfoIncreased.amount1Returned).to.be.equal(0);
+      expect(positionInfoIncreased.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionInfoIncreased.amount1ReturnedUsdValue).to.be.equal(0);
+    });
+
+    it("should fail to depositListedStrategy when strategy is not exist", async function () {
+      // give pool some liquidity
+      await providePoolLiquidity();
+
+      const strategyId = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16);
+      const token0 = tokenOP.address < tokenUSDT.address ? tokenOP : tokenUSDT;
+      const token1 = tokenOP.address < tokenUSDT.address ? tokenUSDT : tokenOP;
+      const amount0Desired: BigNumber = BigNumber.from(10n * 10n ** 18n);
+      const amount1Desired: BigNumber = BigNumber.from(2n * 10n ** 18n);
+      const tickLowerDiff = 0n - 120n;
+      const tickUpperDiff = 0n + 120n;
+      const user0BalanceBefore = await token0.balanceOf(user.address);
+      const user1BalanceBefore = await token1.balanceOf(user.address);
+
+      // user2 add strategy
+      const user2WalltAddress = await strategyProviderWalletFactory.providerToWallet(user2.address);
+      const user2Wallet = (await ethers.getContractAt(
+        "StrategyProviderWallet",
+        user2WalltAddress,
+      )) as StrategyProviderWallet;
+
+      await user2Wallet
+        .connect(user2)
+        .addStrategy(
+          strategyId,
+          token0.address,
+          token1.address,
+          3000,
+          "2000",
+          "0x0000000000000000000000000000000000000000",
+          "3",
+        );
+
+      // provider do not create wallet
+      await expect(
+        depositRecipes.connect(user).depositListedStrategy({
+          token0: token0.address,
+          token1: token1.address,
+          fee: 3000,
+          tickLowerDiff: tickLowerDiff,
+          tickUpperDiff: tickUpperDiff,
+          amount0Desired: amount0Desired,
+          amount1Desired: amount1Desired,
+          strategyId: strategyId,
+          strategyProvider: liquidityProvider.address,
+        }),
+      ).to.be.revertedWith("DRSPW");
+
+      // strategy pool not exist
+      await expect(
+        depositRecipes.connect(user).depositListedStrategy({
+          token0: token0.address,
+          token1: token1.address,
+          fee: 500,
+          tickLowerDiff: tickLowerDiff,
+          tickUpperDiff: tickUpperDiff,
+          amount0Desired: amount0Desired,
+          amount1Desired: amount1Desired,
+          strategyId: strategyId,
+          strategyProvider: user2.address,
+        }),
+      ).to.be.revertedWith("DRP0");
+
+      // pool not match
+      await poolFixture(tokenOP, tokenUSDT, 500, uniswapV3Factory, -1);
+      const strategyId2 = ethers.utils.hexZeroPad(ethers.utils.hexlify(2), 16);
+      await user2Wallet
+        .connect(user2)
+        .addStrategy(
+          strategyId2,
+          token0.address,
+          token1.address,
+          500,
+          "2000",
+          "0x0000000000000000000000000000000000000000",
+          "3",
+        );
+
+      await expect(
+        depositRecipes.connect(user).depositListedStrategy({
+          token0: token0.address,
+          token1: token1.address,
+          fee: 3000,
+          tickLowerDiff: tickLowerDiff,
+          tickUpperDiff: tickUpperDiff,
+          amount0Desired: amount0Desired,
+          amount1Desired: amount1Desired,
+          strategyId: strategyId2,
+          strategyProvider: user2.address,
+        }),
+      ).to.be.revertedWith("DRSPWSE");
+    });
+
+    it("should fail to depositListedStrategy when tokens are not valid", async function () {
+      // give pool some liquidity
+      await providePoolLiquidity();
+      const tokenREYLD = (await tokensFixture("REYLD", 18)).tokenFixture;
+      const strategyId = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16);
+      const token0 = tokenREYLD.address < tokenUSDT.address ? tokenREYLD : tokenUSDT;
+      const token1 = tokenREYLD.address < tokenUSDT.address ? tokenUSDT : tokenREYLD;
+      const amount0Desired: BigNumber = BigNumber.from(10n * 10n ** 18n);
+      const amount1Desired: BigNumber = BigNumber.from(2n * 10n ** 18n);
+      const tickLowerDiff = 0n - 120n;
+      const tickUpperDiff = 0n + 120n;
+      const user0BalanceBefore = await token0.balanceOf(user.address);
+      const user1BalanceBefore = await token1.balanceOf(user.address);
+
+      // user2 add strategy
+      const user2WalltAddress = await strategyProviderWalletFactory.providerToWallet(user2.address);
+      const user2Wallet = (await ethers.getContractAt(
+        "StrategyProviderWallet",
+        user2WalltAddress,
+      )) as StrategyProviderWallet;
+
+      await poolFixture(tokenREYLD, tokenUSDT, 3000, uniswapV3Factory, -1);
+      await user2Wallet
+        .connect(user2)
+        .addStrategy(
+          strategyId,
+          token0.address,
+          token1.address,
+          3000,
+          "2000",
+          "0x0000000000000000000000000000000000000000",
+          "3",
+        );
+
+      await expect(
+        depositRecipes.connect(user).depositListedStrategy({
+          token0: token0.address,
+          token1: token1.address,
+          fee: 3000,
+          tickLowerDiff: tickLowerDiff,
+          tickUpperDiff: tickUpperDiff,
+          amount0Desired: amount0Desired,
+          amount1Desired: amount1Desired,
+          strategyId: strategyId,
+          strategyProvider: user2.address,
+        }),
+      ).to.be.revertedWith("DRCSTW");
+    });
+
+    it("should fail to depositListedStrategy when tick spacing for feeTier is not valid", async function () {
+      // give pool some liquidity
+      await providePoolLiquidity();
+
+      const strategyId = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16);
+      const token0 = tokenOP.address < tokenUSDT.address ? tokenOP : tokenUSDT;
+      const token1 = tokenOP.address < tokenUSDT.address ? tokenUSDT : tokenOP;
+      const amount0Desired: BigNumber = BigNumber.from(10n * 10n ** 18n);
+      const amount1Desired: BigNumber = BigNumber.from(2n * 10n ** 18n);
+      const tickLowerDiff = 0n - 125n;
+      const tickUpperDiff = 0n + 120n;
+      const user0BalanceBefore = await token0.balanceOf(user.address);
+      const user1BalanceBefore = await token1.balanceOf(user.address);
+
+      // user2 add strategy
+      const user2WalltAddress = await strategyProviderWalletFactory.providerToWallet(user2.address);
+      const user2Wallet = (await ethers.getContractAt(
+        "StrategyProviderWallet",
+        user2WalltAddress,
+      )) as StrategyProviderWallet;
+
+      await user2Wallet
+        .connect(user2)
+        .addStrategy(
+          strategyId,
+          token0.address,
+          token1.address,
+          3000,
+          "2000",
+          "0x0000000000000000000000000000000000000000",
+          "3",
+        );
+
+      // provider do not create wallet
+      await expect(
+        depositRecipes.connect(user).depositListedStrategy({
+          token0: token0.address,
+          token1: token1.address,
+          fee: 3000,
+          tickLowerDiff: tickLowerDiff,
+          tickUpperDiff: tickUpperDiff,
+          amount0Desired: amount0Desired,
+          amount1Desired: amount1Desired,
+          strategyId: strategyId,
+          strategyProvider: user2.address,
+        }),
+      ).to.be.revertedWith("DRTD");
+    });
   });
 });

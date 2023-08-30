@@ -143,6 +143,48 @@ describe("PositionManagerFactory.sol", function () {
       const PM = (await ethers.getContractAt("PositionManager", deployedContract)) as PositionManager;
 
       expect(PM).to.exist;
+
+      const { managers, newCursor } = await PMF.getPositionManagers(0, 3);
+      expect(managers.length).to.be.equal(1);
+      expect(newCursor).to.be.equal(1);
+      expect(managers[0]).to.be.equal(deployedContract);
+    });
+
+    it("Should fail to create a new position manager instance when contract is paused", async function () {
+      await Registry.addNewContract(
+        hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("PositionManagerFactory")),
+        PMF.address,
+        hre.ethers.utils.formatBytes32String("1"),
+      );
+
+      await Registry.setPositionManagerFactory(PMF.address);
+      await Registry.setStrategyProviderWalletFactory(SPWF.address);
+
+      await PMF.connect(deployer).updateActionData({
+        facetAddress: mintAction.address,
+        action: 0,
+        functionSelectors: await getSelectors(mintAction),
+      });
+
+      await PMF.connect(deployer).updateActionData({
+        facetAddress: swapToPositionRatioAction.address,
+        action: 0,
+        functionSelectors: await getSelectors(swapToPositionRatioAction),
+      });
+      await Registry.connect(deployer).setPositionManagerFactory(PMF.address);
+      await PMF.connect(deployer).pause();
+
+      await expect(PMF.connect(deployer).create()).to.be.revertedWith("Pausable: paused");
+
+      // unpause
+      await PMF.connect(deployer).unpause();
+
+      await PMF.connect(deployer).create();
+
+      const deployedContract = await PMF.positionManagers(0);
+      const PM = (await ethers.getContractAt("PositionManager", deployedContract)) as PositionManager;
+
+      expect(PM).to.exist;
     });
 
     it("should remove the mint action from an existing position manager", async () => {

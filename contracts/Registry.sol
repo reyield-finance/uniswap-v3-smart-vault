@@ -176,8 +176,6 @@ contract Registry is IRegistry {
     ///@notice change the address of the service fee recipient
     ///@param _serviceFeeRecipient the address of the new service fee recipient
     function changeServiceFeeRecipient(address _serviceFeeRecipient) external onlyGovernance {
-        //TODO: check the address is not the contract address
-
         require(_serviceFeeRecipient != address(0), "RS0");
         serviceFeeRecipient = _serviceFeeRecipient;
         emit ServiceFeeRecipientChanged(_serviceFeeRecipient);

@@ -18,9 +18,10 @@ import "../interfaces/actions/IClosePosition.sol";
 import "../interfaces/actions/IRepayRebalanceFee.sol";
 import "../interfaces/actions/ISwapToPositionRatio.sol";
 import "../interfaces/actions/IMint.sol";
+import "../base/Multicall.sol";
 
 ///@title Idle Liquidity Module to manage liquidity for a user position
-contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule {
+contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
     ///@notice uniswap address holder
     IUniswapAddressHolder public immutable uniswapAddressHolder;
     using SafeMath for uint256;
@@ -38,7 +39,7 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule {
 
     ///@notice check if the position is out of range and rebalance it by swapping the tokens as necessary
     ///@param input RebalanceInput struct
-    function rebalance(RebalanceInput calldata input) external onlyWhitelistedKeeper {
+    function rebalance(RebalanceInput calldata input) external whenNotPaused onlyWhitelistedKeeper {
         address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
             .userToPositionManager(input.userAddress);
         require(positionManager != address(0), "ILPM0");
@@ -50,44 +51,42 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule {
         checkCurrentTickOutOfRange(pInfo.tokenId);
 
         _CloseAndRepayRebalanceResult memory carRes = _closedAndRepayRebalance(
-            _CloseAndRepayRebalanceParams(
-                positionManager,
-                input.feeReceiver,
-                pInfo.tokenId,
-                input.estimatedGasFee,
-                input.isForced
-            )
+            _CloseAndRepayRebalanceParams({
+                positionManager: positionManager,
+                feeReceiver: input.feeReceiver,
+                tokenId: pInfo.tokenId,
+                rebalanceFee: input.estimatedGasFee,
+                isForced: input.isForced
+            })
         );
 
         require(carRes.amount0Removed > 0 || carRes.amount1Removed > 0, "ILAR");
 
         _SwapAndMintResult memory samRes = _swapAndMint(
-            _SwapAndMintParams(
-                positionManager,
-                pInfo.tokenId,
-                carRes.amount0Removed.add(carRes.amount0CollectedFee).add(pInfo.amount0Leftover),
-                carRes.amount1Removed.add(carRes.amount1CollectedFee).add(pInfo.amount1Leftover),
-                pInfo.tickLowerDiff,
-                pInfo.tickLowerDiff
-            )
+            _SwapAndMintParams({
+                positionManager: positionManager,
+                tokenId: pInfo.tokenId,
+                amount0: carRes.amount0Removed.add(carRes.amount0CollectedFee).add(pInfo.amount0Leftover),
+                amount1: carRes.amount1Removed.add(carRes.amount1CollectedFee).add(pInfo.amount1Leftover),
+                tickLowerDiff: pInfo.tickLowerDiff,
+                tickUpperDiff: pInfo.tickUpperDiff
+            })
         );
-
-        pInfo.amount0CollectedFee = pInfo.amount0CollectedFee.add(carRes.amount0CollectedFee);
-        pInfo.amount1CollectedFee = pInfo.amount1CollectedFee.add(carRes.amount1CollectedFee);
 
         IPositionManager(positionManager).middlewareRebalance(
             input.positionId,
             samRes.newTokenId,
             pInfo.tickLowerDiff,
             pInfo.tickUpperDiff,
-            pInfo.amount0CollectedFee,
-            pInfo.amount1CollectedFee,
+            pInfo.amount0CollectedFee.add(carRes.amount0CollectedFee),
+            pInfo.amount1CollectedFee.add(carRes.amount1CollectedFee),
             samRes.amount0Leftover,
             samRes.amount1Leftover
         );
 
         emit positionRebalanced(
             positionManager,
+            input.positionId,
             pInfo.tokenId,
             samRes.newTokenId,
             carRes.amount0CollectedFee,
@@ -97,7 +96,9 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule {
 
     ///@notice check if the position is out of range and rebalance it by swapping the tokens as necessary and customize lower & upper tick diff
     ///@param input RebalanceWithTickDiffsInput struct
-    function rebalanceWithTickDiffs(RebalanceWithTickDiffsInput calldata input) external onlyWhitelistedKeeper {
+    function rebalanceWithTickDiffs(
+        RebalanceWithTickDiffsInput calldata input
+    ) external whenNotPaused onlyWhitelistedKeeper {
         address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
             .userToPositionManager(input.userAddress);
         require(positionManager != address(0), "ILPM0");
@@ -110,44 +111,42 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule {
         checkCurrentTickOutOfRange(pInfo.tokenId);
 
         _CloseAndRepayRebalanceResult memory carRes = _closedAndRepayRebalance(
-            _CloseAndRepayRebalanceParams(
-                positionManager,
-                input.feeReceiver,
-                pInfo.tokenId,
-                input.estimatedGasFee,
-                input.isForced
-            )
+            _CloseAndRepayRebalanceParams({
+                positionManager: positionManager,
+                feeReceiver: input.feeReceiver,
+                tokenId: pInfo.tokenId,
+                rebalanceFee: input.estimatedGasFee,
+                isForced: input.isForced
+            })
         );
 
         require(carRes.amount0Removed > 0 || carRes.amount1Removed > 0, "ILAR");
 
         _SwapAndMintResult memory samRes = _swapAndMint(
-            _SwapAndMintParams(
-                positionManager,
-                pInfo.tokenId,
-                carRes.amount0Removed.add(carRes.amount0CollectedFee).add(pInfo.amount0Leftover),
-                carRes.amount1Removed.add(carRes.amount1CollectedFee).add(pInfo.amount1Leftover),
-                input.tickLowerDiff,
-                input.tickUpperDiff
-            )
+            _SwapAndMintParams({
+                positionManager: positionManager,
+                tokenId: pInfo.tokenId,
+                amount0: carRes.amount0Removed.add(carRes.amount0CollectedFee).add(pInfo.amount0Leftover),
+                amount1: carRes.amount1Removed.add(carRes.amount1CollectedFee).add(pInfo.amount1Leftover),
+                tickLowerDiff: input.tickLowerDiff,
+                tickUpperDiff: input.tickUpperDiff
+            })
         );
-
-        pInfo.amount0CollectedFee = pInfo.amount0CollectedFee.add(carRes.amount0CollectedFee);
-        pInfo.amount1CollectedFee = pInfo.amount1CollectedFee.add(carRes.amount1CollectedFee);
 
         IPositionManager(positionManager).middlewareRebalance(
             input.positionId,
             samRes.newTokenId,
             input.tickLowerDiff,
             input.tickUpperDiff,
-            pInfo.amount0CollectedFee,
-            pInfo.amount1CollectedFee,
+            pInfo.amount0CollectedFee.add(carRes.amount0CollectedFee),
+            pInfo.amount1CollectedFee.add(carRes.amount1CollectedFee),
             samRes.amount0Leftover,
             samRes.amount1Leftover
         );
 
         emit positionRebalanced(
             positionManager,
+            input.positionId,
             pInfo.tokenId,
             samRes.newTokenId,
             carRes.amount0CollectedFee,

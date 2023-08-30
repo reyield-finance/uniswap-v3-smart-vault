@@ -16,13 +16,13 @@ import "../interfaces/IRegistry.sol";
 import "../interfaces/IStrategyProviderWalletFactory.sol";
 import "../interfaces/IStrategyProviderWallet.sol";
 import "../libraries/SwapHelper.sol";
+import "./BaseRecipes.sol";
 
 ///@notice WithdrawRecipes allows user to withdraw positions from PositionManager
-contract WithdrawRecipes is IWithdrawRecipes {
+contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
     using SafeMath for uint256;
 
     IUniswapAddressHolder public immutable uniswapAddressHolder;
-    IRegistry public immutable registry;
 
     modifier positionIsRunning(uint256 positionId) {
         require(
@@ -34,22 +34,14 @@ contract WithdrawRecipes is IWithdrawRecipes {
         _;
     }
 
-    modifier onlyGovernance() {
-        require(msg.sender == registry.governance(), "WRFOG");
-        _;
-    }
-
-    constructor(address _registry, address _uniswapAddressHolder) {
+    constructor(address _registry, address _uniswapAddressHolder) BaseRecipes(_registry) {
         require(_uniswapAddressHolder != address(0), "WRCA0");
-        require(_registry != address(0), "WRCA0");
-
         uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
-        registry = IRegistry(_registry);
     }
 
     ///@notice closed position to the position manager with single token
     ///@param positionId ID of closed position
-    function withdraw(uint256 positionId) external positionIsRunning(positionId) {
+    function withdraw(uint256 positionId) external whenNotPaused positionIsRunning(positionId) {
         address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
             .userToPositionManager(msg.sender);
         require(positionManager != address(0), "WRPM0");
@@ -132,7 +124,10 @@ contract WithdrawRecipes is IWithdrawRecipes {
 
     ///@notice closed position to the position manager with single token
     ///@param positionId ID of closed position
-    function singleTokenWithdraw(uint256 positionId, bool isReturnedToken0) external positionIsRunning(positionId) {
+    function singleTokenWithdraw(
+        uint256 positionId,
+        bool isReturnedToken0
+    ) external whenNotPaused positionIsRunning(positionId) {
         address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
             .userToPositionManager(msg.sender);
         require(positionManager != address(0), "WRPM0");
@@ -204,56 +199,6 @@ contract WithdrawRecipes is IWithdrawRecipes {
                 spOutput.amount1Returned
             );
         }
-
-        mwInput.amount0CollectedFee = pInfo.amount0CollectedFee.add(amount0CollectedFee);
-        mwInput.amount1CollectedFee = pInfo.amount1CollectedFee.add(amount1CollectedFee);
-        IPositionManager(positionManager).middlewareWithdraw(mwInput);
-
-        emit PositionWithdrawan(positionManager, msg.sender, positionId, pInfo.tokenId);
-    }
-
-    ///@notice closed position forcedly by governance
-    ///@param user address of the user
-    ///@param positionId ID of closed position
-    function closedPositionForced(address user, uint256 positionId) external onlyGovernance {
-        address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
-            .userToPositionManager(user);
-        require(positionManager != address(0), "WRPM0");
-
-        IPositionManager.PositionInfo memory pInfo = IPositionManager(positionManager).getPositionInfo(positionId);
-        (address token0, address token1, , , ) = UniswapHelper._getTokens(
-            pInfo.tokenId,
-            INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
-        );
-
-        ///@dev close position
-        (
-            uint256 amount0CollectedFee,
-            uint256 amount1CollectedFee,
-            uint256 amount0Removed,
-            uint256 amount1Removed
-        ) = IClosePosition(positionManager).closePosition(pInfo.tokenId, false);
-
-        IPositionManager.MiddlewareWithdrawInput memory mwInput;
-        mwInput.positionId = positionId;
-        IReturnProfit.ReturnProfitInput memory rpInput = IReturnProfit.ReturnProfitInput({
-            token0: token0,
-            token1: token1,
-            amount0: amount0Removed.add(amount0CollectedFee).add(pInfo.amount0Leftover),
-            amount1: amount1Removed.add(amount1CollectedFee).add(pInfo.amount1Leftover),
-            returnedToken: address(0)
-        });
-
-        ///@dev return profit to user
-        IReturnProfit.ReturnProfitOutput memory rpOutput = IReturnProfit(positionManager).returnProfit(rpInput);
-        mwInput.amount0Returned = rpOutput.amount0Returned;
-        mwInput.amount1Returned = rpOutput.amount1Returned;
-        (mwInput.amount0ReturnedUsdValue, mwInput.amount1ReturnedUsdValue) = _calTokensUsdValue(
-            token0,
-            token1,
-            rpOutput.amount0Returned,
-            rpOutput.amount1Returned
-        );
 
         mwInput.amount0CollectedFee = pInfo.amount0CollectedFee.add(amount0CollectedFee);
         mwInput.amount1CollectedFee = pInfo.amount1CollectedFee.add(amount1CollectedFee);

@@ -55,7 +55,7 @@ contract SwapToPositionRatio is ISwapToPositionRatio {
             );
         }
 
-        emit SwappedToPositionRatio(address(this), inputs.token0Address, inputs.token1Address, amount0Out, amount1Out);
+        emit SwappedToPositionRatio(address(this), inputs.amount0In, inputs.amount1In, amount0Out, amount1Out);
     }
 
     function getAmount0OutAmount1Out(
@@ -131,7 +131,7 @@ contract SwapToPositionRatio is ISwapToPositionRatio {
                 recipient: address(this),
                 deadline: block.timestamp,
                 amountIn: amountIn,
-                // TODO: slippage protection by using amountOutMinimum, sqrtPriceLimitX96
+                //NOTE slippage protection by using amountOutMinimum, sqrtPriceLimitX96
                 amountOutMinimum: 0,
                 sqrtPriceLimitX96: 0
             })

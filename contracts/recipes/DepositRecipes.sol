@@ -23,29 +23,26 @@ import "../interfaces/IStrategyProviderWallet.sol";
 import "../libraries/UniswapHelper.sol";
 import "../libraries/SwapHelper.sol";
 import "../libraries/SafeInt24Math.sol";
+import "./BaseRecipes.sol";
 
 ///@notice DepositRecipes allows user to fill their position manager with UniswapV3 positions
 ///        by depositing an already minted NFT or by minting directly a new one
-contract DepositRecipes is IDepositRecipes {
+contract DepositRecipes is BaseRecipes, IDepositRecipes {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
     using SafeInt24Math for int24;
 
     IUniswapAddressHolder public immutable uniswapAddressHolder;
-    IRegistry public immutable registry;
 
-    constructor(address _registry, address _uniswapAddressHolder) {
+    constructor(address _registry, address _uniswapAddressHolder) BaseRecipes(_registry) {
         require(_uniswapAddressHolder != address(0), "DRCA0");
-        require(_registry != address(0), "DRCA0");
-
         uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
-        registry = IRegistry(_registry);
     }
 
     ///@notice mint uniswapV3 NFT and deposit in the position manager
     ///@param input struct of DepositInput parameters
     ///@return tokenId the ID of the minted NFT
-    function deposit(DepositInput memory input) external returns (uint256 tokenId) {
+    function deposit(DepositInput memory input) external whenNotPaused returns (uint256 tokenId) {
         require(input.amount0Desired != 0 || input.amount1Desired != 0, "DRA0");
         require(registry.isAllowableFeeTier(input.fee), "DRFT");
         bool isOrderChanged;
@@ -122,7 +119,9 @@ contract DepositRecipes is IDepositRecipes {
     ///@notice mint uniswapV3 NFT and deposit in the position manager by following listed strategy
     ///@param input struct of DepositListedStrategyInput parameters
     ///@return tokenId the ID of the minted NFT
-    function depositListedStrategy(DepositListedStrategyInput memory input) external returns (uint256 tokenId) {
+    function depositListedStrategy(
+        DepositListedStrategyInput memory input
+    ) external whenNotPaused returns (uint256 tokenId) {
         require(input.amount0Desired != 0 || input.amount1Desired != 0, "DRA0");
         require(registry.isAllowableFeeTier(input.fee), "DRFT");
 
@@ -211,7 +210,11 @@ contract DepositRecipes is IDepositRecipes {
     ///@param positionId id of the position
     ///@param amount0Desired amount of token0 to be added to the position
     ///@param amount1Desired amount of token1 to be added to the position
-    function increaseLiquidity(uint256 positionId, uint256 amount0Desired, uint256 amount1Desired) external {
+    function increaseLiquidity(
+        uint256 positionId,
+        uint256 amount0Desired,
+        uint256 amount1Desired
+    ) external whenNotPaused {
         require(amount0Desired != 0 || amount1Desired != 0, "DRA0");
         address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
             .userToPositionManager(msg.sender);
@@ -266,7 +269,7 @@ contract DepositRecipes is IDepositRecipes {
     ///@notice mints a uni NFT with a single input token
     ///@param input struct of SingleTokenDepositInput parameters
     ///@return tokenId the ID of the minted NFT
-    function singleTokenDeposit(SingleTokenDepositInput memory input) external returns (uint256 tokenId) {
+    function singleTokenDeposit(SingleTokenDepositInput memory input) external whenNotPaused returns (uint256 tokenId) {
         require(input.amountIn != 0, "DRA0");
         require(registry.isAllowableFeeTier(input.fee), "DRFT");
 
@@ -337,7 +340,7 @@ contract DepositRecipes is IDepositRecipes {
     ///@return tokenId the ID of the minted NFT
     function singleTokenDepositListedStrategy(
         SingleTokenDepositListedStrategyInput memory input
-    ) external returns (uint256 tokenId) {
+    ) external whenNotPaused returns (uint256 tokenId) {
         require(input.amountIn != 0, "DRA0");
         require(registry.isAllowableFeeTier(input.fee), "DRFT");
 
@@ -418,7 +421,7 @@ contract DepositRecipes is IDepositRecipes {
     ///@param positionId id of the position
     ///@param isToken0In true if the input token is token0, false if the input token is token1
     ///@param amount amount of input token
-    function singleTokenIncreaseLiquidity(uint256 positionId, bool isToken0In, uint256 amount) external {
+    function singleTokenIncreaseLiquidity(uint256 positionId, bool isToken0In, uint256 amount) external whenNotPaused {
         require(amount != 0, "DRA0");
         address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
             .userToPositionManager(msg.sender);

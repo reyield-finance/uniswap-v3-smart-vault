@@ -92,6 +92,9 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
         address receivedToken, // if set 0x0 means received tokens are avaliable in both token0 and token1
         uint32 licenseAmount
     ) external onlyOwner strategyNotExist(strategyId) {
+        //reorder
+        (token0, token1) = token0 < token1 ? (token0, token1) : (token1, token0);
+
         address pool = IUniswapV3Factory(uniswapAddressHolder.uniswapV3FactoryAddress()).getPool(token0, token1, fee);
         require(pool != address(0), "SPWAP0");
 

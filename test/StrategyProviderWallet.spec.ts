@@ -1,3 +1,4 @@
+import { reset } from "@nomicfoundation/hardhat-network-helpers";
 import "@nomiclabs/hardhat-ethers";
 import { expect } from "chai";
 import { Signer } from "ethers";
@@ -25,7 +26,7 @@ import {
   tokensFixture,
 } from "./shared/fixtures";
 
-describe("PositionManagerFactory.sol", function () {
+describe("StrategyProviderWallet.sol", function () {
   let deployer: Signer;
   let user: Signer;
   let serviceFeeRecipient: Signer;
@@ -100,6 +101,10 @@ describe("PositionManagerFactory.sol", function () {
 
     expect(SPW).to.exist;
   }
+
+  before(async function () {
+    await reset(process.env.ALCHEMY_OPTIMISM_MAINNET, 107735214);
+  });
 
   beforeEach(async function () {
     const signers = await ethers.getSigners();
@@ -182,6 +187,10 @@ describe("PositionManagerFactory.sol", function () {
       expect(sInfo[1]).to.be.equal(2000);
       expect(sInfo[2]).to.be.equal(token0.address);
       expect(sInfo[3]).to.be.equal(3);
+
+      const { wallets } = await SPWF.getStrategyProviderWallets(0, 30);
+      expect(wallets.length).to.be.equal(1);
+      expect(wallets[0]).to.be.equal(SPW.address);
     });
 
     it("Should fail add strategy with invalid input", async () => {

@@ -16,25 +16,18 @@ import "../interfaces/IRegistry.sol";
 import "../interfaces/IStrategyProviderWalletFactory.sol";
 import "../interfaces/IStrategyProviderWallet.sol";
 import "../libraries/SwapHelper.sol";
+import "./BaseRecipes.sol";
 
 ///@notice WithdrawRecipes allows user to withdraw positions from PositionManager
-contract GovernanceRecipes is IGovernanceRecipes {
+contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
     using SafeMath for uint256;
 
     IUniswapAddressHolder public immutable uniswapAddressHolder;
-    IRegistry public immutable registry;
 
-    modifier onlyGovernance() {
-        require(msg.sender == registry.governance(), "WRFOG");
-        _;
-    }
-
-    constructor(address _registry, address _uniswapAddressHolder) {
+    constructor(address _registry, address _uniswapAddressHolder) BaseRecipes(_registry) {
         require(_uniswapAddressHolder != address(0), "WRCA0");
-        require(_registry != address(0), "WRCA0");
 
         uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
-        registry = IRegistry(_registry);
     }
 
     ///@notice closed position forcedly by governance

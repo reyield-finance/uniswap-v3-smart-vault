@@ -20,6 +20,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     autoMine: true,
     gasLimit: Config[chainId].gasLimit,
     gasPrice: Config[chainId].gasPrice,
+    nonce: 4,
   });
 
   await new Promise((resolve) => setTimeout(resolve, Config[chainId].sleep));

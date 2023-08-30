@@ -199,7 +199,7 @@ contract RepayRebalanceFee is IRepayRebalanceFee {
                 recipient: address(this),
                 deadline: block.timestamp,
                 amountIn: amountIn,
-                // TODO: slippage protection by using amountOutMinimum, sqrtPriceLimitX96
+                //NOTE slippage protection by using amountOutMinimum, sqrtPriceLimitX96
                 amountOutMinimum: 0,
                 sqrtPriceLimitX96: 0
             })

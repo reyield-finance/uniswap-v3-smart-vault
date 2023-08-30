@@ -7,21 +7,16 @@ import "../interfaces/IRegistry.sol";
 import "../interfaces/IPositionManager.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 
-contract BaseModule is Pausable {
+contract BaseRecipes is Pausable {
     IRegistry public immutable registry;
 
-    modifier onlyWhitelistedKeeper() {
-        require(registry.whitelistedKeepers(msg.sender), "OWLK");
-        _;
-    }
-
     modifier onlyGovernance() {
-        require(msg.sender == registry.governance(), "BMOG");
+        require(msg.sender == registry.governance(), "BROG");
         _;
     }
 
-    constructor(address _registry) {
-        require(_registry != address(0), "BMR0");
+    constructor(address _registry) Pausable() {
+        require(_registry != address(0), "BRR0");
         registry = IRegistry(_registry);
     }
 

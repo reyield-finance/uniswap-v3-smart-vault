@@ -6,14 +6,14 @@ pragma abicoder v2;
 interface ISwapToPositionRatio {
     ///@notice emitted when a positionManager swaps to ratio
     ///@param positionManager address of PositionManager
-    ///@param token0 address of first token of the pool
-    ///@param token1 address of second token of the pool
-    ///@param amount0Out token0 amount swapped
-    ///@param amount1Out token1 amount swapped
+    ///@param amount0In token0 amount in
+    ///@param amount1In token1 amount in
+    ///@param amount0Out token0 amount out
+    ///@param amount1Out token1 amount out
     event SwappedToPositionRatio(
         address indexed positionManager,
-        address token0,
-        address token1,
+        uint256 amount0In,
+        uint256 amount1In,
         uint256 amount0Out,
         uint256 amount1Out
     );

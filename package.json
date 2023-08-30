@@ -47,7 +47,11 @@
     "coverage": "hardhat coverage",
     "deploy:optimismGoerli": "hardhat deploy --network optimismGoerli",
     "deploy:mumbai": "hardhat deploy --network mumbai",
+    "deploy:optimism": "hardhat deploy --network optimism",
+    "deploy:polygon": "hardhat deploy --network polygon",
     "run:optimismGoerli": "hardhat run --network optimismGoerli",
-    "run:mumbai": "hardhat run --network mumbai"
+    "run:mumbai": "hardhat run --network mumbai",
+    "run:optimism": "hardhat run --network optimism",
+    "run:polygon": "hardhat run --network polygon"
   }
 }

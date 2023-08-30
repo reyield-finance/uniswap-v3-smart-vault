@@ -50,14 +50,21 @@ contract Mint is IMint {
                 })
             );
 
+        uint256 amount0Leftover = inputs.amount0Desired.sub(amount0Deposited);
+        uint256 amount1Leftover = inputs.amount1Desired.sub(amount1Deposited);
         ///@dev send leftover tokens back to the user if necessary
         if (inputs.isReturnLeftOver) {
-            uint256 amount0Leftover = inputs.amount0Desired.sub(amount0Deposited);
-            uint256 amount1Leftover = inputs.amount1Desired.sub(amount1Deposited);
             if (amount0Leftover != 0) IERC20(inputs.token0Address).safeTransfer(Storage.owner, amount0Leftover);
             if (amount1Leftover != 0) IERC20(inputs.token1Address).safeTransfer(Storage.owner, amount1Leftover);
         }
 
-        emit PositionMinted(address(this), tokenId, amount0Deposited, amount1Deposited);
+        emit PositionMinted(
+            address(this),
+            tokenId,
+            amount0Deposited,
+            amount1Deposited,
+            amount0Leftover,
+            amount1Leftover
+        );
     }
 }

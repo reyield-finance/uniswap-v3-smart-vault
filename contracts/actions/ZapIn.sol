@@ -146,7 +146,7 @@ contract ZapIn is IZapIn {
                     recipient: address(this),
                     deadline: block.timestamp,
                     amountIn: amountToSwap,
-                    // TODO: slippage protection by using amountOutMinimum, sqrtPriceLimitX96
+                    //NOTE slippage protection by using amountOutMinimum, sqrtPriceLimitX96
                     amountOutMinimum: 0,
                     sqrtPriceLimitX96: 0
                 })

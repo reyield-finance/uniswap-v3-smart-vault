@@ -39,7 +39,12 @@ contract UniswapCalculator {
 
         require(pool != address(0), "UCP0");
 
-        (, int24 currentTick, , , , , ) = IUniswapV3Pool(pool).slot0();
+        int24 currentTick = UniswapHelper._getDepositCurrentTick(
+            uniswapAddressHolder.uniswapV3FactoryAddress(),
+            token0,
+            token1,
+            fee
+        );
         (liquidity, amount0, amount1) = UniswapHelper.calLiquidityAndAmounts(
             uniswapAddressHolder.uniswapV3FactoryAddress(),
             token0,
@@ -52,6 +57,27 @@ contract UniswapCalculator {
         );
     }
 
+    ///@notice get pool address of a pair of tokens
+    ///@param token0 address of the token0
+    ///@param token1 address of the token1
+    ///@param fee fee tier of the pool
+    function getPool(address token0, address token1, uint24 fee) external view returns (address pool) {
+        pool = UniswapHelper._getPool(uniswapAddressHolder.uniswapV3FactoryAddress(), token0, token1, fee);
+    }
+
+    ///@notice reorder tokens to be in the same order as in the pool
+    ///@param token0 address of the token0
+    ///@param token1 address of the token1
+    ///@return token0Reordered address of the token0
+    ///@return token1Reordered address of the token1
+    ///@return isOrderChanged true if the order of the tokens has changed
+    function reorderTokens(
+        address token0,
+        address token1
+    ) external pure returns (address token0Reordered, address token1Reordered, bool isOrderChanged) {
+        (token0Reordered, token1Reordered, isOrderChanged) = UniswapHelper._reorderTokens(token0, token1);
+    }
+
     ///@notice validate if a pool is valid
     ///@param token0 address of the token0
     ///@param token1 address of the token1
@@ -60,7 +86,10 @@ contract UniswapCalculator {
     function validatePool(address token0, address token1, uint24 fee) external view returns (bool) {
         address pool = IUniswapV3Factory(uniswapAddressHolder.uniswapV3FactoryAddress()).getPool(token0, token1, fee);
 
-        return (pool != address(0) && checkTokenCanBeSwapToWETH9(token0) && checkTokenCanBeSwapToWETH9(token1));
+        return (token0 < token1 &&
+            pool != address(0) &&
+            checkTokenCanBeSwapToWETH9(token0) &&
+            checkTokenCanBeSwapToWETH9(token1));
     }
 
     function checkTokenCanBeSwapToWETH9(address token) internal view returns (bool) {

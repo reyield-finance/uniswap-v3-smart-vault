@@ -6,9 +6,10 @@ pragma abicoder v2;
 import "./PositionManager.sol";
 import "./interfaces/IPositionManagerFactory.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./interfaces/IStrategyProviderWalletFactory.sol";
 
-contract PositionManagerFactory is IPositionManagerFactory {
+contract PositionManagerFactory is Pausable, IPositionManagerFactory {
     using SafeMath for uint256;
 
     address public immutable registry;
@@ -28,10 +29,20 @@ contract PositionManagerFactory is IPositionManagerFactory {
         _;
     }
 
-    constructor(address _registry, address _diamondCutFacet, address _uniswapAddressHolder) {
+    constructor(address _registry, address _diamondCutFacet, address _uniswapAddressHolder) Pausable() {
         registry = _registry;
         diamondCutFacet = _diamondCutFacet;
         uniswapAddressHolder = _uniswapAddressHolder;
+    }
+
+    ///@notice pause the factory
+    function pause() external onlyGovernance {
+        _pause();
+    }
+
+    ///@notice unpause the factory
+    function unpause() external onlyGovernance {
+        _unpause();
     }
 
     ///@notice update actions already existing on positionManager
@@ -85,7 +96,7 @@ contract PositionManagerFactory is IPositionManagerFactory {
 
     ///@notice deploy new positionManager and assign to userAddress
     ///@return address return new PositionManager address
-    function create() external override returns (address) {
+    function create() external override whenNotPaused returns (address) {
         require(userToPositionManager[msg.sender] == address(0), "PFP");
 
         PositionManager manager = new PositionManager(msg.sender, diamondCutFacet, registry);

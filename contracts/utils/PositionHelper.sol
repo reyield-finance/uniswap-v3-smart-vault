@@ -127,13 +127,15 @@ contract PositionHelper {
     ///@notice the output struct of getAmounts
     ///@param amount0 amount of token0
     ///@param amount1 amount of token1
-    ///@param amount0USDValue amount of token0 in USD
-    ///@param amount1USDValue amount of token1 in USD
+    ///@param amount0UsdValue amount of token0 in USD
+    ///@param amount1UsdValue amount of token1 in USD
     struct GetAmountsOutput {
+        address token0;
+        address token1;
         uint256 amount0;
         uint256 amount1;
-        uint256 amount0USDValue;
-        uint256 amount1USDValue;
+        uint256 amount0UsdValue;
+        uint256 amount1UsdValue;
     }
 
     ///@notice Get the amounts of a position
@@ -143,17 +145,20 @@ contract PositionHelper {
     function getAmounts(address userAddress, uint256 positionId) public view returns (GetAmountsOutput memory output) {
         IPositionManager.PositionInfo memory pInfo = getPositionInfo(userAddress, positionId);
 
-        address token0;
-        address token1;
         uint24 fee;
         int24 tickLower;
         int24 tickUpper;
-        (token0, token1, fee, tickLower, tickUpper) = UniswapHelper._getTokens(
+        (output.token0, output.token1, fee, tickLower, tickUpper) = UniswapHelper._getTokens(
             pInfo.tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
 
-        address pool = UniswapHelper._getPool(uniswapAddressHolder.uniswapV3FactoryAddress(), token0, token1, fee);
+        address pool = UniswapHelper._getPool(
+            uniswapAddressHolder.uniswapV3FactoryAddress(),
+            output.token0,
+            output.token1,
+            fee
+        );
 
         (uint160 sqrtRatioX96, int24 currentTick, , , , , ) = IUniswapV3Pool(pool).slot0();
 
@@ -169,11 +174,12 @@ contract PositionHelper {
             tickUpper,
             sqrtRatioX96
         );
+
         output.amount0 = output.amount0.add(pInfo.amount0Leftover);
         output.amount1 = output.amount1.add(pInfo.amount1Leftover);
 
-        output.amount0USDValue = quoteUsdValue(token0, output.amount0);
-        output.amount1USDValue = quoteUsdValue(token1, output.amount1);
+        output.amount0UsdValue = quoteUsdValue(output.token0, output.amount0);
+        output.amount1UsdValue = quoteUsdValue(output.token1, output.amount1);
     }
 
     ///@notice the output struct of getUncollectedFees
@@ -181,15 +187,15 @@ contract PositionHelper {
     ///@param token1 address of the token1
     ///@param tokensOwed0 amount of token0
     ///@param tokensOwed1 amount of token1
-    ///@param amount0USDValue amount of token0 in USD
-    ///@param amount1USDValue amount of token1 in USD
+    ///@param amount0UsdValue amount of token0 in USD
+    ///@param amount1UsdValue amount of token1 in USD
     struct GetUncollectedFeesOutput {
         address token0;
         address token1;
-        uint128 tokensOwed0;
-        uint128 tokensOwed1;
-        uint256 amount0USDValue;
-        uint256 amount1USDValue;
+        uint128 amount0;
+        uint128 amount1;
+        uint256 amount0UsdValue;
+        uint256 amount1UsdValue;
     }
 
     ///@notice Get the uncollected fees of a position
@@ -216,23 +222,23 @@ contract PositionHelper {
                 liquidity,
                 feeGrowthInside0LastX128,
                 feeGrowthInside1LastX128,
-                output.tokensOwed0,
-                output.tokensOwed1
+                output.amount0,
+                output.amount1
             ) = INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress()).positions(
                 pInfo.tokenId
             );
 
             (uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128) = _getFeeGrowthInside(pInfo.tokenId);
 
-            output.tokensOwed0 += uint128(
+            output.amount0 += uint128(
                 FullMath.mulDiv(feeGrowthInside0X128 - feeGrowthInside0LastX128, liquidity, FixedPoint128.Q128)
             );
-            output.tokensOwed1 += uint128(
+            output.amount1 += uint128(
                 FullMath.mulDiv(feeGrowthInside1X128 - feeGrowthInside1LastX128, liquidity, FixedPoint128.Q128)
             );
 
-            output.amount0USDValue = quoteUsdValue(output.token0, output.tokensOwed0);
-            output.amount1USDValue = quoteUsdValue(output.token1, output.tokensOwed1);
+            output.amount0UsdValue = quoteUsdValue(output.token0, output.amount0);
+            output.amount1UsdValue = quoteUsdValue(output.token1, output.amount1);
         }
     }
 
@@ -336,8 +342,8 @@ contract PositionHelper {
             token0 = ufOutput.token0;
             token1 = ufOutput.token1;
             pInfo = getPositionInfo(userAddress, positionId);
-            amount0Returned = gaOutput.amount0.add(ufOutput.tokensOwed0).add(pInfo.amount0Leftover);
-            amount1Returned = gaOutput.amount1.add(ufOutput.tokensOwed1).add(pInfo.amount1Leftover);
+            amount0Returned = gaOutput.amount0.add(ufOutput.amount0).add(pInfo.amount0Leftover);
+            amount1Returned = gaOutput.amount1.add(ufOutput.amount1).add(pInfo.amount1Leftover);
         }
 
         if (pInfo.strategyProvider == address(0)) {
@@ -474,7 +480,7 @@ contract PositionHelper {
         if (input.token1 == registry.usdValueTokenAddress()) {
             output.amount1ReturnedUsdValue = output.amount1Returned;
         } else {
-            output.amount0ReturnedUsdValue = SwapHelper.getQuoteFromSqrtRatioX96(
+            output.amount1ReturnedUsdValue = SwapHelper.getQuoteFromSqrtRatioX96(
                 input.token1UsdValueTokenSqrtPriceX96,
                 MathHelper.fromUint256ToUint128(output.amount1Returned),
                 input.token1,

@@ -210,13 +210,13 @@ describe("SwapToPositionRatio.sol", function () {
       });
       const receipt = await txSwapRatio.wait();
       const events: any = receipt.events;
-      const token0Log = events[events.length - 1].args.token0;
-      const token1Log = events[events.length - 1].args.token1;
+      const amount0InLog = events[events.length - 1].args.amount0In;
+      const amount1InLog = events[events.length - 1].args.amount1In;
       const amount0Out = events[events.length - 1].args.amount0Out;
       const amount1Out = events[events.length - 1].args.amount1Out;
 
-      expect(token0Log).to.be.equal(token0.address);
-      expect(token1Log).to.be.equal(token1.address);
+      expect(amount0InLog).to.be.equal(amount0In);
+      expect(amount1InLog).to.be.equal(amount1In);
       let token1SwappedFromToken0: BigNumber = BigNumber.from(0);
 
       let swappedToken0: BigNumber = BigNumber.from(0);

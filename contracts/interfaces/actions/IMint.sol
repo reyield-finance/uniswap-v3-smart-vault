@@ -9,11 +9,15 @@ interface IMint {
     ///@param tokenId Id of deposited token
     ///@param amount0Deposited token0 amount deposited
     ///@param amount1Deposited token1 amount deposited
+    ///@param amount0Leftover token0 amount leftover
+    ///@param amount1Leftover token1 amount leftover
     event PositionMinted(
         address indexed positionManager,
         uint256 tokenId,
         uint256 amount0Deposited,
-        uint256 amount1Deposited
+        uint256 amount1Deposited,
+        uint256 amount0Leftover,
+        uint256 amount1Leftover
     );
 
     ///@notice struct for input of the mint action

@@ -425,9 +425,9 @@ describe("PositionManagerFactory.sol", function () {
         expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(100n);
       }
 
-      await expect(await PM.connect(dummyWhitelist).isPositionRunning(1)).to.be.false;
-      await expect(await PM.connect(dummyWhitelist).isPositionRunning(2)).to.be.true;
-      await expect(await PM.connect(dummyWhitelist).isPositionRunning(3)).to.be.false;
+      expect(await PM.connect(dummyWhitelist).isPositionRunning(1)).to.be.false;
+      expect(await PM.connect(dummyWhitelist).isPositionRunning(2)).to.be.true;
+      expect(await PM.connect(dummyWhitelist).isPositionRunning(3)).to.be.false;
 
       {
         const { runningPositions } = await PM.getRunningPositions(0, 3);

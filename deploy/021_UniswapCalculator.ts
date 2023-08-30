@@ -5,24 +5,29 @@ import { Config } from "./000_Config";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts, getChainId } = hre;
-  const chainId = await getChainId();
   const { deploy } = deployments;
+
+  const chainId = await getChainId();
 
   const { deployer } = await getNamedAccounts();
 
-  await deploy("DiamondCutFacet", {
+  const UniswapAddressHolder = await deployments.get("UniswapAddressHolder");
+  const registry = await deployments.get("Registry");
+
+  await deploy("UniswapCalculator", {
     from: deployer,
-    args: [],
+    args: [registry.address, UniswapAddressHolder.address],
     log: true,
     autoMine: true,
     gasLimit: Config[chainId].gasLimit,
     gasPrice: Config[chainId].gasPrice,
-    nonce: 1,
+    nonce: 20,
   });
 
   await new Promise((resolve) => setTimeout(resolve, Config[chainId].sleep));
-  console.log(":: Deployed DiamondCutFacet: ", (await deployments.get("DiamondCutFacet")).address);
+  console.log(":: Deployed UniswapCalculator: ", (await deployments.get("UniswapCalculator")).address);
 };
 
 export default func;
-func.tags = ["SmartVault", "DiamondCutFacet"];
+func.tags = ["SmartVault", "Utils", "UniswapCalculator"];
+func.dependencies = ["UniswapAddressHolder", "Registry"];
