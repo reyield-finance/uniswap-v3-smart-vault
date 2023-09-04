@@ -77,7 +77,7 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
         mwInput.amount1CollectedFee = pInfo.amount1CollectedFee.add(amount1CollectedFee);
         IPositionManager(positionManager).middlewareWithdraw(mwInput);
 
-        emit PositionWithdrawan(positionManager, msg.sender, positionId, pInfo.tokenId);
+        emit PositionWithdrawn(positionManager, msg.sender, positionId, pInfo.tokenId);
     }
 
     function _calTokensUsdValue(

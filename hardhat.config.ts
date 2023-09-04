@@ -55,18 +55,26 @@ const config: HardhatUserConfig = {
     mumbai: {
       url: process.env.ALCHEMY_POLYGON_MUMBAI || "",
       accounts: [process.env.TEST_PRIVATE_KEY || ""],
+      // gas: 10000000,
+      // gasPrice: 1520000000,
     },
     polygon: {
       url: process.env.ALCHEMY_POLYGON_MAINNET || "",
       accounts: [process.env.TEST_PRIVATE_KEY || ""],
+      // gas: 10000000,
+      // gasPrice: 128000000000,
     },
     optimismGoerli: {
       url: process.env.ALCHEMY_OPTIMISM_GOERLI || "",
       accounts: [process.env.TEST_PRIVATE_KEY || ""],
+      // gas: 10000000,
+      // gasPrice: 1000000000,
     },
     optimism: {
       url: process.env.ALCHEMY_OPTIMISM_MAINNET || "",
       accounts: [process.env.TEST_PRIVATE_KEY || ""],
+      // gas: 10000000,
+      // gasPrice: 8000000,
     },
   },
   etherscan: {

@@ -29,15 +29,17 @@
                 |-- MathHelper.sol
                 |-- SafeInt24Math.sol
                 |-- SafeInt56Math.sol
+                |-- SafeUint32Math.sol
                 |-- SwapHelper.sol
                 |-- UniswapHelper.sol
-                |-- UniswapQuoter.sol
             |-- modules
                 |-- BaseModule.sol
                 |-- IdleLiquidityModule.sol
             |-- recipes
+                |-- BaseRecipes.sol
                 |-- DepositRecipes.sol
                 |-- WithdrawRecipes.sol
+                |-- GovernanceRecipes.sol
             |-- interfaces
                 |-- actions
                     |-- IClosePosition.sol
@@ -73,6 +75,8 @@
             |-- utils
                 |-- UniswapAddressHolder.sol
                 |-- UniswapCalculator.sol
+                |-- PositionHelper.sol
+                |-- ERC20Extended.sol
             |-- Storage.sol
             |-- DiamondCutFacet.sol
             |-- PositionManager.sol

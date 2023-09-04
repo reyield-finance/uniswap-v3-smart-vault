@@ -119,7 +119,7 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
         mwInput.amount1CollectedFee = pInfo.amount1CollectedFee.add(amount1CollectedFee);
         IPositionManager(positionManager).middlewareWithdraw(mwInput);
 
-        emit PositionWithdrawan(positionManager, msg.sender, positionId, pInfo.tokenId);
+        emit PositionWithdrawn(positionManager, msg.sender, positionId, pInfo.tokenId);
     }
 
     ///@notice closed position to the position manager with single token
@@ -204,7 +204,7 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
         mwInput.amount1CollectedFee = pInfo.amount1CollectedFee.add(amount1CollectedFee);
         IPositionManager(positionManager).middlewareWithdraw(mwInput);
 
-        emit PositionWithdrawan(positionManager, msg.sender, positionId, pInfo.tokenId);
+        emit PositionWithdrawn(positionManager, msg.sender, positionId, pInfo.tokenId);
     }
 
     function _calTokensUsdValue(

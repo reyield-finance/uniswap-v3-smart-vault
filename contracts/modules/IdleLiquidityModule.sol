@@ -262,7 +262,9 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
             fee
         );
 
-        require(currentTick < tickLower || currentTick > tickUpper, "ILOOR");
+        ///@dev check if the current tick is out of range
+        ///note current tick == tickUpper is out of range
+        require(currentTick < tickLower || currentTick >= tickUpper, "ILOOR");
     }
 
     function checkDiffOfTicksRange(int24 tickLowerDiff, int24 tickUpperDiff, uint256 tokenId) internal view {

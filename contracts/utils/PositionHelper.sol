@@ -389,8 +389,8 @@ contract PositionHelper {
 
             // if current usd value > total deposit usd value, charge performance fee
             if (amount0ReturnedUsdValue.add(amount1ReturnedUsdValue) > pInfo.totalDepositUSDValue) {
-                output = _estimateChargePerformanceFeeWithdrawanPosition(
-                    _EstimateChargePerformanceFeeWithdrawanPositionInput({
+                output = _estimateChargePerformanceFeeWithdrawnPosition(
+                    _EstimateChargePerformanceFeeWithdrawnPositionInput({
                         token0: token0,
                         token1: token1,
                         amount0Returned: amount0Returned,
@@ -414,7 +414,7 @@ contract PositionHelper {
         }
     }
 
-    struct _EstimateChargePerformanceFeeWithdrawanPositionInput {
+    struct _EstimateChargePerformanceFeeWithdrawnPositionInput {
         address token0;
         address token1;
         uint256 amount0Returned;
@@ -427,8 +427,8 @@ contract PositionHelper {
         uint160 token1UsdValueTokenSqrtPriceX96;
     }
 
-    function _estimateChargePerformanceFeeWithdrawanPosition(
-        _EstimateChargePerformanceFeeWithdrawanPositionInput memory input
+    function _estimateChargePerformanceFeeWithdrawnPosition(
+        _EstimateChargePerformanceFeeWithdrawnPositionInput memory input
     ) private view returns (EstimateWithdrawPositionOutput memory output) {
         uint256 performanceFeeUsd = _calPerformanceFee(
             input.amount0ReturnedUsdValue.add(input.amount1ReturnedUsdValue).sub(input.totalDepositUSDValue),
