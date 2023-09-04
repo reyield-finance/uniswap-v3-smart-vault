@@ -12,3 +12,4 @@ deployments
 out
 # custom
 _*
+.DS_Store
