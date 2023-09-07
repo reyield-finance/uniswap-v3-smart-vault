@@ -191,6 +191,7 @@ contract Registry is IRegistry {
     ///@notice get the list of fee tiers
     ///@return array of fee tiers
     function getFeeTiers() external view override returns (uint24[] memory) {
+        //XXX: seems like the same functionality as the getAllowableFeeTiers function
         return feeTiers;
     }
 
@@ -200,6 +201,8 @@ contract Registry is IRegistry {
         uint24[] memory allowableFeeTiersList = new uint24[](feeTiers.length);
 
         for (uint256 i; i < feeTiers.length; ++i) {
+            //XXX: Why is this check necessary? It seems like it should be impossible for this to fail.
+            // even you can return the feeTiers directly.
             if (!allowableFeeTiers[feeTiers[i]]) {
                 continue;
             }
@@ -213,6 +216,7 @@ contract Registry is IRegistry {
     ///@param _positionManagerFactory the address of the position manager factory
     function setPositionManagerFactory(address _positionManagerFactory) external onlyGovernance {
         require(_positionManagerFactory != address(0), "RF0");
+        //XXX: check the address implement the interface by using EIP-165?
         positionManagerFactoryAddress = _positionManagerFactory;
     }
 
@@ -220,11 +224,14 @@ contract Registry is IRegistry {
     ///@param _strategyProviderWalletFactory the address of the strategy provider collect wallet factory
     function setStrategyProviderWalletFactory(address _strategyProviderWalletFactory) external onlyGovernance {
         require(_strategyProviderWalletFactory != address(0), "RF0");
+        //XXX: check the address implement the interface by using EIP-165?
         strategyProviderWalletFactoryAddress = _strategyProviderWalletFactory;
     }
 
     function setServiceFeeRatio(uint32 _licenseAmount, uint32 _serviceFeeRatio) external onlyGovernance {
         licnesesToServiceFeeRatio[_licenseAmount] = _serviceFeeRatio;
+        //XXX: What's the purpose for extending the length? if extends the length, the value in the middle will be 0.
+        //I think it could be fixed to simpfy the logic.
         if (_licenseAmount > serviceFeeRatioLength) {
             serviceFeeRatioLength = _licenseAmount;
         }
@@ -238,6 +245,7 @@ contract Registry is IRegistry {
         require(modules[_id].contractAddress == address(0), "RAE");
         require(_contractAddress != address(0), "RA0");
         modules[_id] = Entry({ contractAddress: _contractAddress, defaultData: _defaultValue });
+        //XXX: What's the usage of the moduleKeys?
         moduleKeys.push(_id);
         emit ContractAdded(_contractAddress, _id);
     }
@@ -258,6 +266,7 @@ contract Registry is IRegistry {
     function removeContract(bytes32 _id) external onlyGovernance {
         require(modules[_id].contractAddress != address(0), "RRE");
         address origMoudleAddress = modules[_id].contractAddress;
+        //XXX: Should we delete module key at the same time?
         delete modules[_id];
         emit ContractRemoved(origMoudleAddress, _id);
     }
@@ -267,6 +276,7 @@ contract Registry is IRegistry {
     function addKeeperToWhitelist(address _keeper) external onlyGovernance {
         require(!whitelistedKeepers[_keeper], "RKW");
         whitelistedKeepers[_keeper] = true;
+        //XXX: Emit event? looks like there is no way to check which addresses are whitelisted.
     }
 
     ///@notice remove a whitelisted keeper
@@ -279,6 +289,7 @@ contract Registry is IRegistry {
     ///@notice Get the keys for all modules
     ///@return bytes32[] all module keys
     function getModuleKeys() external view override returns (bytes32[] memory) {
+        //XXX: here would consist of all the modules, including the ones that are deleted.
         return moduleKeys;
     }
 
@@ -330,19 +341,20 @@ contract Registry is IRegistry {
     ///@param fee fee tier to be activated
     function activateFeeTier(uint24 fee) external onlyGovernance {
         require(!allowableFeeTiers[fee], "DRAFT");
+        //XXX: this function doesn't check the value exist or not. if call repeatedly,
+        //it will add the same value to the array.
         allowableFeeTiers[fee] = true;
         feeTiers.push(fee);
     }
 
-    ///@notice deactivates a fee tier
-    ///@param fee fee tier to be deactivated
+    ///@notice deactivates a fee tier @param fee fee tier to be deactivated
     function deactivateFeeTier(uint24 fee) external onlyGovernance {
         require(allowableFeeTiers[fee], "DRAFT");
         allowableFeeTiers[fee] = false;
         for (uint256 i; i < feeTiers.length; ++i) {
             if (feeTiers[i] == fee) {
                 if (feeTiers.length == 1) {
-                    feeTiers.pop();
+                    ffeeTierseeTiers.pop();
                     break;
                 }
                 feeTiers[i] = feeTiers[feeTiers.length - 1];
