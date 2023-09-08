@@ -59,6 +59,7 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
         _;
     }
 
+    //XXX: seems not used?
     modifier onlyFactory() {
         require(msg.sender == registry.strategyProviderWalletFactoryAddress(), "SPWOF");
         _;
@@ -103,6 +104,7 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
 
         addReceivedTokens(token0, token1, receivedToken);
 
+        //XXX: what's the purpose of strategyIds?
         strategyIds.push(strategyId);
         isStrategyExist[strategyId] = true;
         strategyIdToStrategyInfo[strategyId] = StrategyInfo({
@@ -153,6 +155,7 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
     }
 
     function updateStrategyReceivedToken(bytes16 strategyId, address receivedToken) external onlyOwner {
+        //XXX: check receivedToken is valid?
         address pool = strategyIdToStrategyInfo[strategyId].pool;
         require(pool != address(0), "SPWNS");
         address token0 = IUniswapV3Pool(pool).token0();

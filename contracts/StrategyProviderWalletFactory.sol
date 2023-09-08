@@ -16,6 +16,7 @@ contract StrategyProviderWalletFactory is IStrategyProviderWalletFactory {
     address public immutable uniswapAddressHolder;
 
     mapping(address => address) public override providerToWallet;
+    //XXX: isInCreateorWhitelist?
     mapping(address => bool) public isIncreatorWhitelist;
     address[] public strategyProviderWallets;
 
@@ -41,6 +42,7 @@ contract StrategyProviderWalletFactory is IStrategyProviderWalletFactory {
         uniswapAddressHolder = _uniswapAddressHolder;
     }
 
+    //XXX: is it able to remove creator from creatorWhitelist? what's the drawback? Who would be add to the list?
     function addCreatorWhitelist(address _creator) external onlyGovernance {
         require(_creator != address(0), "SPWFA0");
         require(!isIncreatorWhitelist[_creator], "SPWFNICWL");
