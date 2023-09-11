@@ -1,6 +1,8 @@
 name: Hardhat CI on main branch
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main, development]
 
