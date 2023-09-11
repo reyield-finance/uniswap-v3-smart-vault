@@ -119,11 +119,5 @@ interface IPositionManager {
 
     function getPositionModuleData(uint256 _positionId, address _moduleAddress) external view returns (bytes32 data);
 
-    ///@notice get position lower tick diff and upper tick diff
-    ///@param positionId ID of the position
-    ///@return tickLowerDiff difference between the current tick of the position and the provied lower tick
-    ///@return tickUpperDiff difference between the current tick of the position and the provied upper tick
-    function getPositionTickDiffs(uint256 positionId) external view returns (int24, int24);
-
     function getOwner() external view returns (address);
 }

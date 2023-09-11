@@ -29,6 +29,10 @@ interface IRegistry {
     ///@return address of StrategyProviderWalletFactory
     function strategyProviderWalletFactoryAddress() external view returns (address);
 
+    ///@notice return the address of officialAccount
+    ///@return address of officialAccount
+    function officialAccount() external view returns (address);
+
     ///@notice return the address of weth9
     ///@return address of weth9
     function weth9() external view returns (address);

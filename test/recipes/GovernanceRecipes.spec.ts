@@ -278,6 +278,23 @@ describe("GovernanceRecipes.sol", function () {
     );
   }
 
+  describe("changeRegistry", function () {
+    it("Should success change registry", async () => {
+      await governanceRecipes.connect(deployer).changeRegistry(await deployer.getAddress());
+      expect(await governanceRecipes.registry()).to.be.equal(await deployer.getAddress());
+    });
+
+    it("Should fail change registry by others not owner", async () => {
+      await expect(governanceRecipes.connect(user).changeRegistry(await deployer.getAddress())).to.be.revertedWith(
+        "BROG",
+      );
+    });
+
+    it("Should fail change registry by zero address", async () => {
+      await expect(governanceRecipes.connect(deployer).changeRegistry(zeroAddress)).to.be.revertedWith("BRCR");
+    });
+  });
+
   describe("governance force close position", function () {
     it("closedPositionForced", async function () {
       // give pool some liquidity

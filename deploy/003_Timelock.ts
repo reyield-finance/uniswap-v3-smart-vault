@@ -10,9 +10,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { deployer } = await getNamedAccounts();
 
+  const governance = Config[chainId].governance;
+
   await deploy("Timelock", {
     from: deployer,
-    args: [deployer, 21600],
+    args: [governance, 21600],
     log: true,
     autoMine: true,
     gasLimit: Config[chainId].gasLimit,

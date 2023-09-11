@@ -24,6 +24,7 @@ import {
   deployUniswapContracts,
   getSelectors,
   tokensFixture,
+  zeroAddress,
 } from "./shared/fixtures";
 
 describe("StrategyProviderWallet.sol", function () {
@@ -164,6 +165,36 @@ describe("StrategyProviderWallet.sol", function () {
     await createStrategyProviderWallet();
   });
 
+  describe("StrategyProviderWalletFactory changeRegistry", function () {
+    it("Should success change registry", async () => {
+      await SPWF.connect(deployer).changeRegistry(await deployer.getAddress());
+      expect(await SPWF.registry()).to.be.equal(await deployer.getAddress());
+    });
+
+    it("Should fail change registry by others not owner", async () => {
+      await expect(SPWF.connect(user).changeRegistry(await deployer.getAddress())).to.be.revertedWith("SPWFOG");
+    });
+
+    it("Should fail change registry by zero address", async () => {
+      await expect(SPWF.connect(deployer).changeRegistry(zeroAddress)).to.be.revertedWith("SPWFCR");
+    });
+  });
+
+  describe("StrategyProviderWallet changeRegistry", function () {
+    it("Should success change registry", async () => {
+      await SPW.connect(deployer).changeRegistry(await deployer.getAddress());
+      expect(await SPW.registry()).to.be.equal(await deployer.getAddress());
+    });
+
+    it("Should fail change registry by others not owner", async () => {
+      await expect(SPW.connect(user).changeRegistry(await deployer.getAddress())).to.be.revertedWith("SPWOG");
+    });
+
+    it("Should fail change registry by zero address", async () => {
+      await expect(SPW.connect(deployer).changeRegistry(zeroAddress)).to.be.revertedWith("SPWCR");
+    });
+  });
+
   describe("StrategyProviderWalletFactory - create", function () {
     it("Should all set the variables in constructor", async () => {
       expect(await SPW.registry()).to.be.equal(Registry.address);
@@ -191,6 +222,33 @@ describe("StrategyProviderWallet.sol", function () {
       const { wallets } = await SPWF.getStrategyProviderWallets(0, 30);
       expect(wallets.length).to.be.equal(1);
       expect(wallets[0]).to.be.equal(SPW.address);
+    });
+
+    it("Should success add strategy by official account with arbitrary performanceFeeRatio", async () => {
+      await Registry.setOfficialAccount(await user.getAddress());
+      await SPW.connect(user).addStrategy(
+        ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16),
+        token0.address,
+        token1.address,
+        "500",
+        "10000",
+        token0.address,
+        "3",
+      );
+    });
+
+    it("Should fail add strategy by non-official account with arbitrary performanceFeeRatio", async () => {
+      await expect(
+        SPW.connect(user).addStrategy(
+          ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16),
+          token0.address,
+          token1.address,
+          "500",
+          "10000",
+          token0.address,
+          "3",
+        ),
+      ).to.be.revertedWith("SPWPFR");
     });
 
     it("Should fail add strategy with invalid input", async () => {
@@ -245,7 +303,7 @@ describe("StrategyProviderWallet.sol", function () {
           token0.address,
           token1.address,
           "500",
-          "10001",
+          "8000",
           "0x0000000000000000000000000000000000000000",
           "3",
         ),
@@ -256,7 +314,7 @@ describe("StrategyProviderWallet.sol", function () {
           token0.address,
           token1.address,
           "500",
-          "10000",
+          "2000",
           "0x0000000000000000000000000000000000000000",
           "0",
         ),

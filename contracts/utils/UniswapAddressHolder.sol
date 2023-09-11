@@ -12,12 +12,23 @@ contract UniswapAddressHolder is IUniswapAddressHolder {
     address public override swapRouterAddress;
     IRegistry public registry;
 
+    ///@notice restrict some function called only by governance
+    modifier onlyGovernance() {
+        require(msg.sender == registry.governance(), "UOG");
+        _;
+    }
+
     constructor(
         address _nonfungiblePositionManagerAddress,
         address _uniswapV3FactoryAddress,
         address _swapRouterAddress,
         address _registry
     ) {
+        require(_nonfungiblePositionManagerAddress != address(0), "UAHNPA0");
+        require(_uniswapV3FactoryAddress != address(0), "UAF0");
+        require(_swapRouterAddress != address(0), "UAHSR0");
+        require(_registry != address(0), "UAHR0");
+
         nonfungiblePositionManagerAddress = _nonfungiblePositionManagerAddress;
         uniswapV3FactoryAddress = _uniswapV3FactoryAddress;
         swapRouterAddress = _swapRouterAddress;
@@ -42,15 +53,10 @@ contract UniswapAddressHolder is IUniswapAddressHolder {
         swapRouterAddress = newAddress;
     }
 
-    ///@notice Set the address of the registry
+    ///@notice Change the address of the registry
     ///@param newAddress The address of the registry
-    function setRegistry(address newAddress) external override onlyGovernance {
+    function changeRegistry(address newAddress) external onlyGovernance {
+        require(newAddress != address(0), "UACR");
         registry = IRegistry(newAddress);
-    }
-
-    ///@notice restrict some function called only by governance
-    modifier onlyGovernance() {
-        require(msg.sender == registry.governance(), "UOG");
-        _;
     }
 }

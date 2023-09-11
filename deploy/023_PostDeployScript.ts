@@ -54,7 +54,7 @@ const PostDeployScript: DeployFunction = async function (hre: HardhatRuntimeEnvi
 
   const Registry = (await ethers.getContractAt("Registry", RegistryD.address)) as Registry;
 
-  // ******************** Set positionManagerFactory & strategyProviderWalletFactory to registry ********************
+  // ******************** Set positionManagerFactory & strategyProviderWalletFactory & officialAccount  to registry ********************
   await Registry.setPositionManagerFactory(PositionManagerFactoryD.address, {
     gasPrice: Config[chainId].gasPrice,
     gasLimit: Config[chainId].gasLimit,
@@ -68,6 +68,14 @@ const PostDeployScript: DeployFunction = async function (hre: HardhatRuntimeEnvi
   });
   await new Promise((resolve) => setTimeout(resolve, Config[chainId].sleep));
   console.log(":: Set StrategyProviderWalletFactory to Registry");
+
+  const officialAccount = Config[chainId].officialAccount;
+  await Registry.setOfficialAccount(officialAccount as string, {
+    gasPrice: Config[chainId].gasPrice,
+    gasLimit: Config[chainId].gasLimit,
+  });
+  await new Promise((resolve) => setTimeout(resolve, Config[chainId].sleep));
+  console.log(":: Set setOfficialAccount to Registry");
 
   // ******************** Add modules and recipes and factory to registry ********************
   const positionManagerFactory = (await ethers.getContractAt(
@@ -150,8 +158,8 @@ const PostDeployScript: DeployFunction = async function (hre: HardhatRuntimeEnvi
   console.log(":: Added GovernanceRecipes to Registry");
 
   // ****************** Add keeper(s) to the whitelist ******************
-  const { keeper } = await getNamedAccounts();
-  await Registry.addKeeperToWhitelist(keeper, {
+  const keeper = Config[chainId].keeper;
+  await Registry.addKeeperToWhitelist(keeper as string, {
     gasPrice: Config[chainId].gasPrice,
     gasLimit: Config[chainId].gasLimit,
   });

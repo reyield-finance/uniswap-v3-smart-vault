@@ -22,6 +22,7 @@ import {
   deployUniswapContracts,
   getSelectors,
   tokensFixture,
+  zeroAddress,
 } from "./shared/fixtures";
 
 describe("PositionManagerFactory.sol", function () {
@@ -111,6 +112,21 @@ describe("PositionManagerFactory.sol", function () {
     await SPWF.deployed();
 
     await SPWF.connect(deployer).addCreatorWhitelist(PMF.address);
+  });
+
+  describe("PositionManagerFactory changeRegistry", function () {
+    it("Should success change registry", async () => {
+      await PMF.connect(deployer).changeRegistry(await deployer.getAddress());
+      expect(await PMF.registry()).to.be.equal(await deployer.getAddress());
+    });
+
+    it("Should fail change registry by others not owner", async () => {
+      await expect(PMF.connect(user).changeRegistry(await deployer.getAddress())).to.be.revertedWith("PFOG");
+    });
+
+    it("Should fail change registry by zero address", async () => {
+      await expect(PMF.connect(deployer).changeRegistry(zeroAddress)).to.be.revertedWith("PFCR");
+    });
   });
 
   describe("PositionManagerFactory - create", function () {

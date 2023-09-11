@@ -32,7 +32,6 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
     ///@param _uniswapAddressHolder address of the uniswap address holder
     constructor(address _registry, address _uniswapAddressHolder) BaseModule(_registry) {
         require(_uniswapAddressHolder != address(0), "ILCA0");
-        require(_registry != address(0), "ILCA0");
 
         uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
     }

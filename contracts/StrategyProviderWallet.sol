@@ -14,8 +14,8 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 contract StrategyProviderWallet is IStrategyProviderWallet {
     using SafeERC20 for IERC20;
 
+    IRegistry public registry;
     address public immutable owner;
-    IRegistry public immutable registry;
     IUniswapAddressHolder public immutable uniswapAddressHolder;
 
     bytes16[] public strategyIds;
@@ -75,6 +75,13 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
         uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
     }
 
+    ///@notice change registry address
+    ///@param _registry address of new registry
+    function changeRegistry(address _registry) external onlyGovernance {
+        require(_registry != address(0), "SPWCR");
+        registry = IRegistry(_registry);
+    }
+
     ///@notice addStrategy adds a strategy to the wallet
     ///@param strategyId the id of the strategy
     ///@param token0 the first token of the pool
@@ -98,7 +105,11 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
         address pool = IUniswapV3Factory(uniswapAddressHolder.uniswapV3FactoryAddress()).getPool(token0, token1, fee);
         require(pool != address(0), "SPWAP0");
 
-        checkPerformanceFeeRatio(performanceFeeRatio);
+        ///@dev check performanceFeeRatio only if the official account is not the owner
+        if (owner != registry.officialAccount()) {
+            checkPerformanceFeeRatio(performanceFeeRatio);
+        }
+
         checkLicenseAmount(licenseAmount);
 
         addReceivedTokens(token0, token1, receivedToken);
@@ -125,7 +136,8 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
     }
 
     function checkPerformanceFeeRatio(uint24 performanceFeeRatio) internal pure {
-        require(performanceFeeRatio <= 10_000, "SPWPFR");
+        ///NOTE: 7.5% <= Perf. Fee <= 65%
+        require(performanceFeeRatio >= 750 && performanceFeeRatio <= 6500, "SPWPFR");
     }
 
     function checkLicenseAmount(uint32 licenseAmount) internal pure {

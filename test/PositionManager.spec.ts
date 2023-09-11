@@ -30,6 +30,7 @@ import {
   getSelectors,
   poolFixture,
   tokensFixture,
+  zeroAddress,
 } from "./shared/fixtures";
 
 describe("PositionManagerFactory.sol", function () {
@@ -253,6 +254,20 @@ describe("PositionManagerFactory.sol", function () {
 
     const events2: any = (await mintTx2.wait()).events;
     tokenId2 = await events2[events2.length - 1].args.tokenId.toNumber();
+  });
+
+  describe("PositionManager changeRegistry", function () {
+    it("Should success change registry", async () => {
+      await PM.connect(deployer).changeRegistry(await deployer.getAddress());
+    });
+
+    it("Should fail change registry by others not owner", async () => {
+      await expect(PM.connect(user).changeRegistry(await deployer.getAddress())).to.be.revertedWith("PMOG");
+    });
+
+    it("Should fail change registry by zero address", async () => {
+      await expect(PM.connect(deployer).changeRegistry(zeroAddress)).to.be.revertedWith("PMCR");
+    });
   });
 
   describe("PositionManager.sol", function () {
@@ -482,22 +497,6 @@ describe("PositionManagerFactory.sol", function () {
     });
     it("Should success get owner", async () => {
       expect(await PM.getOwner()).to.be.equal(user.address);
-    });
-
-    it("Should success get tick diff", async () => {
-      await PM.connect(dummyWhitelist).createPosition({
-        tokenId: tokenId,
-        strategyProvider: await deployer.getAddress(),
-        strategyId: ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16),
-        totalDepositUSDValue: 3000n * 10n ** 6n,
-        tickLowerDiff: -1n,
-        tickUpperDiff: 1n,
-        amount0Leftover: 12n,
-        amount1Leftover: 10n,
-      });
-      const ticks = await PM.getPositionTickDiffs(1);
-      expect(ticks[0]).to.be.equal(-1);
-      expect(ticks[1]).to.be.equal(1);
     });
 
     it("Should success withdraw erc20 by governance", async () => {

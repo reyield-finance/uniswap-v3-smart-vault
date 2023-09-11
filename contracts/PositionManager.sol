@@ -111,6 +111,14 @@ contract PositionManager is IPositionManager, ERC721Holder, Initializable {
         Storage.uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
     }
 
+    ///@notice change registry address
+    ///@param _registry address of new registry
+    function changeRegistry(address _registry) external onlyGovernance {
+        require(_registry != address(0), "PMCR");
+        StorageStruct storage Storage = PositionManagerStorage.getStorage();
+        Storage.registry = IRegistry(_registry);
+    }
+
     ///@notice generate position ID
     ///@return positionId ID of the position
     function _genPositionId() internal returns (uint256) {
@@ -380,16 +388,6 @@ contract PositionManager is IPositionManager, ERC721Holder, Initializable {
         address _moduleAddress
     ) public view override returns (bytes32 data) {
         return (positionToModuleData[_positionId][_moduleAddress]);
-    }
-
-    ///@notice get position lower tick diff and upper tick diff
-    ///@param positionId ID of the position
-    ///@return tickLowerDiff difference between the current tick of the position and the provied lower tick
-    ///@return tickUpperDiff difference between the current tick of the position and the provied upper tick
-    function getPositionTickDiffs(
-        uint256 positionId
-    ) external view override positionExists(positionId) returns (int24, int24) {
-        return (positions[positionId].tickLowerDiff, positions[positionId].tickUpperDiff);
     }
 
     ///@notice return the address of this position manager owner

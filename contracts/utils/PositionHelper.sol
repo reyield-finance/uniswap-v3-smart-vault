@@ -26,10 +26,25 @@ contract PositionHelper {
     using SafeMath for uint256;
 
     IUniswapAddressHolder public immutable uniswapAddressHolder;
-    IRegistry public immutable registry;
+    IRegistry public registry;
+
+    ///@notice restrict some function called only by governance
+    modifier onlyGovernance() {
+        require(msg.sender == registry.governance(), "PHOG");
+        _;
+    }
 
     constructor(address _registry, address _uniswapAddressHolder) {
+        require(_registry != address(0), "PHR0");
+        require(_uniswapAddressHolder != address(0), "PHUAH0");
         uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
+        registry = IRegistry(_registry);
+    }
+
+    ///@notice change registry address
+    ///@param _registry address of new registry
+    function changeRegistry(address _registry) external onlyGovernance {
+        require(_registry != address(0), "PHCR");
         registry = IRegistry(_registry);
     }
 
@@ -533,14 +548,5 @@ contract PositionHelper {
     function _calPerformanceFee(uint256 amount, uint24 ratio) private pure returns (uint256) {
         uint256 MAX_RATIO = 10_000;
         return FullMath.mulDiv(amount, ratio, MAX_RATIO);
-    }
-
-    ///@notice restrict some function called only by governance
-    modifier onlyGovernance() {
-        require(
-            msg.sender == registry.governance(),
-            "AaveAddressHolder::onlyGovernance:  Only governance can call this function"
-        );
-        _;
     }
 }

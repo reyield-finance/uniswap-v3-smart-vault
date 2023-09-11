@@ -3,6 +3,9 @@
 # Table of contents
 - [Flowchart](#flowchart)
 - [Project Folder Architecture](#project-folder-architecture)
+- [Quick Start](#quick-start)
+    - [Setting](#setting)
+    - [Commands](#commands)
 
 ## Flowchart
 
@@ -92,4 +95,83 @@
 
 ---
 
-# To be continue...
+# Quick Start
+
+## Setting
+
+* .env
+```
+ALCHEMY_POLYGON_MAINNET = "https://polygon-mainnet.g.alchemy.com/v2/{{KEY}}"
+ALCHEMY_POLYGON_MUMBAI = "https://polygon-mumbai.g.alchemy.com/v2/{{KEY}}"
+ALCHEMY_OPTIMISM_MAINNET = "https://opt-mainnet.g.alchemy.com/v2/{{KEY}}"
+ALCHEMY_OPTIMISM_GOERLI = "https://opt-goerli.g.alchemy.com/v2/{{KEY}}"
+TEST_PRIVATE_KEY = "{{PRIVATE_KEY}}" #with 0x prefix
+OPTIMISM_ETHERSCAN_API_KEY = "{{OPTIMISM_ETHERSCAN_API_KEY}}"
+POLYGONSCAN_API_KEY = "{{POLYGONSCAN_API_KEY}}"
+```
+
+* hardhat.config.ts
+```
+  namedAccounts: {
+    deployer: {
+      default: "{{DEPLOYER_ADDRESS}}",
+    },
+    governance: {
+      default: "{{GOVERNANCE_ADDRESS}}",
+    },
+    serviceFeeRecipient: {
+      default: "{{SERVICE_FEE_RECIPIENT_ADDRESS}}",
+    },
+    official: {
+      default: "{{OFFICIAL_ADDRESS}}",
+    },
+    keeper: {
+      default: "{{KEEPER_ADDRESS}}",
+    },
+  },
+```
+
+| Name | Description |
+| ---- | ----------- |
+| deployer | Address of account for deploy. |
+| governance | Address of governance which is responsible for setting all official configuration including setting the address of factory address, adding new contracts to proxy ...etc. |
+| serviceFeeRecipient | Address of recipient of service fee. The service fee will be charged when the user position closed. |
+| official | Address of official account which provided the official strategies. |
+| keeper | Address of keeper which is used to trigger the function of auto-rebalancing and auto-management function. |
+
+
+## Commands
+* install modules
+```
+$ yarn install
+```
+
+* compile contracts
+```
+$ yarn compile
+```
+
+* run test
+```
+$ yarn test
+```
+
+* run test with coverage report
+```
+$ yarn coverage
+```
+
+* deploy Smart Vault contracts
+```
+$ yarn deploy:{{chain}} --tags SmartVault
+```
+
+* run scripts
+```
+$ yarn deploy:{{chain}} scripts/{{FIlE_NAME}}
+```
+
+* clean all caches
+```
+$ yarn clean
+```

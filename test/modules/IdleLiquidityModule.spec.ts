@@ -297,6 +297,23 @@ describe("IdleLiquidityModule.sol", function () {
     );
   }
 
+  describe("changeRegistry", function () {
+    it("Should success change registry", async () => {
+      await idleLiquidityModule.connect(deployer).changeRegistry(await deployer.getAddress());
+      expect(await idleLiquidityModule.registry()).to.be.equal(await deployer.getAddress());
+    });
+
+    it("Should fail change registry by others not owner", async () => {
+      await expect(idleLiquidityModule.connect(user).changeRegistry(await deployer.getAddress())).to.be.revertedWith(
+        "BMOG",
+      );
+    });
+
+    it("Should fail change registry by zero address", async () => {
+      await expect(idleLiquidityModule.connect(deployer).changeRegistry(zeroAddress)).to.be.revertedWith("BMCR");
+    });
+  });
+
   describe("rebalance", function () {
     it("rebalance", async function () {
       // give pool some liquidity

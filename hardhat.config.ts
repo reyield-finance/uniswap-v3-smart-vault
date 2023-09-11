@@ -125,13 +125,16 @@ const config: HardhatUserConfig = {
   },
   namedAccounts: {
     deployer: {
-      default: 0,
+      default: "0x565d490806A6D8eF532f4d29eC00EF6aAC71A17A",
     },
-    multiSig: {
-      default: 0,
+    governance: {
+      default: "0x565d490806A6D8eF532f4d29eC00EF6aAC71A17A",
+    },
+    serviceFeeRecipient: {
+      default: "0x565d490806A6D8eF532f4d29eC00EF6aAC71A17A",
     },
     official: {
-      default: "0xedFA23616e1B11eb4649940Ce20A79BD1aFcf43e",
+      default: "0x565d490806A6D8eF532f4d29eC00EF6aAC71A17A",
     },
     keeper: {
       default: "0xcafCE5363A2dEC41e0597B6B3c6c1A11ab219698",

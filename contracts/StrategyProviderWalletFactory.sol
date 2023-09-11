@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 contract StrategyProviderWalletFactory is IStrategyProviderWalletFactory {
     using SafeMath for uint256;
 
-    address public immutable registry;
+    address public registry;
     address public immutable uniswapAddressHolder;
 
     mapping(address => address) public override providerToWallet;
@@ -37,10 +37,21 @@ contract StrategyProviderWalletFactory is IStrategyProviderWalletFactory {
     }
 
     constructor(address _registry, address _uniswapAddressHolder) {
+        require(_registry != address(0), "SPWFR0");
+        require(_uniswapAddressHolder != address(0), "SPWFUAH0");
         registry = _registry;
         uniswapAddressHolder = _uniswapAddressHolder;
     }
 
+    ///@notice change registry address
+    ///@param _registry address of new registry
+    function changeRegistry(address _registry) external onlyGovernance {
+        require(_registry != address(0), "SPWFCR");
+        registry = _registry;
+    }
+
+    ///@notice add creator to whitelist
+    ///@param _creator address of creator
     function addCreatorWhitelist(address _creator) external onlyGovernance {
         require(_creator != address(0), "SPWFA0");
         require(!isIncreatorWhitelist[_creator], "SPWFNICWL");
@@ -48,6 +59,8 @@ contract StrategyProviderWalletFactory is IStrategyProviderWalletFactory {
         creatorWhitelist.push(_creator);
     }
 
+    ///@notice create the strategy provider wallet
+    ///@param provider address of provider
     function create(address provider) external override onlycreator returns (address walletAddress) {
         require(providerToWallet[provider] == address(0), "SPWFA0");
         StrategyProviderWallet wallet = new StrategyProviderWallet(provider, registry, uniswapAddressHolder);

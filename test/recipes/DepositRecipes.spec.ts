@@ -251,6 +251,21 @@ describe("DepositRecipes.sol", function () {
     );
   }
 
+  describe("changeRegistry", function () {
+    it("Should success change registry", async () => {
+      await depositRecipes.connect(deployer).changeRegistry(await deployer.getAddress());
+      expect(await depositRecipes.registry()).to.be.equal(await deployer.getAddress());
+    });
+
+    it("Should fail change registry by others not owner", async () => {
+      await expect(depositRecipes.connect(user).changeRegistry(await deployer.getAddress())).to.be.revertedWith("BROG");
+    });
+
+    it("Should fail change registry by zero address", async () => {
+      await expect(depositRecipes.connect(deployer).changeRegistry(zeroAddress)).to.be.revertedWith("BRCR");
+    });
+  });
+
   describe("deposit", function () {
     it("deposit", async function () {
       // give pool some liquidity

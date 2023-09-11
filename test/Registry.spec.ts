@@ -313,6 +313,9 @@ describe("Registry.sol", function () {
       await Registry.connect(deployer).setStrategyProviderWalletFactory(dummyAddress);
       expect(await Registry.strategyProviderWalletFactoryAddress()).to.be.equal(dummyAddress);
 
+      await Registry.connect(deployer).setOfficialAccount(dummyAddress);
+      expect(await Registry.officialAccount()).to.be.equal(dummyAddress);
+
       await Registry.connect(deployer).changeGovernance(dummyAddress);
       expect(await Registry.governance()).to.be.equal(dummyAddress);
     });
@@ -324,6 +327,7 @@ describe("Registry.sol", function () {
       await expect(Registry.connect(user).setWETH9(dummyAddress)).to.be.revertedWith("ROG");
       await expect(Registry.connect(user).setPositionManagerFactory(dummyAddress)).to.be.revertedWith("ROG");
       await expect(Registry.connect(user).setStrategyProviderWalletFactory(dummyAddress)).to.be.revertedWith("ROG");
+      await expect(Registry.connect(user).setOfficialAccount(dummyAddress)).to.be.revertedWith("ROG");
       await expect(Registry.connect(user).changeGovernance(dummyAddress)).to.be.revertedWith("ROG");
     });
   });

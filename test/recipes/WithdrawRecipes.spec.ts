@@ -278,6 +278,23 @@ describe("WithdrawRecipes.sol", function () {
     );
   }
 
+  describe("changeRegistry", function () {
+    it("Should success change registry", async () => {
+      await withdrawRecipes.connect(deployer).changeRegistry(await deployer.getAddress());
+      expect(await withdrawRecipes.registry()).to.be.equal(await deployer.getAddress());
+    });
+
+    it("Should fail change registry by others not owner", async () => {
+      await expect(withdrawRecipes.connect(user).changeRegistry(await deployer.getAddress())).to.be.revertedWith(
+        "BROG",
+      );
+    });
+
+    it("Should fail change registry by zero address", async () => {
+      await expect(withdrawRecipes.connect(deployer).changeRegistry(zeroAddress)).to.be.revertedWith("BRCR");
+    });
+  });
+
   describe("withdraw", function () {
     it("withdraw the position without strategy provider", async function () {
       // give pool some liquidity

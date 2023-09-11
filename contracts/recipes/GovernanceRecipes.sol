@@ -25,7 +25,7 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
     IUniswapAddressHolder public immutable uniswapAddressHolder;
 
     constructor(address _registry, address _uniswapAddressHolder) BaseRecipes(_registry) {
-        require(_uniswapAddressHolder != address(0), "WRCA0");
+        require(_uniswapAddressHolder != address(0), "GRCA0");
 
         uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
     }

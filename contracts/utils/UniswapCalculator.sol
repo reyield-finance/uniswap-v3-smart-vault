@@ -11,10 +11,25 @@ contract UniswapCalculator {
     using SafeInt24Math for int24;
 
     IUniswapAddressHolder public immutable uniswapAddressHolder;
-    IRegistry public immutable registry;
+    IRegistry public registry;
+
+    ///@notice restrict some function called only by governance
+    modifier onlyGovernance() {
+        require(msg.sender == registry.governance(), "UCOG");
+        _;
+    }
 
     constructor(address _registry, address _uniswapAddressHolder) {
+        require(_registry != address(0), "UCR0");
+        require(_uniswapAddressHolder != address(0), "UCUAH0");
         uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
+        registry = IRegistry(_registry);
+    }
+
+    ///@notice change registry address
+    ///@param _registry address of new registry
+    function changeRegistry(address _registry) external onlyGovernance {
+        require(_registry != address(0), "UCCR");
         registry = IRegistry(_registry);
     }
 

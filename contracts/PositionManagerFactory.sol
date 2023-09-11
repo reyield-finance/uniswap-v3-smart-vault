@@ -12,7 +12,7 @@ import "./interfaces/IStrategyProviderWalletFactory.sol";
 contract PositionManagerFactory is Pausable, IPositionManagerFactory {
     using SafeMath for uint256;
 
-    address public immutable registry;
+    address public registry;
     address public immutable diamondCutFacet;
     address public immutable uniswapAddressHolder;
     address[] public positionManagers;
@@ -25,11 +25,14 @@ contract PositionManagerFactory is Pausable, IPositionManagerFactory {
     event PositionManagerCreated(address indexed positionManager, address user);
 
     modifier onlyGovernance() {
-        require(msg.sender == IRegistry(registry).governance(), "PFG");
+        require(msg.sender == IRegistry(registry).governance(), "PFOG");
         _;
     }
 
     constructor(address _registry, address _diamondCutFacet, address _uniswapAddressHolder) Pausable() {
+        require(_registry != address(0), "PFR0");
+        require(_diamondCutFacet != address(0), "PFDC0");
+        require(_uniswapAddressHolder != address(0), "PFUAH0");
         registry = _registry;
         diamondCutFacet = _diamondCutFacet;
         uniswapAddressHolder = _uniswapAddressHolder;
@@ -43,6 +46,13 @@ contract PositionManagerFactory is Pausable, IPositionManagerFactory {
     ///@notice unpause the factory
     function unpause() external onlyGovernance {
         _unpause();
+    }
+
+    ///@notice change registry address
+    ///@param _registry address of new registry
+    function changeRegistry(address _registry) external onlyGovernance {
+        require(_registry != address(0), "PFCR");
+        registry = _registry;
     }
 
     ///@notice update actions already existing on positionManager

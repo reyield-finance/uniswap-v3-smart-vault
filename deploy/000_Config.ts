@@ -12,6 +12,10 @@ interface NetworkConfig {
   sleep: number;
   gasPrice: string;
   gasLimit: string;
+  governance?: string;
+  serviceFeeRecipient?: string;
+  officialAccount?: string;
+  keeper?: string;
   usdcAddress: string;
   wethAddress: string;
   nonfungiblePositionManager: string;
@@ -75,11 +79,28 @@ export const Config: DeployConfig = {
 };
 
 const func = async function (hre: HardhatRuntimeEnvironment) {
-  const { network, getChainId } = hre;
+  const { network, getChainId, getNamedAccounts } = hre;
 
   const chainId = await getChainId();
 
   if (!network?.live) Config[chainId].sleep = 0;
+
+  const { governance, serviceFeeRecipient, official, keeper } = await getNamedAccounts();
+  console.log("official: ", official);
+
+  if (governance === undefined || serviceFeeRecipient === undefined || official === undefined || keeper === undefined) {
+    throw new Error("Named accounts not configured for this network");
+  }
+
+  Config[chainId].governance = governance;
+  Config[chainId].serviceFeeRecipient = serviceFeeRecipient;
+  Config[chainId].officialAccount = official;
+  Config[chainId].keeper = keeper;
+
+  console.log("governance: ", Config[chainId].governance);
+  console.log("serviceFeeRecipient: ", Config[chainId].serviceFeeRecipient);
+  console.log("official: ", Config[chainId].officialAccount);
+  console.log("keeper: ", Config[chainId].keeper);
 
   console.log(`:: Initialized sleep timeout: ${Config[chainId].sleep}ms`);
   console.log(`:: Initialized gas price: ${Config[chainId].gasPrice} wei`);

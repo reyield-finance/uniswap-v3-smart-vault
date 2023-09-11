@@ -9,6 +9,7 @@ contract Registry is IRegistry {
     address public override governance;
     address public override positionManagerFactoryAddress;
     address public override strategyProviderWalletFactoryAddress;
+    address public override officialAccount;
 
     // for security of swap
     int24 public override maxTwapDeviation;
@@ -221,6 +222,13 @@ contract Registry is IRegistry {
     function setStrategyProviderWalletFactory(address _strategyProviderWalletFactory) external onlyGovernance {
         require(_strategyProviderWalletFactory != address(0), "RF0");
         strategyProviderWalletFactoryAddress = _strategyProviderWalletFactory;
+    }
+
+    ///@notice sets the official account address
+    ///@param _officialAccount the address of the official account
+    function setOfficialAccount(address _officialAccount) external onlyGovernance {
+        require(_officialAccount != address(0), "ROA0");
+        officialAccount = _officialAccount;
     }
 
     function setServiceFeeRatio(uint32 _licenseAmount, uint32 _serviceFeeRatio) external onlyGovernance {
