@@ -1,0 +1,49 @@
+name: Hardhat CI on main branch
+
+on:
+  push:
+    branches: [main, development]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+      - run: yarn install
+      - run: npx --version
+
+      - run: npx hardhat compile
+        env:
+          ALCHEMY_POLYGON_MAINNET:  ${{ secrets.ALCHEMY_POLYGON_MAINNET }}
+          ALCHEMY_POLYGON_MUMBAI:  ${{ secrets.ALCHEMY_POLYGON_MUMBAI }}
+          ALCHEMY_OPTIMISM_MAINNET:  ${{ secrets.ALCHEMY_OPTIMISM_MAINNET }}
+          ALCHEMY_OPTIMISM_GOERLI:  ${{ secrets.ALCHEMY_OPTIMISM_GOERLI }}
+          TEST_PRIVATE_KEY: ${{ secrets.TEST_PRIVATE_KEY }}
+          OPTIMISM_ETHERSCAN_API_KEY:  ${{ secrets.OPTIMISM_ETHERSCAN_API_KEY }}
+          POLYGONSCAN_API_KEY:  ${{ secrets.POLYGONSCAN_API_KEY }}
+
+
+      - run: echo "🎉 Hardhat Compiled passed."
+
+      - run: npx hardhat test
+        env:
+          ALCHEMY_POLYGON_MAINNET:  ${{ secrets.ALCHEMY_POLYGON_MAINNET }}
+          ALCHEMY_POLYGON_MUMBAI:  ${{ secrets.ALCHEMY_POLYGON_MUMBAI }}
+          ALCHEMY_OPTIMISM_MAINNET:  ${{ secrets.ALCHEMY_OPTIMISM_MAINNET }}
+          ALCHEMY_OPTIMISM_GOERLI:  ${{ secrets.ALCHEMY_OPTIMISM_GOERLI }}
+          TEST_PRIVATE_KEY: ${{ secrets.TEST_PRIVATE_KEY }}
+          OPTIMISM_ETHERSCAN_API_KEY:  ${{ secrets.OPTIMISM_ETHERSCAN_API_KEY }}
+          POLYGONSCAN_API_KEY:  ${{ secrets.POLYGONSCAN_API_KEY }}
+
+      - run: echo "🎉 Hardhat Test passed."
