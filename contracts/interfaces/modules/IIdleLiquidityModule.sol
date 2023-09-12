@@ -55,12 +55,15 @@ interface IIdleLiquidityModule {
     ///@param tokenId tokenId of the position
     ///@param tickLower new tickLower of the position
     ///@param tickUpper new tickUpper of the position
+
     struct _CloseAndRepayRebalanceParams {
         address positionManager;
         address payable feeReceiver;
         uint256 tokenId;
         uint256 rebalanceFee;
         bool isForced;
+        uint256 amount0Leftover;
+        uint256 amount1Leftover;
     }
 
     ///@notice struct of the close and repay result

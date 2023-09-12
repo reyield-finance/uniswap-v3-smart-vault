@@ -55,7 +55,9 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
                 feeReceiver: input.feeReceiver,
                 tokenId: pInfo.tokenId,
                 rebalanceFee: input.estimatedGasFee,
-                isForced: input.isForced
+                isForced: input.isForced,
+                amount0Leftover: pInfo.amount0Leftover,
+                amount1Leftover: pInfo.amount1Leftover
             })
         );
 
@@ -65,8 +67,8 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
             _SwapAndMintParams({
                 positionManager: positionManager,
                 tokenId: pInfo.tokenId,
-                amount0: carRes.amount0Removed.add(carRes.amount0CollectedFee).add(pInfo.amount0Leftover),
-                amount1: carRes.amount1Removed.add(carRes.amount1CollectedFee).add(pInfo.amount1Leftover),
+                amount0: carRes.amount0Removed.add(carRes.amount0CollectedFee),
+                amount1: carRes.amount1Removed.add(carRes.amount1CollectedFee),
                 tickLowerDiff: pInfo.tickLowerDiff,
                 tickUpperDiff: pInfo.tickUpperDiff
             })
@@ -115,7 +117,9 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
                 feeReceiver: input.feeReceiver,
                 tokenId: pInfo.tokenId,
                 rebalanceFee: input.estimatedGasFee,
-                isForced: input.isForced
+                isForced: input.isForced,
+                amount0Leftover: pInfo.amount0Leftover,
+                amount1Leftover: pInfo.amount1Leftover
             })
         );
 
@@ -125,8 +129,8 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
             _SwapAndMintParams({
                 positionManager: positionManager,
                 tokenId: pInfo.tokenId,
-                amount0: carRes.amount0Removed.add(carRes.amount0CollectedFee).add(pInfo.amount0Leftover),
-                amount1: carRes.amount1Removed.add(carRes.amount1CollectedFee).add(pInfo.amount1Leftover),
+                amount0: carRes.amount0Removed.add(carRes.amount0CollectedFee),
+                amount1: carRes.amount1Removed.add(carRes.amount1CollectedFee),
                 tickLowerDiff: input.tickLowerDiff,
                 tickUpperDiff: input.tickUpperDiff
             })
@@ -165,6 +169,10 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
         (res.amount0CollectedFee, res.amount1CollectedFee, res.amount0Removed, res.amount1Removed) = IClosePosition(
             params.positionManager
         ).closePosition(params.tokenId, false);
+
+        ///NOTE: introduce leftover into removed amount
+        res.amount0Removed = res.amount0Removed.add(params.amount0Leftover);
+        res.amount1Removed = res.amount1Removed.add(params.amount1Leftover);
 
         if (params.rebalanceFee != 0) {
             ///@dev call repayRebalanceFeeAction
