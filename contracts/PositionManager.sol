@@ -92,6 +92,7 @@ contract PositionManager is IPositionManager, ERC721Holder, Initializable {
         PositionManagerStorage.setContractOwner(_owner);
 
         // Add the diamondCut external function from the diamondCutFacet
+        //XXX: what's the purpose that make the length 1 array instead of assigning the value directly?
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
         bytes4[] memory functionSelectors = new bytes4[](1);
         functionSelectors[0] = IDiamondCut.diamondCut.selector;
@@ -105,6 +106,7 @@ contract PositionManager is IPositionManager, ERC721Holder, Initializable {
         Storage.registry = IRegistry(_registry);
     }
 
+    //XXX: why not use constructor?
     function init(address _owner, address _uniswapAddressHolder) public onlyFactory initializer {
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
         Storage.owner = _owner;
@@ -424,6 +426,7 @@ contract PositionManager is IPositionManager, ERC721Holder, Initializable {
     ///@return boolean true if the address is an active module
     function _calledFromActiveModule(address _address) internal view returns (bool) {
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
+        //XXX: removed module keys would still be considered active
         bytes32[] memory keys = Storage.registry.getModuleKeys();
 
         uint256 keysLength = keys.length;
