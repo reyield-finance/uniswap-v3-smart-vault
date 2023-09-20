@@ -6,6 +6,7 @@ pragma abicoder v2;
 import "./interfaces/IRegistry.sol";
 import "./interfaces/IStrategyProviderWallet.sol";
 import "./interfaces/IUniswapAddressHolder.sol";
+import "./interfaces/IRegistryAddressHolder.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -14,8 +15,8 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 contract StrategyProviderWallet is IStrategyProviderWallet {
     using SafeERC20 for IERC20;
 
-    IRegistry public registry;
     address public immutable owner;
+    IRegistryAddressHolder public immutable registryAddressHolder;
     IUniswapAddressHolder public immutable uniswapAddressHolder;
 
     bytes16[] public strategyIds;
@@ -55,12 +56,12 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
     }
 
     modifier onlyGovernance() {
-        require(msg.sender == registry.governance(), "SPWOG");
+        require(msg.sender == registry().governance(), "SPWOG");
         _;
     }
 
     modifier onlyFactory() {
-        require(msg.sender == registry.strategyProviderWalletFactoryAddress(), "SPWOF");
+        require(msg.sender == registry().strategyProviderWalletFactoryAddress(), "SPWOF");
         _;
     }
 
@@ -69,17 +70,16 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
         _;
     }
 
-    constructor(address _owner, address _registry, address _uniswapAddressHolder) {
+    constructor(address _owner, address _registryAddressHolder, address _uniswapAddressHolder) {
         owner = _owner;
-        registry = IRegistry(_registry);
+        registryAddressHolder = IRegistryAddressHolder(_registryAddressHolder);
         uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
     }
 
-    ///@notice change registry address
-    ///@param _registry address of new registry
-    function changeRegistry(address _registry) external onlyGovernance {
-        require(_registry != address(0), "SPWCR");
-        registry = IRegistry(_registry);
+    ///@notice get IRegistry from registryAddressHolder
+    ///@return IRegistry interface of registry
+    function registry() private view returns (IRegistry) {
+        return IRegistry(registryAddressHolder.registry());
     }
 
     ///@notice addStrategy adds a strategy to the wallet
@@ -106,7 +106,7 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
         require(pool != address(0), "SPWAP0");
 
         ///@dev check performanceFeeRatio only if the official account is not the owner
-        if (owner != registry.officialAccount()) {
+        if (owner != registry().officialAccount()) {
             checkPerformanceFeeRatio(performanceFeeRatio);
         }
 

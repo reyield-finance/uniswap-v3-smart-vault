@@ -27,14 +27,14 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
     modifier positionIsRunning(uint256 positionId) {
         require(
             IPositionManager(
-                IPositionManagerFactory(registry.positionManagerFactoryAddress()).userToPositionManager(msg.sender)
+                IPositionManagerFactory(registry().positionManagerFactoryAddress()).userToPositionManager(msg.sender)
             ).isPositionRunning(positionId),
             "WRPIR"
         );
         _;
     }
 
-    constructor(address _registry, address _uniswapAddressHolder) BaseRecipes(_registry) {
+    constructor(address _registryAddressHolder, address _uniswapAddressHolder) BaseRecipes(_registryAddressHolder) {
         require(_uniswapAddressHolder != address(0), "WRCA0");
         uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
     }
@@ -42,7 +42,7 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
     ///@notice closed position to the position manager with single token
     ///@param positionId ID of closed position
     function withdraw(uint256 positionId) external whenNotPaused positionIsRunning(positionId) {
-        address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
+        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
             .userToPositionManager(msg.sender);
         require(positionManager != address(0), "WRPM0");
 
@@ -84,7 +84,7 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
             );
         } else {
             address strategyProviderWallet = IStrategyProviderWalletFactory(
-                registry.strategyProviderWalletFactoryAddress()
+                registry().strategyProviderWalletFactoryAddress()
             ).providerToWallet(pInfo.strategyProvider);
 
             IStrategyProviderWallet.StrategyInfo memory sInfo = IStrategyProviderWallet(strategyProviderWallet)
@@ -100,7 +100,7 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
                 performanceFeeRecipient: strategyProviderWallet,
                 performanceFeeReceivedToken: sInfo.receivedToken,
                 performanceFeeRatio: sInfo.performanceFeeRatio,
-                serviceFeeRatio: registry.getServiceFeeRatioFromLicenseAmount(sInfo.licenseAmount)
+                serviceFeeRatio: registry().getServiceFeeRatioFromLicenseAmount(sInfo.licenseAmount)
             });
 
             ///@dev share performance fee with strategy provider
@@ -128,7 +128,7 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
         uint256 positionId,
         bool isReturnedToken0
     ) external whenNotPaused positionIsRunning(positionId) {
-        address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
+        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
             .userToPositionManager(msg.sender);
         require(positionManager != address(0), "WRPM0");
 
@@ -169,7 +169,7 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
             );
         } else {
             address strategyProviderWallet = IStrategyProviderWalletFactory(
-                registry.strategyProviderWalletFactoryAddress()
+                registry().strategyProviderWalletFactoryAddress()
             ).providerToWallet(pInfo.strategyProvider);
 
             IStrategyProviderWallet.StrategyInfo memory sInfo = IStrategyProviderWallet(strategyProviderWallet)
@@ -185,7 +185,7 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
                 performanceFeeRecipient: strategyProviderWallet,
                 performanceFeeReceivedToken: sInfo.receivedToken,
                 performanceFeeRatio: sInfo.performanceFeeRatio,
-                serviceFeeRatio: registry.getServiceFeeRatioFromLicenseAmount(sInfo.licenseAmount)
+                serviceFeeRatio: registry().getServiceFeeRatioFromLicenseAmount(sInfo.licenseAmount)
             });
 
             ///@dev share performance fee with strategy provider
@@ -213,7 +213,7 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
         uint256 amount0,
         uint256 amount1
     ) internal view returns (uint256 token0UsdValue, uint256 token1UsdValue) {
-        uint24[] memory allowableFeeTiers = registry.getAllowableFeeTiers();
+        uint24[] memory allowableFeeTiers = registry().getAllowableFeeTiers();
         token0UsdValue = _toUsdValue(token0, amount0, allowableFeeTiers);
         token1UsdValue = _toUsdValue(token1, amount1, allowableFeeTiers);
     }
@@ -223,7 +223,7 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
         uint256 amount,
         uint24[] memory allowableFeeTiers
     ) internal view returns (uint256) {
-        address usdTokenAddress = registry.usdValueTokenAddress();
+        address usdTokenAddress = registry().usdValueTokenAddress();
 
         if (tokenAddress == usdTokenAddress) return amount;
 

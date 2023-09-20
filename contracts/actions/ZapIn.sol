@@ -25,7 +25,9 @@ contract ZapIn is IZapIn {
     ///@return outputs struct of ZapInOutput parameters
     function zapIn(ZapInInput calldata inputs) external override returns (ZapInOutput memory outputs) {
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
-        uint24[] memory allowableFeeTiers = Storage.registry.getAllowableFeeTiers();
+        IRegistry registry = IRegistry(Storage.registryAddressHolder.registry());
+
+        uint24[] memory allowableFeeTiers = registry.getAllowableFeeTiers();
 
         uint256 amountToSwap;
         {
@@ -120,14 +122,11 @@ contract ZapIn is IZapIn {
         uint256 amountToSwap
     ) internal returns (uint256 amount0Desired, uint256 amount1Desired) {
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
+        IRegistry registry = IRegistry(Storage.registryAddressHolder.registry());
 
         uint256 amountOut;
         if (amountToSwap != 0) {
-            SwapHelper.checkDeviation(
-                deepestPool,
-                Storage.registry.maxTwapDeviation(),
-                Storage.registry.twapDuration()
-            );
+            SwapHelper.checkDeviation(deepestPool, registry.maxTwapDeviation(), registry.twapDuration());
 
             ERC20Helper._approveToken(
                 isToken0In ? token0 : token1,

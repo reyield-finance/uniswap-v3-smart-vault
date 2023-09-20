@@ -4,8 +4,15 @@ import { Signer } from "ethers";
 import { AbiCoder } from "ethers/lib/utils";
 import hre, { ethers } from "hardhat";
 
-import { DepositRecipes, IdleLiquidityModule, MockToken, Registry, WithdrawRecipes } from "../types";
-import { RegistryFixture, tokensFixture } from "./shared/fixtures";
+import {
+  DepositRecipes,
+  IdleLiquidityModule,
+  MockToken,
+  Registry,
+  RegistryAddressHolder,
+  WithdrawRecipes,
+} from "../types";
+import { RegistryAddressHolderFixture, RegistryFixture, deployContract, tokensFixture } from "./shared/fixtures";
 
 describe("Registry.sol", function () {
   let deployer: Signer;
@@ -14,6 +21,7 @@ describe("Registry.sol", function () {
   let usdValueTokenAddress: MockToken;
   let weth: MockToken;
   let Registry: Registry;
+  let registryAddressHolder: RegistryAddressHolder;
   let ILM: IdleLiquidityModule;
   let DR: DepositRecipes;
   let WR: WithdrawRecipes;
@@ -53,19 +61,19 @@ describe("Registry.sol", function () {
     //Deploy modules
     const IdleLiquidityModuleFactory = await ethers.getContractFactory("IdleLiquidityModule");
     ILM = (await IdleLiquidityModuleFactory.deploy(
-      Registry.address,
+      registryAddressHolder.address,
       "0x0000000000000000000000000000000000000001", //we don't need this contract for this test
     )) as IdleLiquidityModule;
 
     const DepositRecipesFactory = await ethers.getContractFactory("DepositRecipes");
     DR = (await DepositRecipesFactory.deploy(
-      Registry.address,
+      registryAddressHolder.address,
       "0x0000000000000000000000000000000000000001", //we don't need this contract for this test
     )) as DepositRecipes;
 
     const WithdrawRecipesFactory = await ethers.getContractFactory("WithdrawRecipes");
     WR = (await WithdrawRecipesFactory.deploy(
-      Registry.address,
+      registryAddressHolder.address,
       "0x0000000000000000000000000000000000000001", //we don't need this contract for this test
     )) as WithdrawRecipes;
   }
@@ -77,6 +85,9 @@ describe("Registry.sol", function () {
     serviceFeeRecipient = signers[2];
 
     await deployRegistry();
+
+    registryAddressHolder = (await RegistryAddressHolderFixture(Registry.address)).registryAddressHolderFixture;
+
     await deployModules();
 
     abiCoder = ethers.utils.defaultAbiCoder;

@@ -13,12 +13,14 @@ import {
   MockToken,
   PositionManagerFactory,
   Registry,
+  RegistryAddressHolder,
   StrategyProviderWallet,
   StrategyProviderWalletFactory,
   SwapToPositionRatio,
   UniswapAddressHolder,
 } from "../types";
 import {
+  RegistryAddressHolderFixture,
   RegistryFixture,
   deployContract,
   deployUniswapContracts,
@@ -34,6 +36,7 @@ describe("StrategyProviderWallet.sol", function () {
   let usdValueTokenAddress: MockToken;
   let weth: MockToken;
   let Registry: Registry;
+  let registryAddressHolder: RegistryAddressHolder;
   let token0: MockToken;
   let token1: MockToken;
   let token2: MockToken;
@@ -114,6 +117,7 @@ describe("StrategyProviderWallet.sol", function () {
     serviceFeeRecipient = signers[2];
 
     await deployRegistry();
+    registryAddressHolder = (await RegistryAddressHolderFixture(Registry.address)).registryAddressHolderFixture;
 
     token0 = (await tokensFixture("ETH", 18)).tokenFixture;
     token1 = (await tokensFixture("USDC", 6)).tokenFixture;
@@ -122,10 +126,10 @@ describe("StrategyProviderWallet.sol", function () {
     //deploy factory, used for pools
     const [uniswapFactory, nonFungiblePositionManager, swapRouter] = await deployUniswapContracts(token0);
     UAH = (await deployContract("UniswapAddressHolder", [
+      registryAddressHolder.address,
       nonFungiblePositionManager.address,
       uniswapFactory.address,
       swapRouter.address,
-      Registry.address,
     ])) as UniswapAddressHolder;
     uniswapV3Factory = uniswapFactory as IUniswapV3Factory;
     await uniswapV3Factory.connect(deployer).createPool(token0.address, token1.address, 500);
@@ -154,10 +158,17 @@ describe("StrategyProviderWallet.sol", function () {
     await swapToPositionRatioAction.deployed();
 
     const positionManagerFactory = await ethers.getContractFactory("PositionManagerFactory");
-    PMF = (await positionManagerFactory.deploy(Registry.address, DCF.address, UAH.address)) as PositionManagerFactory;
+    PMF = (await positionManagerFactory.deploy(
+      registryAddressHolder.address,
+      UAH.address,
+      DCF.address,
+    )) as PositionManagerFactory;
     await PMF.deployed();
     const strategyProviderWalletFactory = await ethers.getContractFactory("StrategyProviderWalletFactory");
-    SPWF = (await strategyProviderWalletFactory.deploy(Registry.address, UAH.address)) as StrategyProviderWalletFactory;
+    SPWF = (await strategyProviderWalletFactory.deploy(
+      registryAddressHolder.address,
+      UAH.address,
+    )) as StrategyProviderWalletFactory;
     await SPWF.deployed();
 
     await SPWF.connect(deployer).addCreatorWhitelist(PMF.address);
@@ -165,39 +176,9 @@ describe("StrategyProviderWallet.sol", function () {
     await createStrategyProviderWallet();
   });
 
-  describe("StrategyProviderWalletFactory changeRegistry", function () {
-    it("Should success change registry", async () => {
-      await SPWF.connect(deployer).changeRegistry(await deployer.getAddress());
-      expect(await SPWF.registry()).to.be.equal(await deployer.getAddress());
-    });
-
-    it("Should fail change registry by others not owner", async () => {
-      await expect(SPWF.connect(user).changeRegistry(await deployer.getAddress())).to.be.revertedWith("SPWFOG");
-    });
-
-    it("Should fail change registry by zero address", async () => {
-      await expect(SPWF.connect(deployer).changeRegistry(zeroAddress)).to.be.revertedWith("SPWFCR");
-    });
-  });
-
-  describe("StrategyProviderWallet changeRegistry", function () {
-    it("Should success change registry", async () => {
-      await SPW.connect(deployer).changeRegistry(await deployer.getAddress());
-      expect(await SPW.registry()).to.be.equal(await deployer.getAddress());
-    });
-
-    it("Should fail change registry by others not owner", async () => {
-      await expect(SPW.connect(user).changeRegistry(await deployer.getAddress())).to.be.revertedWith("SPWOG");
-    });
-
-    it("Should fail change registry by zero address", async () => {
-      await expect(SPW.connect(deployer).changeRegistry(zeroAddress)).to.be.revertedWith("SPWCR");
-    });
-  });
-
   describe("StrategyProviderWalletFactory - create", function () {
     it("Should all set the variables in constructor", async () => {
-      expect(await SPW.registry()).to.be.equal(Registry.address);
+      expect(await SPW.registryAddressHolder()).to.be.equal(registryAddressHolder.address);
       expect(await SPW.uniswapAddressHolder()).to.be.equal(UAH.address);
       expect(await SPW.owner()).to.be.equal(await user.getAddress());
     });
@@ -380,9 +361,10 @@ describe("StrategyProviderWallet.sol", function () {
 
       const { tokens } = await SPW.connect(user).getReceivedTokens(0, 3);
       expect(tokens.length).to.be.equal(3);
-      expect(tokens[0]).to.be.equal(token0.address);
-      expect(tokens[1]).to.be.equal(token1.address);
-      expect(tokens[2]).to.be.equal(token2.address);
+
+      expect(tokens).to.include(token0.address);
+      expect(tokens).to.include(token1.address);
+      expect(tokens).to.include(token2.address);
 
       await token0.connect(user).transfer(SPW.address, ethers.utils.parseEther("1000000000000"));
       await token1.connect(user).transfer(SPW.address, ethers.utils.parseEther("1000000000000"));

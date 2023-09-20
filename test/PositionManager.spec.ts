@@ -17,23 +17,26 @@ import {
   PositionManager,
   PositionManagerFactory,
   Registry,
+  RegistryAddressHolder,
   StrategyProviderWalletFactory,
   SwapToPositionRatio,
   UniswapAddressHolder,
   WithdrawRecipes,
 } from "../types";
 import {
+  RegistryAddressHolderFixture,
   RegistryFixture,
   deployContract,
   deployUniswapContracts,
   doAllApprovals,
   getSelectors,
+  mintSTDAmount,
   poolFixture,
   tokensFixture,
   zeroAddress,
 } from "./shared/fixtures";
 
-describe("PositionManagerFactory.sol", function () {
+describe("PositionManager.sol", function () {
   let deployer: SignerWithAddress;
   let user: SignerWithAddress;
   let serviceFeeRecipient: SignerWithAddress;
@@ -41,6 +44,7 @@ describe("PositionManagerFactory.sol", function () {
   let usdValueTokenAddress: MockToken;
   let weth: MockToken;
   let Registry: Registry;
+  let registryAddressHolder: RegistryAddressHolder;
   let WETH: MockToken;
   let USDC: MockToken;
   let DAI: MockToken;
@@ -91,19 +95,19 @@ describe("PositionManagerFactory.sol", function () {
     //Deploy modules
     const IdleLiquidityModuleFactory = await ethers.getContractFactory("IdleLiquidityModule");
     ILM = (await IdleLiquidityModuleFactory.deploy(
-      Registry.address,
+      registryAddressHolder.address,
       UAH.address, //we don't need this contract for this test
     )) as IdleLiquidityModule;
 
     const DepositRecipesFactory = await ethers.getContractFactory("DepositRecipes");
     DR = (await DepositRecipesFactory.deploy(
-      Registry.address,
+      registryAddressHolder.address,
       UAH.address, //we don't need this contract for this test
     )) as DepositRecipes;
 
     const WithdrawRecipesFactory = await ethers.getContractFactory("WithdrawRecipes");
     WR = (await WithdrawRecipesFactory.deploy(
-      Registry.address,
+      registryAddressHolder.address,
       UAH.address, //we don't need this contract for this test
     )) as WithdrawRecipes;
   }
@@ -174,6 +178,7 @@ describe("PositionManagerFactory.sol", function () {
     serviceFeeRecipient = signers[2];
 
     await deployRegistry();
+    registryAddressHolder = (await RegistryAddressHolderFixture(Registry.address)).registryAddressHolderFixture;
 
     WETH = (await tokensFixture("WETH", 18)).tokenFixture;
     USDC = (await tokensFixture("USDC", 6)).tokenFixture;
@@ -182,10 +187,10 @@ describe("PositionManagerFactory.sol", function () {
     //deploy factory, used for pools
     const [uniswapFactory, nonFungible, swapRouter] = await deployUniswapContracts(WETH);
     UAH = (await deployContract("UniswapAddressHolder", [
+      registryAddressHolder.address,
       nonFungible.address,
       uniswapFactory.address,
       swapRouter.address,
-      Registry.address,
     ])) as UniswapAddressHolder;
     uniswapV3Factory = uniswapFactory as IUniswapV3Factory;
     nonFungiblePositionManager = nonFungible as INonfungiblePositionManager;
@@ -194,7 +199,9 @@ describe("PositionManagerFactory.sol", function () {
     await WETH.mint(await user.getAddress(), 100000n * 10n ** 18n);
     await USDC.mint(await user.getAddress(), 100000n * 10n ** 6n);
     await DAI.mint(await user.getAddress(), 100000n * 10n ** 6n);
-
+    await mintSTDAmount(USDC);
+    await mintSTDAmount(DAI);
+    await mintSTDAmount(WETH);
     DCF = (await deployContract("DiamondCutFacet")) as DiamondCutFacet;
 
     const mint = await ethers.getContractFactory("Mint");
@@ -206,10 +213,17 @@ describe("PositionManagerFactory.sol", function () {
     await swapToPositionRatioAction.deployed();
 
     const positionManagerFactory = await ethers.getContractFactory("PositionManagerFactory");
-    PMF = (await positionManagerFactory.deploy(Registry.address, DCF.address, UAH.address)) as PositionManagerFactory;
+    PMF = (await positionManagerFactory.deploy(
+      registryAddressHolder.address,
+      UAH.address,
+      DCF.address,
+    )) as PositionManagerFactory;
     await PMF.deployed();
     const strategyProviderWalletFactory = await ethers.getContractFactory("StrategyProviderWalletFactory");
-    SPWF = (await strategyProviderWalletFactory.deploy(Registry.address, UAH.address)) as StrategyProviderWalletFactory;
+    SPWF = (await strategyProviderWalletFactory.deploy(
+      registryAddressHolder.address,
+      UAH.address,
+    )) as StrategyProviderWalletFactory;
     await SPWF.deployed();
 
     await SPWF.connect(deployer).addCreatorWhitelist(PMF.address);
@@ -221,53 +235,49 @@ describe("PositionManagerFactory.sol", function () {
     await doAllApprovals([user], [nonFungiblePositionManager.address], [DAI, WETH, USDC]);
 
     // give pools some liquidity
-    const mintTx = await nonFungiblePositionManager.connect(user).mint({
-      token0: USDC.address,
-      token1: WETH.address,
-      fee: 500,
-      tickLower: 0 - 60 * 1000,
-      tickUpper: 0 + 60 * 1000,
-      amount0Desired: 1000n * 10n ** 6n,
-      amount1Desired: 1000n * 10n ** 18n,
-      amount0Min: 0,
-      amount1Min: 0,
-      recipient: PM.address,
-      deadline: Date.now() + 1000,
-    });
+    const mintTx = await nonFungiblePositionManager.connect(user).mint(
+      {
+        token0: USDC.address < WETH.address ? USDC.address : WETH.address,
+        token1: USDC.address < WETH.address ? WETH.address : USDC.address,
+        fee: 500,
+        tickLower: 0 - 600,
+        tickUpper: 0 + 600,
+        amount0Desired: 1000n * 10n ** 6n,
+        amount1Desired: 1000n * 10n ** 18n,
+        amount0Min: 0,
+        amount1Min: 0,
+        recipient: PM.address,
+        deadline: Date.now() + 1000,
+      },
+      {
+        gasLimit: 10000000,
+      },
+    );
 
     const events: any = (await mintTx.wait()).events;
     tokenId = await events[events.length - 1].args.tokenId.toNumber();
 
-    const mintTx2 = await nonFungiblePositionManager.connect(user).mint({
-      token0: USDC.address,
-      token1: WETH.address,
-      fee: 500,
-      tickLower: 0 - 60 * 1000,
-      tickUpper: 0 + 60 * 1000,
-      amount0Desired: 1000n * 10n ** 6n,
-      amount1Desired: 1000n * 10n ** 18n,
-      amount0Min: 0,
-      amount1Min: 0,
-      recipient: PM.address,
-      deadline: Date.now() + 1000,
-    });
+    const mintTx2 = await nonFungiblePositionManager.connect(user).mint(
+      {
+        token0: USDC.address < WETH.address ? USDC.address : WETH.address,
+        token1: USDC.address < WETH.address ? WETH.address : USDC.address,
+        fee: 500,
+        tickLower: 0 - 600,
+        tickUpper: 0 + 600,
+        amount0Desired: 1000n * 10n ** 6n,
+        amount1Desired: 1000n * 10n ** 18n,
+        amount0Min: 0,
+        amount1Min: 0,
+        recipient: PM.address,
+        deadline: Date.now() + 1000,
+      },
+      {
+        gasLimit: 10000000,
+      },
+    );
 
     const events2: any = (await mintTx2.wait()).events;
     tokenId2 = await events2[events2.length - 1].args.tokenId.toNumber();
-  });
-
-  describe("PositionManager changeRegistry", function () {
-    it("Should success change registry", async () => {
-      await PM.connect(deployer).changeRegistry(await deployer.getAddress());
-    });
-
-    it("Should fail change registry by others not owner", async () => {
-      await expect(PM.connect(user).changeRegistry(await deployer.getAddress())).to.be.revertedWith("PMOG");
-    });
-
-    it("Should fail change registry by zero address", async () => {
-      await expect(PM.connect(deployer).changeRegistry(zeroAddress)).to.be.revertedWith("PMCR");
-    });
   });
 
   describe("PositionManager.sol", function () {

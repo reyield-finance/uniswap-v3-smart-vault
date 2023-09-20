@@ -13,9 +13,11 @@ import {
   PositionManager,
   PositionManagerFactory,
   Registry,
+  RegistryAddressHolder,
   StrategyProviderWalletFactory,
 } from "../../types";
 import {
+  RegistryAddressHolderFixture,
   RegistryFixture,
   deployContract,
   deployPositionManagerFactoryAndActions,
@@ -34,6 +36,7 @@ describe("ClosePosition.sol", function () {
   let serviceFeeRecipient: SignerWithAddress;
   let liquidityProvider: SignerWithAddress;
   let registry: Registry;
+  let registryAddressHolder: RegistryAddressHolder;
 
   //all the token used globally
   let tokenWETH: MockToken, tokenUSDC: MockToken;
@@ -75,25 +78,27 @@ describe("ClosePosition.sol", function () {
         tokenWETH.address,
       )
     ).registryFixture;
+    registryAddressHolder = (await RegistryAddressHolderFixture(registry.address)).registryAddressHolderFixture;
+
     const uniswapAddressHolder = await deployContract("UniswapAddressHolder", [
+      registryAddressHolder.address,
       nonFungiblePositionManager.address,
       uniswapV3Factory.address,
       nonFungiblePositionManager.address,
-      registry.address,
     ]);
     const diamondCutFacet = await deployContract("DiamondCutFacet");
 
     //deploy the PositionManagerFactory => deploy PositionManager
     const positionManagerFactory = (await deployPositionManagerFactoryAndActions(
-      registry.address,
-      diamondCutFacet.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
+      diamondCutFacet.address,
       ["ClosePosition"],
     )) as PositionManagerFactory;
 
     const strategyProviderWalletFactoryFactory = await ethers.getContractFactory("StrategyProviderWalletFactory");
     const strategyProviderWalletFactory = (await strategyProviderWalletFactoryFactory.deploy(
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     )) as StrategyProviderWalletFactory;
     await strategyProviderWalletFactory.deployed();
@@ -134,8 +139,8 @@ describe("ClosePosition.sol", function () {
     // give pool some liquidity
     const txMint = await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenUSDC.address,
-        token1: tokenWETH.address,
+        token0: tokenUSDC.address < tokenWETH.address ? tokenUSDC.address : tokenWETH.address,
+        token1: tokenWETH.address > tokenUSDC.address ? tokenWETH.address : tokenUSDC.address,
         fee: 500,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -159,8 +164,8 @@ describe("ClosePosition.sol", function () {
       const minAmount1 = "0x" + (1e9).toString(16);
       const txMint = await nonFungiblePositionManager.connect(user).mint(
         {
-          token0: tokenUSDC.address,
-          token1: tokenWETH.address,
+          token0: tokenUSDC.address < tokenWETH.address ? tokenUSDC.address : tokenWETH.address,
+          token1: tokenWETH.address > tokenUSDC.address ? tokenWETH.address : tokenUSDC.address,
           fee: 500,
           tickLower: 0 - 60 * 1000,
           tickUpper: 0 + 60 * 1000,
@@ -204,8 +209,8 @@ describe("ClosePosition.sol", function () {
       const minAmount1 = "0x" + (1e9).toString(16);
       const txMint = await nonFungiblePositionManager.connect(user).mint(
         {
-          token0: tokenUSDC.address,
-          token1: tokenWETH.address,
+          token0: tokenUSDC.address < tokenWETH.address ? tokenUSDC.address : tokenWETH.address,
+          token1: tokenWETH.address > tokenUSDC.address ? tokenWETH.address : tokenUSDC.address,
           fee: 500,
           tickLower: 0 - 60 * 1000,
           tickUpper: 0 + 60 * 1000,

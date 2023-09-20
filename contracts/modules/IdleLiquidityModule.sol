@@ -28,9 +28,9 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
     using SafeInt24Math for int24;
 
     ///@notice assing the uniswap address holder to the contract
-    ///@param _registry address of the registry
+    ///@param _registryAddressHolder address of the registry address holder
     ///@param _uniswapAddressHolder address of the uniswap address holder
-    constructor(address _registry, address _uniswapAddressHolder) BaseModule(_registry) {
+    constructor(address _registryAddressHolder, address _uniswapAddressHolder) BaseModule(_registryAddressHolder) {
         require(_uniswapAddressHolder != address(0), "ILCA0");
 
         uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
@@ -39,7 +39,7 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
     ///@notice check if the position is out of range and rebalance it by swapping the tokens as necessary
     ///@param input RebalanceInput struct
     function rebalance(RebalanceInput calldata input) external whenNotPaused onlyWhitelistedKeeper {
-        address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
+        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
             .userToPositionManager(input.userAddress);
         require(positionManager != address(0), "ILPM0");
 
@@ -100,7 +100,7 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
     function rebalanceWithTickDiffs(
         RebalanceWithTickDiffsInput calldata input
     ) external whenNotPaused onlyWhitelistedKeeper {
-        address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
+        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
             .userToPositionManager(input.userAddress);
         require(positionManager != address(0), "ILPM0");
 

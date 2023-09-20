@@ -34,8 +34,8 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
 
     IUniswapAddressHolder public immutable uniswapAddressHolder;
 
-    constructor(address _registry, address _uniswapAddressHolder) BaseRecipes(_registry) {
-        require(_uniswapAddressHolder != address(0), "DRCA0");
+    constructor(address _registryAddressHolder, address _uniswapAddressHolder) BaseRecipes(_registryAddressHolder) {
+        require(_uniswapAddressHolder != address(0), "DRUAH0");
         uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
     }
 
@@ -44,14 +44,14 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
     ///@return tokenId the ID of the minted NFT
     function deposit(DepositInput memory input) external whenNotPaused returns (uint256 tokenId) {
         require(input.amount0Desired != 0 || input.amount1Desired != 0, "DRA0");
-        require(registry.isAllowableFeeTier(input.fee), "DRFT");
+        require(registry().isAllowableFeeTier(input.fee), "DRFT");
         bool isOrderChanged;
         (input.token0, input.token1, isOrderChanged) = UniswapHelper._reorderTokens(input.token0, input.token1);
 
         checkTokensValid(input.token0, input.token1);
         checkDiffOfTicksRange(input.tickLowerDiff, input.tickUpperDiff, input.fee);
 
-        address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
+        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
             .userToPositionManager(msg.sender);
         require(positionManager != address(0), "DRPM0");
 
@@ -123,7 +123,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         DepositListedStrategyInput memory input
     ) external whenNotPaused returns (uint256 tokenId) {
         require(input.amount0Desired != 0 || input.amount1Desired != 0, "DRA0");
-        require(registry.isAllowableFeeTier(input.fee), "DRFT");
+        require(registry().isAllowableFeeTier(input.fee), "DRFT");
 
         bool isOrderChanged;
         (input.token0, input.token1, isOrderChanged) = UniswapHelper._reorderTokens(input.token0, input.token1);
@@ -132,7 +132,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         checkTokensValid(input.token0, input.token1);
         checkDiffOfTicksRange(input.tickLowerDiff, input.tickUpperDiff, input.fee);
 
-        address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
+        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
             .userToPositionManager(msg.sender);
         require(positionManager != address(0), "DRPM0");
 
@@ -216,7 +216,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         uint256 amount1Desired
     ) external whenNotPaused {
         require(amount0Desired != 0 || amount1Desired != 0, "DRA0");
-        address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
+        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
             .userToPositionManager(msg.sender);
         require(positionManager != address(0), "DRPM0");
 
@@ -271,7 +271,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
     ///@return tokenId the ID of the minted NFT
     function singleTokenDeposit(SingleTokenDepositInput memory input) external whenNotPaused returns (uint256 tokenId) {
         require(input.amountIn != 0, "DRA0");
-        require(registry.isAllowableFeeTier(input.fee), "DRFT");
+        require(registry().isAllowableFeeTier(input.fee), "DRFT");
 
         bool isOrderChanged;
         (input.token0, input.token1, isOrderChanged) = UniswapHelper._reorderTokens(input.token0, input.token1);
@@ -280,7 +280,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         checkTokensValid(input.token0, input.token1);
         checkDiffOfTicksRange(input.tickLowerDiff, input.tickUpperDiff, input.fee);
 
-        address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
+        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
             .userToPositionManager(msg.sender);
         require(positionManager != address(0), "DRPM0");
 
@@ -342,7 +342,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         SingleTokenDepositListedStrategyInput memory input
     ) external whenNotPaused returns (uint256 tokenId) {
         require(input.amountIn != 0, "DRA0");
-        require(registry.isAllowableFeeTier(input.fee), "DRFT");
+        require(registry().isAllowableFeeTier(input.fee), "DRFT");
 
         bool isOrderChanged;
         (input.token0, input.token1, isOrderChanged) = UniswapHelper._reorderTokens(input.token0, input.token1);
@@ -352,7 +352,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         checkTokensValid(input.token0, input.token1);
         checkDiffOfTicksRange(input.tickLowerDiff, input.tickUpperDiff, input.fee);
 
-        address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
+        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
             .userToPositionManager(msg.sender);
         require(positionManager != address(0), "DRPM0");
 
@@ -423,7 +423,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
     ///@param amount amount of input token
     function singleTokenIncreaseLiquidity(uint256 positionId, bool isToken0In, uint256 amount) external whenNotPaused {
         require(amount != 0, "DRA0");
-        address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
+        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
             .userToPositionManager(msg.sender);
         require(positionManager != address(0), "DRPM0");
 
@@ -478,7 +478,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         uint24 fee
     ) internal view {
         if (provider != address(0)) {
-            address wallet = IStrategyProviderWalletFactory(registry.strategyProviderWalletFactoryAddress())
+            address wallet = IStrategyProviderWalletFactory(registry().strategyProviderWalletFactoryAddress())
                 .providerToWallet(provider);
 
             require(wallet != address(0), "DRSPW");
@@ -504,7 +504,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         uint256 amount0,
         uint256 amount1
     ) internal view returns (uint256 totalUsdValue) {
-        uint24[] memory allowableFeeTiers = registry.getAllowableFeeTiers();
+        uint24[] memory allowableFeeTiers = registry().getAllowableFeeTiers();
         totalUsdValue = _toUsdValue(token0, amount0, allowableFeeTiers).add(
             _toUsdValue(token1, amount1, allowableFeeTiers)
         );
@@ -515,7 +515,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         uint256 amount,
         uint24[] memory allowableFeeTiers
     ) internal view returns (uint256) {
-        address usdTokenAddress = registry.usdValueTokenAddress();
+        address usdTokenAddress = registry().usdValueTokenAddress();
 
         if (tokenAddress == usdTokenAddress) return amount;
 
@@ -538,6 +538,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
     }
 
     function _checkTokenCanBeSwapToWETH9(address token) internal view {
+        IRegistry registry = registry();
         address weth = registry.weth9();
         address usdValueTokenAddress = registry.usdValueTokenAddress();
 

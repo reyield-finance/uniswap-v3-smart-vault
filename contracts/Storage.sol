@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import "./interfaces/IPositionManager.sol";
 import "./interfaces/IUniswapAddressHolder.sol";
+import "./interfaces/IRegistryAddressHolder.sol";
 import "./interfaces/IDiamondCut.sol";
 import "./interfaces/IRegistry.sol";
 
@@ -25,9 +26,9 @@ struct StorageStruct {
     mapping(address => FacetFunctionSelectors) facetFunctionSelectors;
     // facet addresses
     address[] facetAddresses;
-    IUniswapAddressHolder uniswapAddressHolder;
     address owner;
-    IRegistry registry;
+    IRegistryAddressHolder registryAddressHolder;
+    IUniswapAddressHolder uniswapAddressHolder;
     mapping(bytes32 => bytes32) storageVars;
 }
 
@@ -63,7 +64,7 @@ library PositionManagerStorage {
     ///@notice make sure that a function is called by the PositionManagerFactory contract
     function enforceIsGovernance() internal view {
         StorageStruct storage ds = getStorage();
-        require(msg.sender == ds.registry.positionManagerFactoryAddress(), "SMF");
+        require(msg.sender == IRegistry(ds.registryAddressHolder.registry()).positionManagerFactoryAddress(), "SMF");
     }
 
     ///@notice emitted when a facet is cut into the diamond

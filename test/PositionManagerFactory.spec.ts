@@ -12,17 +12,18 @@ import {
   PositionManager,
   PositionManagerFactory,
   Registry,
+  RegistryAddressHolder,
   StrategyProviderWalletFactory,
   SwapToPositionRatio,
   UniswapAddressHolder,
 } from "../types";
 import {
+  RegistryAddressHolderFixture,
   RegistryFixture,
   deployContract,
   deployUniswapContracts,
   getSelectors,
   tokensFixture,
-  zeroAddress,
 } from "./shared/fixtures";
 
 describe("PositionManagerFactory.sol", function () {
@@ -32,6 +33,7 @@ describe("PositionManagerFactory.sol", function () {
   let usdValueTokenAddress: MockToken;
   let weth: MockToken;
   let Registry: Registry;
+  let registryAddressHolder: RegistryAddressHolder;
   let token0: MockToken;
   let token1: MockToken;
   let PMF: PositionManagerFactory;
@@ -70,6 +72,7 @@ describe("PositionManagerFactory.sol", function () {
     serviceFeeRecipient = signers[2];
 
     await deployRegistry();
+    registryAddressHolder = (await RegistryAddressHolderFixture(Registry.address)).registryAddressHolderFixture;
 
     token0 = (await tokensFixture("ETH", 18)).tokenFixture;
     token1 = (await tokensFixture("USDC", 6)).tokenFixture;
@@ -77,10 +80,10 @@ describe("PositionManagerFactory.sol", function () {
     //deploy factory, used for pools
     const [uniswapFactory, nonFungiblePositionManager, swapRouter] = await deployUniswapContracts(token0);
     UAH = (await deployContract("UniswapAddressHolder", [
+      registryAddressHolder.address,
       nonFungiblePositionManager.address,
       uniswapFactory.address,
       swapRouter.address,
-      Registry.address,
     ])) as UniswapAddressHolder;
 
     await token0.mint(await user.getAddress(), ethers.utils.parseEther("1000000000000"));
@@ -105,28 +108,20 @@ describe("PositionManagerFactory.sol", function () {
     await swapToPositionRatioAction.deployed();
 
     const positionManagerFactory = await ethers.getContractFactory("PositionManagerFactory");
-    PMF = (await positionManagerFactory.deploy(Registry.address, DCF.address, UAH.address)) as PositionManagerFactory;
+    PMF = (await positionManagerFactory.deploy(
+      registryAddressHolder.address,
+      UAH.address,
+      DCF.address,
+    )) as PositionManagerFactory;
     await PMF.deployed();
     const strategyProviderWalletFactory = await ethers.getContractFactory("StrategyProviderWalletFactory");
-    SPWF = (await strategyProviderWalletFactory.deploy(Registry.address, UAH.address)) as StrategyProviderWalletFactory;
+    SPWF = (await strategyProviderWalletFactory.deploy(
+      registryAddressHolder.address,
+      UAH.address,
+    )) as StrategyProviderWalletFactory;
     await SPWF.deployed();
 
     await SPWF.connect(deployer).addCreatorWhitelist(PMF.address);
-  });
-
-  describe("PositionManagerFactory changeRegistry", function () {
-    it("Should success change registry", async () => {
-      await PMF.connect(deployer).changeRegistry(await deployer.getAddress());
-      expect(await PMF.registry()).to.be.equal(await deployer.getAddress());
-    });
-
-    it("Should fail change registry by others not owner", async () => {
-      await expect(PMF.connect(user).changeRegistry(await deployer.getAddress())).to.be.revertedWith("PFOG");
-    });
-
-    it("Should fail change registry by zero address", async () => {
-      await expect(PMF.connect(deployer).changeRegistry(zeroAddress)).to.be.revertedWith("PFCR");
-    });
   });
 
   describe("PositionManagerFactory - create", function () {

@@ -16,9 +16,11 @@ import {
   PositionManager,
   PositionManagerFactory,
   Registry,
+  RegistryAddressHolder,
   StrategyProviderWalletFactory,
 } from "../../types";
 import {
+  RegistryAddressHolderFixture,
   RegistryFixture,
   deployContract,
   deployPositionManagerFactoryAndActions,
@@ -44,6 +46,7 @@ describe("ShareProfit.sol", function () {
   let serviceFeeRecipient: SignerWithAddress;
   let strategyProvider: SignerWithAddress;
   let registry: Registry;
+  let registryAddressHolder: RegistryAddressHolder;
 
   //all the token used globally
   let tokenWETH9: MockWETH9;
@@ -110,25 +113,26 @@ describe("ShareProfit.sol", function () {
         tokenWETH.address,
       )
     ).registryFixture;
+    registryAddressHolder = (await RegistryAddressHolderFixture(registry.address)).registryAddressHolderFixture;
     const uniswapAddressHolder = await deployContract("UniswapAddressHolder", [
+      registryAddressHolder.address,
       nonFungiblePositionManager.address,
       uniswapV3Factory.address,
       swapRouter.address,
-      registry.address,
     ]);
     const diamondCutFacet = await deployContract("DiamondCutFacet");
 
     //deploy the PositionManagerFactory => deploy PositionManager
     const positionManagerFactory = (await deployPositionManagerFactoryAndActions(
-      registry.address,
-      diamondCutFacet.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
+      diamondCutFacet.address,
       ["ShareProfit"],
     )) as PositionManagerFactory;
 
     const strategyProviderWalletFactoryFactory = await ethers.getContractFactory("StrategyProviderWalletFactory");
     const strategyProviderWalletFactory = (await strategyProviderWalletFactoryFactory.deploy(
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     )) as StrategyProviderWalletFactory;
     await strategyProviderWalletFactory.deployed();
@@ -183,8 +187,8 @@ describe("ShareProfit.sol", function () {
     // give pool some liquidity
     await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenOP.address,
-        token1: tokenUSDT.address,
+        token0: tokenOP.address < tokenUSDT.address ? tokenOP.address : tokenUSDT.address,
+        token1: tokenUSDT.address > tokenOP.address ? tokenUSDT.address : tokenOP.address,
         fee: 500,
         tickLower: 0 - 20,
         tickUpper: 0 + 20,
@@ -201,8 +205,8 @@ describe("ShareProfit.sol", function () {
     // give pool some liquidity
     await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenUSDC.address,
-        token1: tokenOP.address,
+        token0: tokenUSDC.address < tokenOP.address ? tokenUSDC.address : tokenOP.address,
+        token1: tokenOP.address > tokenUSDC.address ? tokenOP.address : tokenUSDC.address,
         fee: 500,
         tickLower: 0 - 30,
         tickUpper: 0 + 30,
@@ -219,8 +223,8 @@ describe("ShareProfit.sol", function () {
     // give pool some liquidity
     await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenUSDC.address,
-        token1: tokenUSDT.address,
+        token0: tokenUSDC.address < tokenUSDT.address ? tokenUSDC.address : tokenUSDT.address,
+        token1: tokenUSDT.address > tokenUSDC.address ? tokenUSDT.address : tokenUSDC.address,
         fee: 500,
         tickLower: 0 - 30,
         tickUpper: 0 + 30,

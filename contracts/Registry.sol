@@ -3,9 +3,10 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "./interfaces/IRegistry.sol";
+import "@openzeppelin/contracts/introspection/ERC165.sol";
 
 /// @title Stores all the governance variables
-contract Registry is IRegistry {
+contract Registry is IRegistry, ERC165 {
     address public override governance;
     address public override positionManagerFactoryAddress;
     address public override strategyProviderWalletFactoryAddress;
@@ -68,6 +69,8 @@ contract Registry is IRegistry {
         address _usdValueTokenAddress,
         address _weth9
     ) {
+        _registerInterface(type(IRegistry).interfaceId);
+
         require(_governance != address(0), "RCG");
         require(_serviceFeeRecipient != address(0), "RCSFR");
         require(_usdValueTokenAddress != address(0), "RCUTA");

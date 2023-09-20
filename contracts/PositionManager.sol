@@ -46,8 +46,7 @@ contract PositionManager is IPositionManager, ERC721Holder, Initializable {
 
     ///@notice modifier to check if the msg.sender is the governance
     modifier onlyGovernance() {
-        StorageStruct storage Storage = PositionManagerStorage.getStorage();
-        require(msg.sender == Storage.registry.governance(), "PMOG");
+        require(msg.sender == registry().governance(), "PMOG");
         _;
     }
 
@@ -59,8 +58,7 @@ contract PositionManager is IPositionManager, ERC721Holder, Initializable {
 
     ///@notice modifier to check if the msg.sender is the PositionManagerFactory
     modifier onlyFactory() {
-        StorageStruct storage Storage = PositionManagerStorage.getStorage();
-        require(Storage.registry.positionManagerFactoryAddress() == msg.sender, "PMOF");
+        require(registry().positionManagerFactoryAddress() == msg.sender, "PMOF");
         _;
     }
 
@@ -88,7 +86,12 @@ contract PositionManager is IPositionManager, ERC721Holder, Initializable {
         _;
     }
 
-    constructor(address _owner, address _diamondCutFacet, address _registry) payable {
+    constructor(
+        address _owner,
+        address _registryAddressHolder,
+        address _uniswapAddressHolder,
+        address _diamondCutFacet
+    ) payable {
         PositionManagerStorage.setContractOwner(_owner);
 
         // Add the diamondCut external function from the diamondCutFacet
@@ -102,21 +105,15 @@ contract PositionManager is IPositionManager, ERC721Holder, Initializable {
         });
         PositionManagerStorage.diamondCut(cut, address(0), "");
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
-        Storage.registry = IRegistry(_registry);
-    }
-
-    function init(address _owner, address _uniswapAddressHolder) public onlyFactory initializer {
-        StorageStruct storage Storage = PositionManagerStorage.getStorage();
-        Storage.owner = _owner;
+        Storage.registryAddressHolder = IRegistryAddressHolder(_registryAddressHolder);
         Storage.uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
     }
 
-    ///@notice change registry address
-    ///@param _registry address of new registry
-    function changeRegistry(address _registry) external onlyGovernance {
-        require(_registry != address(0), "PMCR");
+    ///@notice get IRegistry from registryAddressHolder
+    ///@return IRegistry interface of registry
+    function registry() private view returns (IRegistry) {
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
-        Storage.registry = IRegistry(_registry);
+        return IRegistry(Storage.registryAddressHolder.registry());
     }
 
     ///@notice generate position ID
@@ -360,13 +357,11 @@ contract PositionManager is IPositionManager, ERC721Holder, Initializable {
     ///@notice set default data for every module
     ///@param positionId ID of the position
     function _setDefaultDataOfPosition(uint256 positionId) internal {
-        StorageStruct storage Storage = PositionManagerStorage.getStorage();
-
-        bytes32[] memory moduleKeys = Storage.registry.getModuleKeys();
+        bytes32[] memory moduleKeys = registry().getModuleKeys();
 
         uint256 moduleKeysLength = moduleKeys.length;
         for (uint256 i; i < moduleKeysLength; ++i) {
-            IRegistry.Entry memory entry = Storage.registry.getModuleInfo(moduleKeys[i]);
+            IRegistry.Entry memory entry = registry().getModuleInfo(moduleKeys[i]);
             positionToModuleData[positionId][entry.contractAddress] = entry.defaultData;
         }
     }
@@ -421,12 +416,11 @@ contract PositionManager is IPositionManager, ERC721Holder, Initializable {
     ///@param _address input address
     ///@return boolean true if the address is an active module
     function _calledFromActiveModule(address _address) internal view returns (bool) {
-        StorageStruct storage Storage = PositionManagerStorage.getStorage();
-        bytes32[] memory keys = Storage.registry.getModuleKeys();
+        bytes32[] memory keys = registry().getModuleKeys();
 
         uint256 keysLength = keys.length;
         for (uint256 i; i < keysLength; ++i) {
-            if (Storage.registry.getModuleInfo(keys[i]).contractAddress == _address) {
+            if (registry().getModuleInfo(keys[i]).contractAddress == _address) {
                 return true;
             }
         }

@@ -18,10 +18,12 @@ import {
   PositionManager,
   PositionManagerFactory,
   Registry,
+  RegistryAddressHolder,
   StrategyProviderWallet,
   StrategyProviderWalletFactory,
 } from "../../types";
 import {
+  RegistryAddressHolderFixture,
   RegistryFixture,
   deployContract,
   deployPositionManagerFactoryAndActions,
@@ -48,6 +50,7 @@ describe("DepositRecipes.sol", function () {
   let serviceFeeRecipient: SignerWithAddress;
   let strategyProvider: SignerWithAddress;
   let registry: Registry;
+  let registryAddressHolder: RegistryAddressHolder;
 
   //all the token used globally
   let tokenWETH9: MockWETH9;
@@ -123,25 +126,26 @@ describe("DepositRecipes.sol", function () {
         tokenWETH.address,
       )
     ).registryFixture;
+    registryAddressHolder = (await RegistryAddressHolderFixture(registry.address)).registryAddressHolderFixture;
     const uniswapAddressHolder = await deployContract("UniswapAddressHolder", [
+      registryAddressHolder.address,
       nonFungiblePositionManager.address,
       uniswapV3Factory.address,
       swapRouter.address,
-      registry.address,
     ]);
     const diamondCutFacet = await deployContract("DiamondCutFacet");
 
     //deploy the PositionManagerFactory => deploy PositionManager
     const positionManagerFactory = (await deployPositionManagerFactoryAndActions(
-      registry.address,
-      diamondCutFacet.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
+      diamondCutFacet.address,
       ["IncreaseLiquidity", "SingleTokenIncreaseLiquidity", "Mint", "ZapIn"],
     )) as PositionManagerFactory;
 
     const strategyProviderWalletFactoryFactory = await ethers.getContractFactory("StrategyProviderWalletFactory");
     strategyProviderWalletFactory = (await strategyProviderWalletFactoryFactory.deploy(
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     )) as StrategyProviderWalletFactory;
     await strategyProviderWalletFactory.deployed();
@@ -154,7 +158,7 @@ describe("DepositRecipes.sol", function () {
 
     //deploy DepositRecipes contract
     depositRecipes = (await deployContract("DepositRecipes", [
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     ])) as DepositRecipes;
 
@@ -198,8 +202,8 @@ describe("DepositRecipes.sol", function () {
     // give pool some liquidity
     const r = await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenOP.address,
-        token1: tokenUSDT.address,
+        token0: tokenOP.address < tokenUSDT.address ? tokenOP.address : tokenUSDT.address,
+        token1: tokenUSDT.address > tokenOP.address ? tokenUSDT.address : tokenOP.address,
         fee: 3000,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -217,8 +221,8 @@ describe("DepositRecipes.sol", function () {
     // give pool some liquidity
     await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenUSDC.address,
-        token1: tokenOP.address,
+        token0: tokenUSDC.address < tokenOP.address ? tokenUSDC.address : tokenOP.address,
+        token1: tokenOP.address > tokenUSDC.address ? tokenOP.address : tokenUSDC.address,
         fee: 3000,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -235,8 +239,8 @@ describe("DepositRecipes.sol", function () {
     // give pool some liquidity
     await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenUSDC.address,
-        token1: tokenUSDT.address,
+        token0: tokenUSDC.address < tokenUSDT.address ? tokenUSDC.address : tokenUSDT.address,
+        token1: tokenUSDT.address > tokenUSDC.address ? tokenUSDT.address : tokenUSDC.address,
         fee: 3000,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -250,21 +254,6 @@ describe("DepositRecipes.sol", function () {
       { gasLimit: 670000 },
     );
   }
-
-  describe("changeRegistry", function () {
-    it("Should success change registry", async () => {
-      await depositRecipes.connect(deployer).changeRegistry(await deployer.getAddress());
-      expect(await depositRecipes.registry()).to.be.equal(await deployer.getAddress());
-    });
-
-    it("Should fail change registry by others not owner", async () => {
-      await expect(depositRecipes.connect(user).changeRegistry(await deployer.getAddress())).to.be.revertedWith("BROG");
-    });
-
-    it("Should fail change registry by zero address", async () => {
-      await expect(depositRecipes.connect(deployer).changeRegistry(zeroAddress)).to.be.revertedWith("BRCR");
-    });
-  });
 
   describe("deposit", function () {
     it("deposit", async function () {

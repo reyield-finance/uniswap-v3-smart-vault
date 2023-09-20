@@ -12,17 +12,18 @@ import {
   INonfungiblePositionManager,
   ISwapRouter,
   IUniswapV3Pool,
-  IZapIn,
   MockToken,
   MockWETH9,
   PositionManager,
   PositionManagerFactory,
   Registry,
+  RegistryAddressHolder,
   StrategyProviderWallet,
   StrategyProviderWalletFactory,
   WithdrawRecipes,
 } from "../../types";
 import {
+  RegistryAddressHolderFixture,
   RegistryFixture,
   deployContract,
   deployPositionManagerFactoryAndActions,
@@ -68,6 +69,7 @@ describe("WithdrawRecipes.sol", function () {
   let strategyProviderWalletFactory: StrategyProviderWalletFactory;
   let depositRecipes: DepositRecipes;
   let withdrawRecipes: WithdrawRecipes;
+  let registryAddressHolder: RegistryAddressHolder;
 
   function getToken0Token1(token0: MockToken, token1: MockToken): [MockToken, MockToken, boolean] {
     return token0.address < token1.address ? [token0, token1, false] : [token1, token0, true];
@@ -125,19 +127,22 @@ describe("WithdrawRecipes.sol", function () {
         tokenWETH.address,
       )
     ).registryFixture;
+
+    registryAddressHolder = (await RegistryAddressHolderFixture(registry.address)).registryAddressHolderFixture;
+
     const uniswapAddressHolder = await deployContract("UniswapAddressHolder", [
+      registryAddressHolder.address,
       nonFungiblePositionManager.address,
       uniswapV3Factory.address,
       swapRouter.address,
-      registry.address,
     ]);
     const diamondCutFacet = await deployContract("DiamondCutFacet");
 
     //deploy the PositionManagerFactory => deploy PositionManager
     const positionManagerFactory = (await deployPositionManagerFactoryAndActions(
-      registry.address,
-      diamondCutFacet.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
+      diamondCutFacet.address,
       [
         "IncreaseLiquidity",
         "SingleTokenIncreaseLiquidity",
@@ -151,7 +156,7 @@ describe("WithdrawRecipes.sol", function () {
 
     const strategyProviderWalletFactoryFactory = await ethers.getContractFactory("StrategyProviderWalletFactory");
     strategyProviderWalletFactory = (await strategyProviderWalletFactoryFactory.deploy(
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     )) as StrategyProviderWalletFactory;
     await strategyProviderWalletFactory.deployed();
@@ -161,16 +166,15 @@ describe("WithdrawRecipes.sol", function () {
     //registry setup
     await registry.setPositionManagerFactory(positionManagerFactory.address);
     await registry.setStrategyProviderWalletFactory(strategyProviderWalletFactory.address);
-
     //deploy DepositRecipes contract
     depositRecipes = (await deployContract("DepositRecipes", [
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     ])) as DepositRecipes;
 
     //deploy WithdrawRecipes contract
     withdrawRecipes = (await deployContract("WithdrawRecipes", [
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     ])) as WithdrawRecipes;
 
@@ -201,7 +205,6 @@ describe("WithdrawRecipes.sol", function () {
     await txn2.wait();
     const positionManagerAddress2 = await positionManagerFactory.userToPositionManager(user2.address);
     positionManager2 = (await ethers.getContractAt("PositionManager", positionManagerAddress2)) as PositionManager;
-
     //get AbiCoder
     // abiCoder = ethers.utils.defaultAbiCoder;
 
@@ -225,8 +228,8 @@ describe("WithdrawRecipes.sol", function () {
     // give pool some liquidity
     const r = await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenOP.address,
-        token1: tokenUSDT.address,
+        token0: tokenOP.address < tokenUSDT.address ? tokenOP.address : tokenUSDT.address,
+        token1: tokenUSDT.address > tokenOP.address ? tokenUSDT.address : tokenOP.address,
         fee: 3000,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -244,8 +247,8 @@ describe("WithdrawRecipes.sol", function () {
     // give pool some liquidity
     await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenUSDC.address,
-        token1: tokenOP.address,
+        token0: tokenUSDC.address < tokenOP.address ? tokenUSDC.address : tokenOP.address,
+        token1: tokenOP.address > tokenUSDC.address ? tokenOP.address : tokenUSDC.address,
         fee: 3000,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -262,8 +265,8 @@ describe("WithdrawRecipes.sol", function () {
     // give pool some liquidity
     await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenUSDC.address,
-        token1: tokenUSDT.address,
+        token0: tokenUSDC.address < tokenUSDT.address ? tokenUSDC.address : tokenUSDT.address,
+        token1: tokenUSDT.address > tokenUSDC.address ? tokenUSDT.address : tokenUSDC.address,
         fee: 3000,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -277,23 +280,6 @@ describe("WithdrawRecipes.sol", function () {
       { gasLimit: 670000 },
     );
   }
-
-  describe("changeRegistry", function () {
-    it("Should success change registry", async () => {
-      await withdrawRecipes.connect(deployer).changeRegistry(await deployer.getAddress());
-      expect(await withdrawRecipes.registry()).to.be.equal(await deployer.getAddress());
-    });
-
-    it("Should fail change registry by others not owner", async () => {
-      await expect(withdrawRecipes.connect(user).changeRegistry(await deployer.getAddress())).to.be.revertedWith(
-        "BROG",
-      );
-    });
-
-    it("Should fail change registry by zero address", async () => {
-      await expect(withdrawRecipes.connect(deployer).changeRegistry(zeroAddress)).to.be.revertedWith("BRCR");
-    });
-  });
 
   describe("withdraw", function () {
     it("withdraw the position without strategy provider", async function () {

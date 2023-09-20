@@ -13,6 +13,7 @@ import "@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol";
 import "@uniswap/v3-periphery/contracts/libraries/PositionKey.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/IUniswapAddressHolder.sol";
+import "../interfaces/IRegistryAddressHolder.sol";
 import "../interfaces/IRegistry.sol";
 import "../libraries/UniswapHelper.sol";
 import "../libraries/SwapHelper.sol";
@@ -25,27 +26,26 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 contract PositionHelper {
     using SafeMath for uint256;
 
+    IRegistryAddressHolder public immutable registryAddressHolder;
     IUniswapAddressHolder public immutable uniswapAddressHolder;
-    IRegistry public registry;
 
     ///@notice restrict some function called only by governance
     modifier onlyGovernance() {
-        require(msg.sender == registry.governance(), "PHOG");
+        require(msg.sender == registry().governance(), "PHOG");
         _;
     }
 
-    constructor(address _registry, address _uniswapAddressHolder) {
-        require(_registry != address(0), "PHR0");
+    constructor(address _registryAddressHolder, address _uniswapAddressHolder) {
+        require(_registryAddressHolder != address(0), "PHRAH0");
         require(_uniswapAddressHolder != address(0), "PHUAH0");
         uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
-        registry = IRegistry(_registry);
+        registryAddressHolder = IRegistryAddressHolder(_registryAddressHolder);
     }
 
-    ///@notice change registry address
-    ///@param _registry address of new registry
-    function changeRegistry(address _registry) external onlyGovernance {
-        require(_registry != address(0), "PHCR");
-        registry = IRegistry(_registry);
+    ///@notice get IRegistry from registryAddressHolder
+    ///@return IRegistry interface of registry
+    function registry() private view returns (IRegistry) {
+        return IRegistry(registryAddressHolder.registry());
     }
 
     ///@notice Get the position info of a position
@@ -56,7 +56,7 @@ contract PositionHelper {
         address userAddress,
         uint256 positionId
     ) public view returns (IPositionManager.PositionInfo memory pInfo) {
-        address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
+        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
             .userToPositionManager(userAddress);
         require(positionManager != address(0), "PHA0");
 
@@ -86,7 +86,7 @@ contract PositionHelper {
         address userAddress,
         uint256 positionId
     ) public view returns (PositionTokenInfo memory ptInfo) {
-        address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
+        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
             .userToPositionManager(userAddress);
         require(positionManager != address(0), "PHA0");
 
@@ -370,35 +370,35 @@ contract PositionHelper {
             output.amount1ReturnedToken0Value = quote(token1, token0, amount1Returned);
         } else {
             address strategyProviderWallet = IStrategyProviderWalletFactory(
-                registry.strategyProviderWalletFactoryAddress()
+                registry().strategyProviderWalletFactoryAddress()
             ).providerToWallet(pInfo.strategyProvider);
 
             IStrategyProviderWallet.StrategyInfo memory sInfo = IStrategyProviderWallet(strategyProviderWallet)
                 .getStrategyInfo(pInfo.strategyId);
 
-            uint160 token0UsdValueTokenSqrtPriceX96 = _getBestSqrtPriceX96(token0, registry.usdValueTokenAddress());
-            uint160 token1UsdValueTokenSqrtPriceX96 = _getBestSqrtPriceX96(token1, registry.usdValueTokenAddress());
+            uint160 token0UsdValueTokenSqrtPriceX96 = _getBestSqrtPriceX96(token0, registry().usdValueTokenAddress());
+            uint160 token1UsdValueTokenSqrtPriceX96 = _getBestSqrtPriceX96(token1, registry().usdValueTokenAddress());
 
             uint256 amount0ReturnedUsdValue;
             uint256 amount1ReturnedUsdValue;
-            if (token0 == registry.usdValueTokenAddress()) {
+            if (token0 == registry().usdValueTokenAddress()) {
                 amount0ReturnedUsdValue = amount0Returned;
             } else {
                 amount0ReturnedUsdValue = SwapHelper.getQuoteFromSqrtRatioX96(
                     token0UsdValueTokenSqrtPriceX96,
                     MathHelper.fromUint256ToUint128(amount0Returned),
                     token0,
-                    registry.usdValueTokenAddress()
+                    registry().usdValueTokenAddress()
                 );
             }
-            if (token1 == registry.usdValueTokenAddress()) {
+            if (token1 == registry().usdValueTokenAddress()) {
                 amount1ReturnedUsdValue = amount1Returned;
             } else {
                 amount1ReturnedUsdValue = SwapHelper.getQuoteFromSqrtRatioX96(
                     token1UsdValueTokenSqrtPriceX96,
                     MathHelper.fromUint256ToUint128(amount1Returned),
                     token1,
-                    registry.usdValueTokenAddress()
+                    registry().usdValueTokenAddress()
                 );
             }
 
@@ -452,22 +452,22 @@ contract PositionHelper {
 
         uint256 token0UsdPrice;
         uint256 token1UsdPrice;
-        if (input.token0 == registry.usdValueTokenAddress()) {
+        if (input.token0 == registry().usdValueTokenAddress()) {
             token0UsdPrice = SwapHelper.getPriceWithSameToken(input.token0);
         } else {
             token0UsdPrice = SwapHelper.getPrice(
                 input.token0UsdValueTokenSqrtPriceX96,
                 input.token0,
-                registry.usdValueTokenAddress()
+                registry().usdValueTokenAddress()
             );
         }
-        if (input.token1 == registry.usdValueTokenAddress()) {
+        if (input.token1 == registry().usdValueTokenAddress()) {
             token1UsdPrice = SwapHelper.getPriceWithSameToken(input.token1);
         } else {
             token1UsdPrice = SwapHelper.getPrice(
                 input.token1UsdValueTokenSqrtPriceX96,
                 input.token1,
-                registry.usdValueTokenAddress()
+                registry().usdValueTokenAddress()
             );
         }
         (uint256 amount0PerformanceFee, uint256 amount1PerformanceFee) = SwapHelper.distributeTargetAmount(
@@ -482,24 +482,24 @@ contract PositionHelper {
         output.amount0Returned = input.amount0Returned.sub(amount0PerformanceFee);
         output.amount1Returned = input.amount1Returned.sub(amount1PerformanceFee);
 
-        if (input.token0 == registry.usdValueTokenAddress()) {
+        if (input.token0 == registry().usdValueTokenAddress()) {
             output.amount0ReturnedUsdValue = output.amount0Returned;
         } else {
             output.amount0ReturnedUsdValue = SwapHelper.getQuoteFromSqrtRatioX96(
                 input.token0UsdValueTokenSqrtPriceX96,
                 MathHelper.fromUint256ToUint128(output.amount0Returned),
                 input.token0,
-                registry.usdValueTokenAddress()
+                registry().usdValueTokenAddress()
             );
         }
-        if (input.token1 == registry.usdValueTokenAddress()) {
+        if (input.token1 == registry().usdValueTokenAddress()) {
             output.amount1ReturnedUsdValue = output.amount1Returned;
         } else {
             output.amount1ReturnedUsdValue = SwapHelper.getQuoteFromSqrtRatioX96(
                 input.token1UsdValueTokenSqrtPriceX96,
                 MathHelper.fromUint256ToUint128(output.amount1Returned),
                 input.token1,
-                registry.usdValueTokenAddress()
+                registry().usdValueTokenAddress()
             );
         }
         output.amount0ReturnedToken1Value = quote(input.token0, input.token1, output.amount0Returned);
@@ -507,15 +507,15 @@ contract PositionHelper {
     }
 
     function quoteUsdValue(address token, uint256 amount) public view returns (uint256 usdValue) {
-        if (token == registry.usdValueTokenAddress()) {
+        if (token == registry().usdValueTokenAddress()) {
             return amount;
         }
-        uint160 sqrtPriceX96 = _getBestSqrtPriceX96(token, registry.usdValueTokenAddress());
+        uint160 sqrtPriceX96 = _getBestSqrtPriceX96(token, registry().usdValueTokenAddress());
         usdValue = SwapHelper.getQuoteFromSqrtRatioX96(
             sqrtPriceX96,
             MathHelper.fromUint256ToUint128(amount),
             token,
-            registry.usdValueTokenAddress()
+            registry().usdValueTokenAddress()
         );
     }
 
@@ -533,7 +533,7 @@ contract PositionHelper {
     }
 
     function _getBestSqrtPriceX96(address token0, address token1) private view returns (uint160 sqrtPriceX96) {
-        uint24[] memory allowableFeeTiers = registry.getAllowableFeeTiers();
+        uint24[] memory allowableFeeTiers = registry().getAllowableFeeTiers();
 
         address deepestPool = UniswapHelper._findV3DeepestPool(
             uniswapAddressHolder.uniswapV3FactoryAddress(),

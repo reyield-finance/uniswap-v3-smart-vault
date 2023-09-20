@@ -24,8 +24,8 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
 
     IUniswapAddressHolder public immutable uniswapAddressHolder;
 
-    constructor(address _registry, address _uniswapAddressHolder) BaseRecipes(_registry) {
-        require(_uniswapAddressHolder != address(0), "GRCA0");
+    constructor(address _registryAddressHolder, address _uniswapAddressHolder) BaseRecipes(_registryAddressHolder) {
+        require(_uniswapAddressHolder != address(0), "GRUAH0");
 
         uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
     }
@@ -34,7 +34,7 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
     ///@param user address of the user
     ///@param positionId ID of closed position
     function closedPositionForced(address user, uint256 positionId) external onlyGovernance {
-        address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
+        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
             .userToPositionManager(user);
         require(positionManager != address(0), "WRPM0");
 
@@ -86,7 +86,7 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
         uint256 amount0,
         uint256 amount1
     ) internal view returns (uint256 token0UsdValue, uint256 token1UsdValue) {
-        uint24[] memory allowableFeeTiers = registry.getAllowableFeeTiers();
+        uint24[] memory allowableFeeTiers = registry().getAllowableFeeTiers();
         token0UsdValue = _toUsdValue(token0, amount0, allowableFeeTiers);
         token1UsdValue = _toUsdValue(token1, amount1, allowableFeeTiers);
     }
@@ -96,7 +96,7 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
         uint256 amount,
         uint24[] memory allowableFeeTiers
     ) internal view returns (uint256) {
-        address usdTokenAddress = registry.usdValueTokenAddress();
+        address usdTokenAddress = registry().usdValueTokenAddress();
 
         if (tokenAddress == usdTokenAddress) return amount;
 

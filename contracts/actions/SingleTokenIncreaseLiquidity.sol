@@ -28,7 +28,9 @@ contract SingleTokenIncreaseLiquidity is ISingleTokenIncreaseLiquidity {
         require(inputs.amountIn != 0, "ILA");
 
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
-        uint24[] memory allowableFeeTiers = Storage.registry.getAllowableFeeTiers();
+        IRegistry registry = IRegistry(Storage.registryAddressHolder.registry());
+
+        uint24[] memory allowableFeeTiers = registry.getAllowableFeeTiers();
 
         uint256 amountToSwap;
         IUniswapV3Pool deepestPool;
@@ -106,12 +108,9 @@ contract SingleTokenIncreaseLiquidity is ISingleTokenIncreaseLiquidity {
         uint256 amountIn
     ) internal returns (uint256 amountOut) {
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
+        IRegistry registry = IRegistry(Storage.registryAddressHolder.registry());
 
-        SwapHelper.checkDeviation(
-            IUniswapV3Pool(deepestPool),
-            Storage.registry.maxTwapDeviation(),
-            Storage.registry.twapDuration()
-        );
+        SwapHelper.checkDeviation(IUniswapV3Pool(deepestPool), registry.maxTwapDeviation(), registry.twapDuration());
 
         ERC20Helper._approveToken(tokenIn, Storage.uniswapAddressHolder.swapRouterAddress(), amountIn);
 

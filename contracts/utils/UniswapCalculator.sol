@@ -3,6 +3,7 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "../interfaces/IUniswapAddressHolder.sol";
+import "../interfaces/IRegistryAddressHolder.sol";
 import "../interfaces/IRegistry.sol";
 import "../libraries/UniswapHelper.sol";
 import "../libraries/SafeInt24Math.sol";
@@ -10,27 +11,26 @@ import "../libraries/SafeInt24Math.sol";
 contract UniswapCalculator {
     using SafeInt24Math for int24;
 
+    IRegistryAddressHolder public immutable registryAddressHolder;
     IUniswapAddressHolder public immutable uniswapAddressHolder;
-    IRegistry public registry;
 
     ///@notice restrict some function called only by governance
     modifier onlyGovernance() {
-        require(msg.sender == registry.governance(), "UCOG");
+        require(msg.sender == registry().governance(), "UCOG");
         _;
     }
 
-    constructor(address _registry, address _uniswapAddressHolder) {
-        require(_registry != address(0), "UCR0");
+    constructor(address _registryAddressHolder, address _uniswapAddressHolder) {
+        require(_registryAddressHolder != address(0), "UCRHA0");
         require(_uniswapAddressHolder != address(0), "UCUAH0");
         uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
-        registry = IRegistry(_registry);
+        registryAddressHolder = IRegistryAddressHolder(_registryAddressHolder);
     }
 
-    ///@notice change registry address
-    ///@param _registry address of new registry
-    function changeRegistry(address _registry) external onlyGovernance {
-        require(_registry != address(0), "UCCR");
-        registry = IRegistry(_registry);
+    ///@notice get IRegistry from registryAddressHolder
+    ///@return IRegistry interface of registry
+    function registry() private view returns (IRegistry) {
+        return IRegistry(registryAddressHolder.registry());
     }
 
     ///@notice Get the liquidity and amounts of a position
@@ -108,8 +108,8 @@ contract UniswapCalculator {
     }
 
     function checkTokenCanBeSwapToWETH9(address token) internal view returns (bool) {
-        address weth = registry.weth9();
-        address usdValueTokenAddress = registry.usdValueTokenAddress();
+        address weth = registry().weth9();
+        address usdValueTokenAddress = registry().usdValueTokenAddress();
 
         if (token == weth || token == usdValueTokenAddress) {
             return true;
@@ -120,10 +120,10 @@ contract UniswapCalculator {
 
     function isPoolExist(address token0, address token1) internal view returns (bool) {
         (token0, token1) = token0 < token1 ? (token0, token1) : (token1, token0);
-        uint24[] memory feeTiers = registry.getFeeTiers();
+        uint24[] memory feeTiers = registry().getFeeTiers();
 
         for (uint256 i = 0; i < feeTiers.length; ++i) {
-            if (!registry.isAllowableFeeTier(feeTiers[i])) {
+            if (!registry().isAllowableFeeTier(feeTiers[i])) {
                 continue;
             }
             address pool = IUniswapV3Factory(uniswapAddressHolder.uniswapV3FactoryAddress()).getPool(

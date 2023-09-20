@@ -19,10 +19,12 @@ import {
   PositionManager,
   PositionManagerFactory,
   Registry,
+  RegistryAddressHolder,
   StrategyProviderWallet,
   StrategyProviderWalletFactory,
 } from "../../types";
 import {
+  RegistryAddressHolderFixture,
   RegistryFixture,
   deployContract,
   deployPositionManagerFactoryAndActions,
@@ -68,6 +70,7 @@ describe("GovernanceRecipes.sol", function () {
   let strategyProviderWalletFactory: StrategyProviderWalletFactory;
   let depositRecipes: DepositRecipes;
   let governanceRecipes: GovernanceRecipes;
+  let registryAddressHolder: RegistryAddressHolder;
 
   function getToken0Token1(token0: MockToken, token1: MockToken): [MockToken, MockToken, boolean] {
     return token0.address < token1.address ? [token0, token1, false] : [token1, token0, true];
@@ -125,19 +128,20 @@ describe("GovernanceRecipes.sol", function () {
         tokenWETH.address,
       )
     ).registryFixture;
+    registryAddressHolder = (await RegistryAddressHolderFixture(registry.address)).registryAddressHolderFixture;
     const uniswapAddressHolder = await deployContract("UniswapAddressHolder", [
+      registryAddressHolder.address,
       nonFungiblePositionManager.address,
       uniswapV3Factory.address,
       swapRouter.address,
-      registry.address,
     ]);
     const diamondCutFacet = await deployContract("DiamondCutFacet");
 
     //deploy the PositionManagerFactory => deploy PositionManager
     const positionManagerFactory = (await deployPositionManagerFactoryAndActions(
-      registry.address,
-      diamondCutFacet.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
+      diamondCutFacet.address,
       [
         "IncreaseLiquidity",
         "SingleTokenIncreaseLiquidity",
@@ -151,7 +155,7 @@ describe("GovernanceRecipes.sol", function () {
 
     const strategyProviderWalletFactoryFactory = await ethers.getContractFactory("StrategyProviderWalletFactory");
     strategyProviderWalletFactory = (await strategyProviderWalletFactoryFactory.deploy(
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     )) as StrategyProviderWalletFactory;
     await strategyProviderWalletFactory.deployed();
@@ -164,13 +168,13 @@ describe("GovernanceRecipes.sol", function () {
 
     //deploy DepositRecipes contract
     depositRecipes = (await deployContract("DepositRecipes", [
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     ])) as DepositRecipes;
 
     //deploy GovernanceRecipes contract
     governanceRecipes = (await deployContract("GovernanceRecipes", [
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     ])) as GovernanceRecipes;
 
@@ -225,8 +229,8 @@ describe("GovernanceRecipes.sol", function () {
     // give pool some liquidity
     const r = await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenOP.address,
-        token1: tokenUSDT.address,
+        token0: tokenOP.address < tokenUSDT.address ? tokenOP.address : tokenUSDT.address,
+        token1: tokenUSDT.address > tokenOP.address ? tokenUSDT.address : tokenOP.address,
         fee: 3000,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -244,8 +248,8 @@ describe("GovernanceRecipes.sol", function () {
     // give pool some liquidity
     await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenUSDC.address,
-        token1: tokenOP.address,
+        token0: tokenUSDC.address < tokenOP.address ? tokenUSDC.address : tokenOP.address,
+        token1: tokenOP.address > tokenUSDC.address ? tokenOP.address : tokenUSDC.address,
         fee: 3000,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -262,8 +266,8 @@ describe("GovernanceRecipes.sol", function () {
     // give pool some liquidity
     await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenUSDC.address,
-        token1: tokenUSDT.address,
+        token0: tokenUSDC.address < tokenUSDT.address ? tokenUSDC.address : tokenUSDT.address,
+        token1: tokenUSDT.address > tokenUSDC.address ? tokenUSDT.address : tokenUSDC.address,
         fee: 3000,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -277,23 +281,6 @@ describe("GovernanceRecipes.sol", function () {
       { gasLimit: 670000 },
     );
   }
-
-  describe("changeRegistry", function () {
-    it("Should success change registry", async () => {
-      await governanceRecipes.connect(deployer).changeRegistry(await deployer.getAddress());
-      expect(await governanceRecipes.registry()).to.be.equal(await deployer.getAddress());
-    });
-
-    it("Should fail change registry by others not owner", async () => {
-      await expect(governanceRecipes.connect(user).changeRegistry(await deployer.getAddress())).to.be.revertedWith(
-        "BROG",
-      );
-    });
-
-    it("Should fail change registry by zero address", async () => {
-      await expect(governanceRecipes.connect(deployer).changeRegistry(zeroAddress)).to.be.revertedWith("BRCR");
-    });
-  });
 
   describe("governance force close position", function () {
     it("closedPositionForced", async function () {

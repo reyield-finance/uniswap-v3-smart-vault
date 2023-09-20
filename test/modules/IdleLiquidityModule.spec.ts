@@ -18,11 +18,13 @@ import {
   PositionManager,
   PositionManagerFactory,
   Registry,
+  RegistryAddressHolder,
   StrategyProviderWallet,
   StrategyProviderWalletFactory,
 } from "../../types";
 import { pool } from "../../types/@uniswap/v3-core/contracts/interfaces";
 import {
+  RegistryAddressHolderFixture,
   RegistryFixture,
   deployContract,
   deployPositionManagerFactoryAndActions,
@@ -50,6 +52,7 @@ describe("IdleLiquidityModule.sol", function () {
   let keeper: SignerWithAddress;
   let rebalanceFeeRecipient: SignerWithAddress;
   let registry: Registry;
+  let registryAddressHolder: RegistryAddressHolder;
 
   //all the token used globally
   let tokenWETH9: MockWETH9;
@@ -128,23 +131,23 @@ describe("IdleLiquidityModule.sol", function () {
         tokenWETH.address,
       )
     ).registryFixture;
-
+    registryAddressHolder = (await RegistryAddressHolderFixture(registry.address)).registryAddressHolderFixture;
     // add deployer as keeper
     await registry.connect(deployer).addKeeperToWhitelist(keeper.address);
 
     const uniswapAddressHolder = await deployContract("UniswapAddressHolder", [
+      registryAddressHolder.address,
       nonFungiblePositionManager.address,
       uniswapV3Factory.address,
       swapRouter.address,
-      registry.address,
     ]);
     const diamondCutFacet = await deployContract("DiamondCutFacet");
 
     //deploy the PositionManagerFactory => deploy PositionManager
     const positionManagerFactory = (await deployPositionManagerFactoryAndActions(
-      registry.address,
-      diamondCutFacet.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
+      diamondCutFacet.address,
       [
         "IncreaseLiquidity",
         "SingleTokenIncreaseLiquidity",
@@ -158,7 +161,7 @@ describe("IdleLiquidityModule.sol", function () {
 
     const strategyProviderWalletFactoryFactory = await ethers.getContractFactory("StrategyProviderWalletFactory");
     strategyProviderWalletFactory = (await strategyProviderWalletFactoryFactory.deploy(
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     )) as StrategyProviderWalletFactory;
     await strategyProviderWalletFactory.deployed();
@@ -171,13 +174,13 @@ describe("IdleLiquidityModule.sol", function () {
 
     //deploy DepositRecipes contract
     depositRecipes = (await deployContract("DepositRecipes", [
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     ])) as DepositRecipes;
 
     //deploy IdleLiquidityModule contract
     idleLiquidityModule = (await deployContract("IdleLiquidityModule", [
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     ])) as IdleLiquidityModule;
 
@@ -226,8 +229,8 @@ describe("IdleLiquidityModule.sol", function () {
     // give pool some liquidity
     const r = await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenOP.address,
-        token1: tokenUSDT.address,
+        token0: tokenOP.address < tokenUSDT.address ? tokenOP.address : tokenUSDT.address,
+        token1: tokenUSDT.address > tokenOP.address ? tokenUSDT.address : tokenOP.address,
         fee: 500,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -245,8 +248,8 @@ describe("IdleLiquidityModule.sol", function () {
     // give pool some liquidity
     await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenUSDC.address,
-        token1: tokenOP.address,
+        token0: tokenUSDC.address < tokenOP.address ? tokenUSDC.address : tokenOP.address,
+        token1: tokenUSDC.address < tokenOP.address ? tokenOP.address : tokenUSDC.address,
         fee: 500,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -263,8 +266,8 @@ describe("IdleLiquidityModule.sol", function () {
     // give pool some liquidity
     await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenUSDC.address,
-        token1: tokenUSDT.address,
+        token0: tokenUSDC.address < tokenUSDT.address ? tokenUSDC.address : tokenUSDT.address,
+        token1: tokenUSDC.address < tokenUSDT.address ? tokenUSDT.address : tokenUSDC.address,
         fee: 500,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -281,8 +284,8 @@ describe("IdleLiquidityModule.sol", function () {
     // give pool some liquidity
     await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenUSDC.address,
-        token1: tokenWETH.address,
+        token0: tokenUSDC.address < tokenWETH.address ? tokenUSDC.address : tokenWETH.address,
+        token1: tokenUSDC.address < tokenWETH.address ? tokenWETH.address : tokenUSDC.address,
         fee: 500,
         tickLower: 0 - 10000,
         tickUpper: 0 + 10000,
@@ -296,23 +299,6 @@ describe("IdleLiquidityModule.sol", function () {
       { gasLimit: 670000 },
     );
   }
-
-  describe("changeRegistry", function () {
-    it("Should success change registry", async () => {
-      await idleLiquidityModule.connect(deployer).changeRegistry(await deployer.getAddress());
-      expect(await idleLiquidityModule.registry()).to.be.equal(await deployer.getAddress());
-    });
-
-    it("Should fail change registry by others not owner", async () => {
-      await expect(idleLiquidityModule.connect(user).changeRegistry(await deployer.getAddress())).to.be.revertedWith(
-        "BMOG",
-      );
-    });
-
-    it("Should fail change registry by zero address", async () => {
-      await expect(idleLiquidityModule.connect(deployer).changeRegistry(zeroAddress)).to.be.revertedWith("BMCR");
-    });
-  });
 
   describe("rebalance", function () {
     it("rebalance", async function () {
@@ -1086,7 +1072,7 @@ describe("IdleLiquidityModule.sol", function () {
           tickUpperDiff: newTickUpperDiff,
           isForced: false,
         }),
-      ).to.be.revertedWith("OWLK");
+      ).to.be.revertedWith("BMOWLK");
     });
 
     it("should fail rebalance with tick not out of range", async function () {

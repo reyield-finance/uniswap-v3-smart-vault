@@ -7,12 +7,13 @@ import "./StrategyProviderWallet.sol";
 import "./interfaces/IRegistry.sol";
 import "./interfaces/IStrategyProviderWalletFactory.sol";
 import "./interfaces/IUniswapAddressHolder.sol";
+import "./interfaces/IRegistryAddressHolder.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract StrategyProviderWalletFactory is IStrategyProviderWalletFactory {
     using SafeMath for uint256;
 
-    address public registry;
+    address public immutable registryAddressHolder;
     address public immutable uniswapAddressHolder;
 
     mapping(address => address) public override providerToWallet;
@@ -27,7 +28,7 @@ contract StrategyProviderWalletFactory is IStrategyProviderWalletFactory {
     event StrategyProviderWalletCreated(address indexed strategyProviderWallet, address creator, address provider);
 
     modifier onlyGovernance() {
-        require(msg.sender == IRegistry(registry).governance(), "SPWFOG");
+        require(msg.sender == registry().governance(), "SPWFOG");
         _;
     }
 
@@ -36,18 +37,17 @@ contract StrategyProviderWalletFactory is IStrategyProviderWalletFactory {
         _;
     }
 
-    constructor(address _registry, address _uniswapAddressHolder) {
-        require(_registry != address(0), "SPWFR0");
+    constructor(address _registryAddressHolder, address _uniswapAddressHolder) {
+        require(_registryAddressHolder != address(0), "SPWFRAH0");
         require(_uniswapAddressHolder != address(0), "SPWFUAH0");
-        registry = _registry;
+        registryAddressHolder = _registryAddressHolder;
         uniswapAddressHolder = _uniswapAddressHolder;
     }
 
-    ///@notice change registry address
-    ///@param _registry address of new registry
-    function changeRegistry(address _registry) external onlyGovernance {
-        require(_registry != address(0), "SPWFCR");
-        registry = _registry;
+    ///@notice get IRegistry from registryAddressHolder
+    ///@return IRegistry interface of registry
+    function registry() private view returns (IRegistry) {
+        return IRegistry(IRegistryAddressHolder(registryAddressHolder).registry());
     }
 
     ///@notice add creator to whitelist
@@ -63,7 +63,11 @@ contract StrategyProviderWalletFactory is IStrategyProviderWalletFactory {
     ///@param provider address of provider
     function create(address provider) external override onlycreator returns (address walletAddress) {
         require(providerToWallet[provider] == address(0), "SPWFA0");
-        StrategyProviderWallet wallet = new StrategyProviderWallet(provider, registry, uniswapAddressHolder);
+        StrategyProviderWallet wallet = new StrategyProviderWallet(
+            provider,
+            registryAddressHolder,
+            uniswapAddressHolder
+        );
         strategyProviderWallets.push(address(wallet));
         providerToWallet[provider] = address(wallet);
 
