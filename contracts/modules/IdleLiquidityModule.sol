@@ -85,7 +85,7 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
             samRes.amount1Leftover
         );
 
-        emit positionRebalanced(
+        emit PositionRebalanced(
             positionManager,
             input.positionId,
             pInfo.tokenId,
@@ -147,7 +147,7 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
             samRes.amount1Leftover
         );
 
-        emit positionRebalanced(
+        emit PositionRebalanced(
             positionManager,
             input.positionId,
             pInfo.tokenId,

@@ -129,10 +129,10 @@ export async function routerFixture(): Promise<RuoterFixture> {
 
 export async function mintSTDAmount(token: MockToken, amount?: string) {
   const signers = await ethers.getSigners();
-  await token.mint(signers[0].address, ethers.utils.parseEther(amount || "1000000000000000"));
-  await token.mint(signers[1].address, ethers.utils.parseEther(amount || "1000000000000000"));
-  await token.mint(signers[2].address, ethers.utils.parseEther(amount || "1000000000000000"));
-  await token.mint(signers[3].address, ethers.utils.parseEther(amount || "1000000000000000"));
+  await token.mint(signers[0].address, ethers.utils.parseEther(amount || "100000000000000000000"));
+  await token.mint(signers[1].address, ethers.utils.parseEther(amount || "100000000000000000000"));
+  await token.mint(signers[2].address, ethers.utils.parseEther(amount || "100000000000000000000"));
+  await token.mint(signers[3].address, ethers.utils.parseEther(amount || "100000000000000000000"));
 }
 
 export async function depositWETH9Amount(weth9: MockWETH9, amount?: string) {

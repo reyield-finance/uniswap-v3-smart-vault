@@ -55,6 +55,40 @@ describe("SwapHelper.sol", function () {
   }
 
   describe("calcAmountToSwap", function () {
+    it("should calculate 0.01% USDC/sUSD amount under estimation missing 0.1% tolerance", async function () {
+      const sqrtRatioX96 = 79286591560947343002375493343276333000n;
+      const tick = 887270n;
+      const tickLower = tick - 1n;
+      const tickUpper = tick + 1n;
+      const { sqrtRatioAX96, sqrtRatioBX96, liquidity, intermediate } = await SwapHelper.getRatioFromRangeWithTick(
+        tick,
+        tickLower,
+        tickUpper,
+      );
+      console.log("sqrtRatioAX96", sqrtRatioAX96);
+      // 79327044955287866133200608285007024101485
+      console.log("sqrtRatioBX96", sqrtRatioBX96);
+      console.log("intermediate", intermediate);
+      const result = (2n ** 96n * intermediate.toBigInt()) / (sqrtRatioBX96.toBigInt() - sqrtRatioX96);
+      console.log("result", result);
+      console.log("liquidity", liquidity);
+      console.log("final", result - 2n ** 128n);
+      // 73237509206788409033143286412657469303644n;
+      // 1461300573087664225169824675732939745364450255123n
+      const sqrtPriceX96 = 1461227513878616457037757440299078829107947336294n;
+      const amount0In = 10n * 10n ** 6n;
+      const amount1In = 0n;
+      const token0Decimal = 6n;
+      const token1Decimal = 18n;
+      const [amountToSwap, token0In] = await SwapHelper.calcAmountToSwap(
+        sqrtRatioX96,
+        tickLower,
+        tickUpper,
+        sqrtPriceX96,
+        amount0In,
+        amount1In,
+      );
+    });
     it("should swap all to one token if poolTick is under tickLower", async function () {
       //range is over the pool tick => after swap, all my position should be in token0
       const sqrtRatioX96 = "84436263667623614766280323984";

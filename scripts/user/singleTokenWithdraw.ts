@@ -29,7 +29,7 @@ async function main() {
 
   const withdrawRecipesAddress = "0xa92ac3e46442b32F02848D26bcB0Cc4426D2f568";
   const withdrawRecipes = (await ethers.getContractAt("WithdrawRecipes", withdrawRecipesAddress)) as WithdrawRecipes;
-  const positionId = 1;
+  const positionId = 9;
   const isReturnedToken0 = true;
   const txn = await withdrawRecipes.singleTokenWithdraw(positionId, isReturnedToken0);
   console.log(`Withdraw txn hash: ${txn.hash}...`);

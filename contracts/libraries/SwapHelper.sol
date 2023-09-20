@@ -16,6 +16,9 @@ import "./MathHelper.sol";
 
 ///@title library to help with swap amounts calculations
 library SwapHelper {
+    uint8 internal constant RESOLUTION48 = 48;
+    uint256 internal constant Q48 = 0x1000000000000;
+
     using SafeInt24Math for int24;
     using SafeInt56Math for int56;
     using SafeMath for uint256;
@@ -31,7 +34,7 @@ library SwapHelper {
         uint160 sqrtRatioBX96
     ) internal pure returns (uint256 ratioX96) {
         require(sqrtRatioAX96 < sqrtRatioX96 && sqrtRatioBX96 > sqrtRatioX96, "SHR");
-        uint128 liquidity = LiquidityAmounts.getLiquidityForAmount0(sqrtRatioX96, sqrtRatioBX96, FixedPoint96.Q96);
+        uint128 liquidity = LiquidityAmounts.getLiquidityForAmount0(sqrtRatioX96, sqrtRatioBX96, Q48);
         (, ratioX96) = LiquidityAmounts.getAmountsForLiquidity(sqrtRatioX96, sqrtRatioAX96, sqrtRatioBX96, liquidity);
     }
 
@@ -72,13 +75,15 @@ library SwapHelper {
                 amount1In << FixedPoint96.RESOLUTION
             );
 
-            uint256 amount0Post = valueX96.div(((uint256(sqrtPriceX96) ** 2) >> FixedPoint96.RESOLUTION).add(ratioX96));
+            uint256 amount0Post = valueX96.div(
+                ((uint256(sqrtPriceX96) ** 2) >> FixedPoint96.RESOLUTION).add(ratioX96 << RESOLUTION48)
+            );
             token0In = amount0Post < amount0In;
 
             if (token0In) {
                 amountToSwap = amount0In.sub(amount0Post);
             } else {
-                amountToSwap = amount1In.sub((amount0Post).mul(ratioX96) >> FixedPoint96.RESOLUTION);
+                amountToSwap = amount1In.sub((amount0Post).mul(ratioX96) >> RESOLUTION48);
             }
         }
     }

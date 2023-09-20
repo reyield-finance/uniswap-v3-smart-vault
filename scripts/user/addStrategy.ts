@@ -43,10 +43,10 @@ async function main() {
   )) as StrategyProviderWallet;
 
   const strategyId = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16);
-  const token0 = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174";
-  const token1 = "0xc2132d05d31c914a87c6611c10748aeb04b58e8f";
+  const token0 = "0x7F5c764cBc14f9669B88837ca1490cCa17c31607";
+  const token1 = "0x8c6f28f2F1A3C87F0f938b96d27520d9751ec8d9";
   const fee = 100;
-  const performanceFeeRatio = 1000;
+  const performanceFeeRatio = 000;
   const receivedToken = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174";
   const licenseAmount = 1;
 
