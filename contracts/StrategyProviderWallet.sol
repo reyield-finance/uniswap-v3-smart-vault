@@ -105,10 +105,7 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
         address pool = IUniswapV3Factory(uniswapAddressHolder.uniswapV3FactoryAddress()).getPool(token0, token1, fee);
         require(pool != address(0), "SPWAP0");
 
-        ///@dev check performanceFeeRatio only if the official account is not the owner
-        if (owner != registry().officialAccount()) {
-            checkPerformanceFeeRatio(performanceFeeRatio);
-        }
+        checkPerformanceFeeRatio(performanceFeeRatio);
 
         checkLicenseAmount(licenseAmount);
 
@@ -135,9 +132,14 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
         );
     }
 
-    function checkPerformanceFeeRatio(uint24 performanceFeeRatio) internal pure {
-        ///NOTE: 7.5% <= Perf. Fee <= 65%
-        require(performanceFeeRatio >= 750 && performanceFeeRatio <= 6500, "SPWPFR");
+    function checkPerformanceFeeRatio(uint24 performanceFeeRatio) internal view {
+        if (owner != registry().officialAccount()) {
+            ///NOTE: 7.5% <= Perf. Fee <= 65%
+            require(performanceFeeRatio >= 750 && performanceFeeRatio <= 6500, "SPWPFR");
+        } else {
+            ///NOTE: Perf. Fee <= 100%
+            require(performanceFeeRatio <= 10000, "SPWPFR");
+        }
     }
 
     function checkLicenseAmount(uint32 licenseAmount) internal pure {
