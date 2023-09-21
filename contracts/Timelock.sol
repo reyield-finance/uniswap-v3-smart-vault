@@ -45,21 +45,21 @@ contract Timelock {
     mapping(address => bool) public pendingAdminAccepted;
     mapping(bytes32 => bool) public queuedTransactions;
 
-    constructor(address _admin, uint256 _delay) {
-        require(_delay >= MINIMUM_DELAY, "Timelock::constructor: Delay must exceed minimum delay.");
-        require(_delay <= MAXIMUM_DELAY, "Timelock::constructor: Delay must not exceed maximum delay.");
+    modifier ValidDeplay(uint256 _delay) {
+        require(_delay >= MINIMUM_DELAY, "TVDMIN");
+        require(_delay <= MAXIMUM_DELAY, "TVDMAX");
+        _;
+    }
 
+    constructor(address _admin, uint256 _delay) ValidDeplay(_delay) {
         admin = _admin;
         delay = _delay;
     }
 
     /// @notice Sets the minimum time delay
     /// @param _delay the new delay
-    function setDelay(uint256 _delay) public onlyAdmin {
-        require(_delay >= MINIMUM_DELAY, "Timelock::setDelay: Delay must exceed minimum delay.");
-        require(_delay <= MAXIMUM_DELAY, "Timelock::setDelay: Delay must not exceed maximum delay.");
+    function setDelay(uint256 _delay) public onlyAdmin ValidDeplay(_delay) {
         delay = _delay;
-
         emit NewDelay(delay);
     }
 
