@@ -97,6 +97,7 @@ library SwapHelper {
         //TWAP_DURATION = 60  # 60 seconds
 
         if (twapDuration == 0) {
+            //bypass check
             return;
         }
         (, int24 currentTick, , , , , ) = pool.slot0();

@@ -126,6 +126,9 @@ describe("Registry.sol", function () {
 
       await Registry.deactivateFeeTier(100);
       expect(await Registry.allowableFeeTiers(100)).to.be.false;
+      (await Registry.getAllowableFeeTiers()).forEach((value) => {
+        expect(value).to.not.be.equal(100);
+      });
 
       const newFeeTiers: number[] = await Registry.getFeeTiers();
       expect(newFeeTiers[0]).to.be.equal(200);

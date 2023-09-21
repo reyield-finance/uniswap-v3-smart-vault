@@ -357,15 +357,16 @@ contract Registry is IRegistry, ERC165 {
     function deactivateFeeTier(uint24 fee) external onlyGovernance {
         require(allowableFeeTiers[fee], "DRAFT");
         allowableFeeTiers[fee] = false;
-        for (uint256 i; i < feeTiers.length; ++i) {
-            if (feeTiers[i] == fee) {
-                if (feeTiers.length == 1) {
+        uint256 feeTiersLength = feeTiers.length;
+        if (feeTiersLength == 1) {
+            feeTiers.pop();
+        } else {
+            for (uint256 i; i < feeTiersLength; ++i) {
+                if (feeTiers[i] == fee) {
+                    feeTiers[i] = feeTiers[feeTiersLength - 1];
                     feeTiers.pop();
                     break;
                 }
-                feeTiers[i] = feeTiers[feeTiers.length - 1];
-                feeTiers.pop();
-                break;
             }
         }
     }
