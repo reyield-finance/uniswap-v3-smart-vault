@@ -27,7 +27,7 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
 
     ///@notice emitted when a strategy is added to the wallet
     event StrategyAdded(
-        bytes16 strategyId,
+        bytes16 indexed strategyId,
         address token0,
         address token1,
         uint24 fee,
@@ -38,7 +38,7 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
 
     ///@notice emitted when a strategy is updated
     event StrategyUpdated(
-        bytes16 strategyId,
+        bytes16 indexed strategyId,
         address pool,
         uint16 performanceFeeRatio,
         ReceivedTokenType recievedTokenType,

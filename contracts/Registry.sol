@@ -37,30 +37,6 @@ contract Registry is IRegistry, ERC165 {
     uint32 private serviceFeeRatioLength;
     mapping(uint32 => uint32) public licensesToServiceFeeRatio;
 
-    ///@notice emitted when governance address is changed
-    ///@param newGovernance the new governance address
-    event GovernanceChanged(address newGovernance);
-
-    ///@notice emitted when service fee recipient address is changed
-    ///@param newServiceFeeRecipient the new service fee recipient address
-    event ServiceFeeRecipientChanged(address newServiceFeeRecipient);
-
-    ///@notice emitted when a contract is added to registry
-    ///@param newContract address of the new contract
-    ///@param contractId keccak of contract name
-    event ContractAdded(address newContract, bytes32 contractId);
-
-    ///@notice emitted when a contract address is updated
-    ///@param oldContract address of the contract before update
-    ///@param newContract address of the contract after update
-    ///@param contractId keccak of contract name
-    event ContractChanged(address oldContract, address newContract, bytes32 contractId);
-
-    ///@notice emitted when a contract address is removed
-    ///@param contractAddress address of the removed contract
-    ///@param contractId keccak of removed contract name
-    event ContractRemoved(address contractAddress, bytes32 contractId);
-
     constructor(
         address _governance,
         address _serviceFeeRecipient,
@@ -173,16 +149,18 @@ contract Registry is IRegistry, ERC165 {
     ///@param _governance the address of the new governance
     function changeGovernance(address _governance) external onlyGovernance {
         require(_governance != address(0), "RG0");
+        address oldGovernance = governance;
         governance = _governance;
-        emit GovernanceChanged(_governance);
+        emit GovernanceChanged(oldGovernance, _governance);
     }
 
     ///@notice change the address of the service fee recipient
     ///@param _serviceFeeRecipient the address of the new service fee recipient
     function changeServiceFeeRecipient(address _serviceFeeRecipient) external onlyGovernance {
         require(_serviceFeeRecipient != address(0), "RS0");
+        address oldServiceFeeRecipient = serviceFeeRecipient;
         serviceFeeRecipient = _serviceFeeRecipient;
-        emit ServiceFeeRecipientChanged(_serviceFeeRecipient);
+        emit ServiceFeeRecipientChanged(oldServiceFeeRecipient, _serviceFeeRecipient);
     }
 
     ///@notice check if the fee tier is allowable
@@ -217,21 +195,30 @@ contract Registry is IRegistry, ERC165 {
     ///@param _positionManagerFactory the address of the position manager factory
     function setPositionManagerFactory(address _positionManagerFactory) external onlyGovernance {
         require(_positionManagerFactory != address(0), "RF0");
+        address oldPositionManagerFactoryAddress = positionManagerFactoryAddress;
         positionManagerFactoryAddress = _positionManagerFactory;
+        emit PositionManagerFactoryChanged(oldPositionManagerFactoryAddress, _positionManagerFactory);
     }
 
     ///@notice sets the strategy provider collect wallet factory address
     ///@param _strategyProviderWalletFactory the address of the strategy provider collect wallet factory
     function setStrategyProviderWalletFactory(address _strategyProviderWalletFactory) external onlyGovernance {
         require(_strategyProviderWalletFactory != address(0), "RF0");
+        address oldStrategyProviderWalletFactoryAddress = strategyProviderWalletFactoryAddress;
         strategyProviderWalletFactoryAddress = _strategyProviderWalletFactory;
+        emit StrategyProviderWalletFactoryChanged(
+            oldStrategyProviderWalletFactoryAddress,
+            _strategyProviderWalletFactory
+        );
     }
 
     ///@notice sets the official account address
     ///@param _officialAccount the address of the official account
     function setOfficialAccount(address _officialAccount) external onlyGovernance {
         require(_officialAccount != address(0), "ROA0");
+        address oldOfficialAccount = officialAccount;
         officialAccount = _officialAccount;
+        emit OfficialAccountChanged(oldOfficialAccount, _officialAccount);
     }
 
     function setServiceFeeRatio(uint32 _licenseAmount, uint32 _serviceFeeRatio) external onlyGovernance {
@@ -239,6 +226,7 @@ contract Registry is IRegistry, ERC165 {
         if (_licenseAmount > serviceFeeRatioLength) {
             serviceFeeRatioLength = _licenseAmount;
         }
+        emit ServiceFeeRatioUpdated(_licenseAmount, _serviceFeeRatio);
     }
 
     ///@notice Register a contract
@@ -285,6 +273,7 @@ contract Registry is IRegistry, ERC165 {
     function addKeeperToWhitelist(address _keeper) external onlyGovernance {
         require(!whitelistedKeepers[_keeper], "RKW");
         whitelistedKeepers[_keeper] = true;
+        emit KeeperAdded(_keeper);
     }
 
     ///@notice remove a whitelisted keeper
@@ -292,6 +281,7 @@ contract Registry is IRegistry, ERC165 {
     function removeKeeperFromWhitelist(address _keeper) external onlyGovernance {
         require(whitelistedKeepers[_keeper], "RKN");
         whitelistedKeepers[_keeper] = false;
+        emit KeeperRemoved(_keeper);
     }
 
     ///@notice Get the keys for all modules
@@ -308,33 +298,41 @@ contract Registry is IRegistry, ERC165 {
         require(_defaultData != bytes32(0), "RD0");
 
         modules[_id].defaultData = _defaultData;
+        emit ModuleDataUpdated(_id, modules[_id].contractAddress, _defaultData);
     }
 
     ///@notice set oracle price deviation threshold
     ///@param _maxTwapDeviation the new oracle price deviation threshold
     function setMaxTwapDeviation(int24 _maxTwapDeviation) external onlyGovernance {
+        int24 oldMaxTwapDeviation = maxTwapDeviation;
         maxTwapDeviation = _maxTwapDeviation;
+        emit MaxTwapDeviationUpdated(oldMaxTwapDeviation, _maxTwapDeviation);
     }
 
     ///@notice set twap duration
     ///@param _twapDuration the new twap duration
     function setTwapDuration(uint32 _twapDuration) external onlyGovernance {
-        require(_twapDuration != 0, "RT0");
+        uint32 oldTwapDuration = twapDuration;
         twapDuration = _twapDuration;
+        emit TwapDurationUpdated(oldTwapDuration, _twapDuration);
     }
 
     ///@notice set address of usd value token
     ///@param _usdValueAddress the address of new usd value token
     function setUsdValueTokenAddress(address _usdValueAddress) external onlyGovernance {
         require(_usdValueAddress != address(0), "RUA");
+        address oldUsdValueTokenAddress = usdValueTokenAddress;
         usdValueTokenAddress = _usdValueAddress;
+        emit UsdValueTokenAddressUpdated(oldUsdValueTokenAddress, _usdValueAddress);
     }
 
     ///@notice set address of weth9
     ///@param _weth9 the address of new weth9
     function setWETH9(address _weth9) external onlyGovernance {
         require(_weth9 != address(0), "RWA");
+        address oldWeth9 = weth9;
         weth9 = _weth9;
+        emit Weth9Updated(oldWeth9, _weth9);
     }
 
     ///@notice Get the address of a module for a given key
@@ -350,6 +348,7 @@ contract Registry is IRegistry, ERC165 {
         require(!allowableFeeTiers[fee], "DRAFT");
         allowableFeeTiers[fee] = true;
         feeTiers.push(fee);
+        emit FeeTierActivated(fee);
     }
 
     ///@notice deactivates a fee tier
@@ -369,6 +368,7 @@ contract Registry is IRegistry, ERC165 {
                 }
             }
         }
+        emit FeeTierDeactivated(fee);
     }
 
     ///@notice get service fee ratio for a given license amount

@@ -325,6 +325,7 @@ describe("WithdrawRecipes.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
           amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          break;
         }
       }
       // user
@@ -482,6 +483,7 @@ describe("WithdrawRecipes.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
           amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -658,6 +660,7 @@ describe("WithdrawRecipes.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
           amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          break;
         }
       }
       // user
@@ -726,6 +729,7 @@ describe("WithdrawRecipes.sol", function () {
             amount1CollectedFee = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
             amount0Removed = BigNumber.from(hexToInt256(hexToBn(eventData[3])));
             // amount1Removed = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
+            break;
           }
         }
       }
@@ -813,6 +817,7 @@ describe("WithdrawRecipes.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
           amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -1009,6 +1014,7 @@ describe("WithdrawRecipes.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
           amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -1214,6 +1220,7 @@ describe("WithdrawRecipes.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
           amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          break;
         }
       }
       expect(count).to.be.equal(1);

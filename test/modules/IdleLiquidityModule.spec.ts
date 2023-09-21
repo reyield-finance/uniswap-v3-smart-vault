@@ -347,6 +347,7 @@ describe("IdleLiquidityModule.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
           amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -462,7 +463,7 @@ describe("IdleLiquidityModule.sol", function () {
         }
       }
 
-      expect(countAfterRebalance).to.be.equal(4);
+      expect(countAfterRebalance).to.be.equal(5);
       expect(tokenIdClosed).to.be.equal(tokenIdInLog);
       expect(amount0CollectedFee.sub(token0Repaid)).to.be.equal(collectedFee0InLogRebalance);
       expect(amount1CollectedFee.sub(token1Repaid)).to.be.equal(collectedFee1InLogRebalance);
@@ -552,6 +553,7 @@ describe("IdleLiquidityModule.sol", function () {
           // amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
           amount0LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[5])));
           amount1LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[6])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -672,7 +674,7 @@ describe("IdleLiquidityModule.sol", function () {
         }
       }
 
-      expect(countAfterRebalance).to.be.equal(4);
+      expect(countAfterRebalance).to.be.equal(5);
       expect(tokenIdClosed).to.be.equal(tokenIdInLog);
       expect(amount0CollectedFee.sub(token0Repaid)).to.be.equal(collectedFee0InLogRebalance);
       expect(amount1CollectedFee.sub(token1Repaid)).to.be.equal(collectedFee1InLogRebalance);
@@ -769,6 +771,7 @@ describe("IdleLiquidityModule.sol", function () {
           // amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
           amount0LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[5])));
           amount1LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[6])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -893,7 +896,7 @@ describe("IdleLiquidityModule.sol", function () {
         }
       }
 
-      expect(countAfterRebalance).to.be.equal(4);
+      expect(countAfterRebalance).to.be.equal(5);
       expect(tokenIdClosed).to.be.equal(tokenIdInLog);
       expect(amount0CollectedFee.sub(token0Repaid)).to.be.equal(collectedFee0InLogRebalance);
       expect(amount1CollectedFee.sub(token1Repaid)).to.be.equal(collectedFee1InLogRebalance);
@@ -990,6 +993,7 @@ describe("IdleLiquidityModule.sol", function () {
           // amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
           amount0LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[5])));
           amount1LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[6])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -1107,6 +1111,7 @@ describe("IdleLiquidityModule.sol", function () {
           // amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
           amount0LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[5])));
           amount1LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[6])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -1224,6 +1229,7 @@ describe("IdleLiquidityModule.sol", function () {
           // amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
           amount0LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[5])));
           amount1LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[6])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -1341,6 +1347,7 @@ describe("IdleLiquidityModule.sol", function () {
           // amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
           amount0LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[5])));
           amount1LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[6])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -1478,7 +1485,7 @@ describe("IdleLiquidityModule.sol", function () {
         }
       }
 
-      expect(countAfterRebalance).to.be.equal(4);
+      expect(countAfterRebalance).to.be.equal(5);
       expect(tokenIdClosed).to.be.equal(tokenIdInLog);
       expect(amount0CollectedFee.sub(token0Repaid)).to.be.equal(collectedFee0InLogRebalance);
       expect(amount1CollectedFee.sub(token1Repaid)).to.be.equal(collectedFee1InLogRebalance);

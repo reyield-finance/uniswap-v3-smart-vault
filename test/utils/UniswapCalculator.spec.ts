@@ -323,6 +323,7 @@ describe("UniswapCalculator.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
           amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          break;
         }
       }
       expect(count).to.be.equal(1);

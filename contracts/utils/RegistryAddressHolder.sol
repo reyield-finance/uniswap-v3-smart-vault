@@ -10,6 +10,11 @@ import "@openzeppelin/contracts/introspection/ERC165Checker.sol";
 contract RegistryAddressHolder is IRegistryAddressHolder {
     address public override registry;
 
+    ///@notice emitted when the address of registry is changed
+    ///@param oldAddress old address of registry
+    ///@param newAddress new address of registry
+    event RegistryAddressChanged(address oldAddress, address newAddress);
+
     ///@notice restrict some function called only by governance
     modifier onlyGovernance() {
         require(msg.sender == IRegistry(registry).governance(), "RAHOG");
@@ -25,6 +30,8 @@ contract RegistryAddressHolder is IRegistryAddressHolder {
     ///@param newAddress new address of registry
     function setRegistryAddress(address newAddress) external override onlyGovernance {
         require(ERC165Checker.supportsInterface(newAddress, type(IRegistry).interfaceId), "RAHERC165");
+        address oldRegistry = registry;
         registry = newAddress;
+        emit RegistryAddressChanged(oldRegistry, newAddress);
     }
 }

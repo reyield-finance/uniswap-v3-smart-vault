@@ -27,6 +27,10 @@ contract StrategyProviderWalletFactory is IStrategyProviderWalletFactory {
     ///@param provider address of provider
     event StrategyProviderWalletCreated(address indexed strategyProviderWallet, address creator, address provider);
 
+    ///@notice emitted when a creator is added to whitelist
+    ///@param creator address of creator
+    event CreatorWhitelistAdded(address indexed creator);
+
     modifier onlyGovernance() {
         require(msg.sender == registry().governance(), "SPWFOG");
         _;
@@ -57,6 +61,7 @@ contract StrategyProviderWalletFactory is IStrategyProviderWalletFactory {
         require(!isIncreatorWhitelist[_creator], "SPWFNICWL");
         isIncreatorWhitelist[_creator] = true;
         creatorWhitelist.push(_creator);
+        emit CreatorWhitelistAdded(_creator);
     }
 
     ///@notice create the strategy provider wallet

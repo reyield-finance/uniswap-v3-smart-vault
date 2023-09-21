@@ -3,6 +3,96 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 interface IRegistry {
+    ///@notice emitted when governance address is changed
+    ///@param oldGovernance the old governance address
+    ///@param newGovernance the new governance address
+    event GovernanceChanged(address oldGovernance, address newGovernance);
+
+    ///@notice emitted when service fee recipient address is changed
+    ///@param oldServiceFeeRecipient the old service fee recipient address
+    ///@param newServiceFeeRecipient the new service fee recipient address
+    event ServiceFeeRecipientChanged(address oldServiceFeeRecipient, address newServiceFeeRecipient);
+
+    ///@notice emitted when position manager factory address is changed
+    ///@param oldPositionManagerFactory the old position manager factory address
+    ///@param newPositionManagerFactory the new position manager factory address
+    event PositionManagerFactoryChanged(address oldPositionManagerFactory, address newPositionManagerFactory);
+
+    ///@notice emitted when strategy provider wallet factory address is changed
+    ///@param oldStrategyProviderWalletFactory the old strategy provider wallet factory address
+    ///@param newStrategyProviderWalletFactory the new strategy provider wallet factory address
+    event StrategyProviderWalletFactoryChanged(
+        address oldStrategyProviderWalletFactory,
+        address newStrategyProviderWalletFactory
+    );
+
+    ///@notice emitted when official account address is changed
+    ///@param newOfficialAccount the new official account address
+    event OfficialAccountChanged(address oldOfficialAccount, address newOfficialAccount);
+
+    ///@notice emitted when a contract is added to registry
+    ///@param newContract address of the new contract
+    ///@param contractId keccak of contract name
+    event ContractAdded(address newContract, bytes32 contractId);
+
+    ///@notice emitted when a contract address is updated
+    ///@param oldContract address of the contract before update
+    ///@param newContract address of the contract after update
+    ///@param contractId keccak of contract name
+    event ContractChanged(address oldContract, address newContract, bytes32 contractId);
+
+    ///@notice emitted when a contract address is removed
+    ///@param contractAddress address of the removed contract
+    ///@param contractId keccak of removed contract name
+    event ContractRemoved(address contractAddress, bytes32 contractId);
+
+    ///@notice emitted when a keeper is added to whitelist
+    ///@param keeper address of the added keeper
+    event KeeperAdded(address keeper);
+
+    ///@notice emitted when a keeper is removed from whitelist
+    ///@param keeper address of the removed keeper
+    event KeeperRemoved(address keeper);
+
+    ///@notice emitted when a fee tier is activated
+    ///@param feeTier fee tier activated
+    event FeeTierActivated(uint24 feeTier);
+
+    ///@notice emitted when a fee tier is deactivated
+    ///@param feeTier fee tier deactivated
+    event FeeTierDeactivated(uint24 feeTier);
+
+    ///@notice emitted when service fee ratio is updated
+    ///@param licenseAmount license amount to update service fee ratio
+    ///@param serviceFeeRatio service fee ratio to update
+    event ServiceFeeRatioUpdated(uint32 licenseAmount, uint32 serviceFeeRatio);
+
+    ///@notice emitted when usd value token address is updated
+    ///@param oldUsdValueTokenAddress the old usd value token address
+    ///@param newUsdValueTokenAddress the new usd value token address
+    event UsdValueTokenAddressUpdated(address oldUsdValueTokenAddress, address newUsdValueTokenAddress);
+
+    ///@notice emitted when weth9 address is updated
+    ///@param oldWeth9 the old weth9 address
+    ///@param newWeth9 the new weth9 address
+    event Weth9Updated(address oldWeth9, address newWeth9);
+
+    ///@notice emitted when max twap deviation is updated
+    ///@param oldMaxTwapDeviation the old twap deviation
+    ///@param newMaxTwapDeviation the new twap deviation
+    event MaxTwapDeviationUpdated(int24 oldMaxTwapDeviation, int24 newMaxTwapDeviation);
+
+    ///@notice emitted when twap duration is updated
+    ///@param oldTwapDuration the old twap duration
+    ///@param newTwapDuration the new twap duration
+    event TwapDurationUpdated(uint32 oldTwapDuration, uint32 newTwapDuration);
+
+    ///@notice emitted when module data is updated
+    ///@param id keccak256 of module id string
+    ///@param contractAddress address of the module
+    ///@param defaultData default data of the module
+    event ModuleDataUpdated(bytes32 id, address contractAddress, bytes32 defaultData);
+
     struct Entry {
         address contractAddress;
         bytes32 defaultData;

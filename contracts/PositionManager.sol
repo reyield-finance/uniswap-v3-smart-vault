@@ -36,6 +36,71 @@ contract PositionManager is IPositionManager, ERC721Holder {
     ///@param amount of the ERC20
     event ERC20Withdrawn(address tokenAddress, address to, uint256 amount);
 
+    ///@notice emitted when a position is created
+    ///@param from address of the caller
+    ///@param positionId ID of the position
+    ///@param tokenId ID of the NFT
+    ///@param strategyProvider address of the strategy provider
+    ///@param strategyId ID of the strategy
+    ///@param totalDepositUSDValue total deposit value in USD
+    ///@param amount0Leftover amount of token0 leftover after increase liquidity
+    ///@param amount1Leftover amount of token1 leftover after increase liquidity
+    ///@param tickLowerDiff difference between the current tick and the tickLower
+    ///@param tickUpperDiff difference between the current tick and the tickUpper
+    event PositionCreated(
+        address indexed from,
+        uint256 indexed positionId,
+        uint256 tokenId,
+        address strategyProvider,
+        bytes16 strategyId,
+        uint256 totalDepositUSDValue,
+        uint256 amount0Leftover,
+        uint256 amount1Leftover,
+        int24 tickLowerDiff,
+        int24 tickUpperDiff
+    );
+
+    ///@notice emitted when a position is closed
+    ///@param from address of the caller
+    ///@param positionId ID of the position
+    event PositionClosed(address indexed from, uint256 indexed positionId);
+
+    ///@notice emitted when a position is rebalanced
+    ///@param from address of the caller
+    ///@param positionId ID of the position
+    ///@param newTokenId ID of the new NFT
+    ///@param tickLowerDiff difference between the current tick and the tickLower
+    ///@param tickUpperDiff difference between the current tick and the tickUpper
+    ///@param amount0CollectedFee amount of token0 total collected fee after rebalance
+    ///@param amount1CollectedFee amount of token1 total collected fee after rebalance
+    ///@param amount0Leftover amount of token0 leftover after rebalance
+    ///@param amount1Leftover amount of token1 leftover after rebalance
+    event PositionRebalanced(
+        address indexed from,
+        uint256 indexed positionId,
+        uint256 newTokenId,
+        int24 tickLowerDiff,
+        int24 tickUpperDiff,
+        uint256 amount0CollectedFee,
+        uint256 amount1CollectedFee,
+        uint256 amount0Leftover,
+        uint256 amount1Leftover
+    );
+
+    ///@notice emitted when a position is increased liquidity
+    ///@param from address of the caller
+    ///@param positionId ID of the position
+    ///@param totalDepositUSDValue total deposit value in USD
+    ///@param amount0Leftover amount of token0 leftover after increase liquidity
+    ///@param amount1Leftover amount of token1 leftover after increase liquidity
+    event PositionInceasedLiquidity(
+        address indexed from,
+        uint256 indexed positionId,
+        uint256 totalDepositUSDValue,
+        uint256 amount0Leftover,
+        uint256 amount1Leftover
+    );
+
     ///@notice modifier to check if the msg.sender is the owner
     modifier onlyOwner() {
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
@@ -148,6 +213,19 @@ contract PositionManager is IPositionManager, ERC721Holder {
 
         _pushTokenId(inputs.tokenId);
         _setDefaultDataOfPosition(positionId);
+
+        emit PositionCreated(
+            msg.sender,
+            positionId,
+            inputs.tokenId,
+            inputs.strategyProvider,
+            inputs.strategyId,
+            inputs.totalDepositUSDValue,
+            inputs.amount0Leftover,
+            inputs.amount1Leftover,
+            inputs.tickLowerDiff,
+            inputs.tickUpperDiff
+        );
     }
 
     ///@notice close position
@@ -183,6 +261,14 @@ contract PositionManager is IPositionManager, ERC721Holder {
         positions[positionId].totalDepositUSDValue = _totalDepositUSDValue;
         positions[positionId].amount0Leftover = _amount0Leftover;
         positions[positionId].amount1Leftover = _amount1Leftover;
+
+        emit PositionInceasedLiquidity(
+            msg.sender,
+            positionId,
+            _totalDepositUSDValue,
+            _amount0Leftover,
+            _amount1Leftover
+        );
     }
 
     ///@notice get position info from tokenId
@@ -247,6 +333,18 @@ contract PositionManager is IPositionManager, ERC721Holder {
         positions[positionId].amount1Leftover = amount1Leftover;
 
         _pushTokenId(newTokenId);
+
+        emit PositionRebalanced(
+            msg.sender,
+            positionId,
+            newTokenId,
+            tickLowerDiff,
+            tickUpperDiff,
+            amount0CollectedFee,
+            amount1CollectedFee,
+            amount0Leftover,
+            amount1Leftover
+        );
     }
 
     ///@notice middleware function to update position info for withdraw
@@ -261,6 +359,8 @@ contract PositionManager is IPositionManager, ERC721Holder {
         positions[input.positionId].amount0Leftover = 0;
         positions[input.positionId].amount1Leftover = 0;
         _closePosition(input.positionId);
+
+        emit PositionClosed(msg.sender, input.positionId);
     }
 
     ///@notice add tokenId in the uniswapNFTs array
