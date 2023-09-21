@@ -31,7 +31,7 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
         address token0,
         address token1,
         uint24 fee,
-        uint256 performanceFeeRatio,
+        uint16 performanceFeeRatio,
         ReceivedTokenType recievedTokenType,
         uint32 licenseAmount
     );
@@ -40,7 +40,7 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
     event StrategyUpdated(
         bytes16 strategyId,
         address pool,
-        uint256 performanceFeeRatio,
+        uint16 performanceFeeRatio,
         ReceivedTokenType recievedTokenType,
         uint32 licenseAmount
     );
@@ -93,7 +93,7 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
         address token0,
         address token1,
         uint24 fee,
-        uint24 performanceFeeRatio,
+        uint16 performanceFeeRatio,
         ReceivedTokenType receivedTokenType, // if set 0x0 means received tokens are avaliable in both token0 and token1
         uint32 licenseAmount
     ) external onlyOwner strategyNotExist(strategyId) {
@@ -121,7 +121,7 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
         emit StrategyAdded(strategyId, token0, token1, fee, performanceFeeRatio, receivedTokenType, licenseAmount);
     }
 
-    function checkPerformanceFeeRatio(uint24 performanceFeeRatio) internal view {
+    function checkPerformanceFeeRatio(uint16 performanceFeeRatio) internal view {
         if (owner != registry().officialAccount()) {
             ///NOTE: 7.5% <= Perf. Fee <= 65%
             require(performanceFeeRatio >= 750 && performanceFeeRatio <= 6500, "SPWPFR");

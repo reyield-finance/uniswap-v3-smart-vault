@@ -13,7 +13,7 @@ interface IStrategyProviderWallet {
 
     struct StrategyInfo {
         address pool;
-        uint24 performanceFeeRatio;
+        uint16 performanceFeeRatio;
         ReceivedTokenType receivedTokenType;
         uint32 licenseAmount;
     }
