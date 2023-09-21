@@ -270,6 +270,13 @@ contract Registry is IRegistry, ERC165 {
         require(modules[_id].contractAddress != address(0), "RRE");
         address origMoudleAddress = modules[_id].contractAddress;
         delete modules[_id];
+        for (uint256 i; i < moduleKeys.length; ++i) {
+            if (moduleKeys[i] == _id) {
+                moduleKeys[i] = moduleKeys[moduleKeys.length - 1];
+                moduleKeys.pop();
+                break;
+            }
+        }
         emit ContractRemoved(origMoudleAddress, _id);
     }
 

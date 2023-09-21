@@ -203,6 +203,11 @@ describe("Registry.sol", function () {
 
       expect(module2Info.contractAddress).to.be.equal(hre.ethers.constants.AddressZero);
       expect(module2Info.defaultData).to.be.equal(hre.ethers.constants.HashZero);
+
+      const keys = await Registry.getModuleKeys();
+      keys.forEach((value) => {
+        expect(value).to.not.be.equal(limID);
+      });
     });
 
     it("Should success if governance change module", async function () {
