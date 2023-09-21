@@ -35,7 +35,7 @@ contract Registry is IRegistry, ERC165 {
     uint32 public override serviceFeeDenominator = 100_000_000;
     address public override serviceFeeRecipient;
     uint32 private serviceFeeRatioLength;
-    mapping(uint32 => uint32) public licnesesToServiceFeeRatio;
+    mapping(uint32 => uint32) public licensesToServiceFeeRatio;
 
     ///@notice emitted when governance address is changed
     ///@param newGovernance the new governance address
@@ -103,64 +103,64 @@ contract Registry is IRegistry, ERC165 {
         serviceFeeRatioLength = 20;
 
         // 15.000000%
-        licnesesToServiceFeeRatio[1] = 15_000_000;
+        licensesToServiceFeeRatio[1] = 15_000_000;
 
         // 13.781718%
-        licnesesToServiceFeeRatio[2] = 13_781_718;
+        licensesToServiceFeeRatio[2] = 13_781_718;
 
         // 12.662384%
-        licnesesToServiceFeeRatio[3] = 12_662_384;
+        licensesToServiceFeeRatio[3] = 12_662_384;
 
         // 11.633960%
-        licnesesToServiceFeeRatio[4] = 11_633_960;
+        licensesToServiceFeeRatio[4] = 11_633_960;
 
         // 10.689064%
-        licnesesToServiceFeeRatio[5] = 10_689_064;
+        licensesToServiceFeeRatio[5] = 10_689_064;
 
         // 9.820911%
-        licnesesToServiceFeeRatio[6] = 9_820_911;
+        licensesToServiceFeeRatio[6] = 9_820_911;
 
         // 9.023269%
-        licnesesToServiceFeeRatio[7] = 9_023_269;
+        licensesToServiceFeeRatio[7] = 9_023_269;
 
         // 8.290410%
-        licnesesToServiceFeeRatio[8] = 8_290_410;
+        licensesToServiceFeeRatio[8] = 8_290_410;
 
         // 7.617073%
-        licnesesToServiceFeeRatio[9] = 7_617_073;
+        licensesToServiceFeeRatio[9] = 7_617_073;
 
         // 6.998423%
-        licnesesToServiceFeeRatio[10] = 6_998_423;
+        licensesToServiceFeeRatio[10] = 6_998_423;
 
         // 6.430020%
-        licnesesToServiceFeeRatio[11] = 6_430_020;
+        licensesToServiceFeeRatio[11] = 6_430_020;
 
         // 5.907781%
-        licnesesToServiceFeeRatio[12] = 5_907_781;
+        licensesToServiceFeeRatio[12] = 5_907_781;
 
         // 5.427958%
-        licnesesToServiceFeeRatio[13] = 5_427_958;
+        licensesToServiceFeeRatio[13] = 5_427_958;
 
         // 4.987106%
-        licnesesToServiceFeeRatio[14] = 4_987_106;
+        licensesToServiceFeeRatio[14] = 4_987_106;
 
         // 4.582060%
-        licnesesToServiceFeeRatio[15] = 4_582_060;
+        licensesToServiceFeeRatio[15] = 4_582_060;
 
         // 4.209910%
-        licnesesToServiceFeeRatio[16] = 4_209_910;
+        licensesToServiceFeeRatio[16] = 4_209_910;
 
         // 3.867986%
-        licnesesToServiceFeeRatio[17] = 3_867_986;
+        licensesToServiceFeeRatio[17] = 3_867_986;
 
         // 3.553833%
-        licnesesToServiceFeeRatio[18] = 3_553_833;
+        licensesToServiceFeeRatio[18] = 3_553_833;
 
         // 3.265195%
-        licnesesToServiceFeeRatio[19] = 3_265_195;
+        licensesToServiceFeeRatio[19] = 3_265_195;
 
         // 3.000000%
-        licnesesToServiceFeeRatio[20] = 3_000_000;
+        licensesToServiceFeeRatio[20] = 3_000_000;
     }
 
     ///@notice modifier to check if the sender is the governance contract
@@ -235,7 +235,7 @@ contract Registry is IRegistry, ERC165 {
     }
 
     function setServiceFeeRatio(uint32 _licenseAmount, uint32 _serviceFeeRatio) external onlyGovernance {
-        licnesesToServiceFeeRatio[_licenseAmount] = _serviceFeeRatio;
+        licensesToServiceFeeRatio[_licenseAmount] = _serviceFeeRatio;
         if (_licenseAmount > serviceFeeRatioLength) {
             serviceFeeRatioLength = _licenseAmount;
         }
@@ -376,9 +376,9 @@ contract Registry is IRegistry, ERC165 {
     function getServiceFeeRatioFromLicenseAmount(uint32 _licenseAmount) external view override returns (uint32 ratio) {
         require(_licenseAmount != 0, "RLA0");
         if (_licenseAmount < serviceFeeRatioLength) {
-            return licnesesToServiceFeeRatio[_licenseAmount];
+            return licensesToServiceFeeRatio[_licenseAmount];
         } else {
-            return licnesesToServiceFeeRatio[serviceFeeRatioLength];
+            return licensesToServiceFeeRatio[serviceFeeRatioLength];
         }
     }
 }

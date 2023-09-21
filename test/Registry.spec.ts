@@ -152,10 +152,10 @@ describe("Registry.sol", function () {
   describe("ServiceFee", function () {
     // Service fee
     it("Should init success", async function () {
-      expect(await Registry.licnesesToServiceFeeRatio(1)).to.be.equal(15_000_000);
-      expect(await Registry.licnesesToServiceFeeRatio(3)).to.be.equal(12_662_384);
-      expect(await Registry.licnesesToServiceFeeRatio(19)).to.be.equal(3_265_195);
-      expect(await Registry.licnesesToServiceFeeRatio(20)).to.be.equal(3_000_000);
+      expect(await Registry.licensesToServiceFeeRatio(1)).to.be.equal(15_000_000);
+      expect(await Registry.licensesToServiceFeeRatio(3)).to.be.equal(12_662_384);
+      expect(await Registry.licensesToServiceFeeRatio(19)).to.be.equal(3_265_195);
+      expect(await Registry.licensesToServiceFeeRatio(20)).to.be.equal(3_000_000);
       expect(await Registry.getServiceFeeRatioFromLicenseAmount(1)).to.be.equal(15_000_000);
       expect(await Registry.getServiceFeeRatioFromLicenseAmount(21)).to.be.equal(3_000_000);
       expect(await Registry.getServiceFeeRatioFromLicenseAmount(30)).to.be.equal(3_000_000);
