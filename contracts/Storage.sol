@@ -86,7 +86,7 @@ library PositionManagerStorage {
             } else if (action == IDiamondCut.FacetCutAction.Replace) {
                 replaceFunctions(_diamondCut[facetIndex].facetAddress, _diamondCut[facetIndex].functionSelectors);
             } else if (action == IDiamondCut.FacetCutAction.Remove) {
-                removeFunctions(_diamondCut[facetIndex].facetAddress, _diamondCut[facetIndex].functionSelectors);
+                removeFunctions(_diamondCut[facetIndex].functionSelectors);
             } else {
                 revert("SIF");
             }
@@ -208,14 +208,11 @@ library PositionManagerStorage {
     }
 
     ///@notice remove functions in facet
-    ///@param _facetAddress address of the facet
     ///@param _functionSelectors function selectors to remove
-    function removeFunctions(address _facetAddress, bytes4[] memory _functionSelectors) internal {
+    function removeFunctions(bytes4[] memory _functionSelectors) internal {
         require(_functionSelectors.length != 0, "SES");
 
         StorageStruct storage ds = getStorage();
-
-        require(_facetAddress == address(0), "SE0");
 
         uint256 _functionSelectorsLength = _functionSelectors.length;
         for (uint256 selectorIndex; selectorIndex < _functionSelectorsLength; ++selectorIndex) {

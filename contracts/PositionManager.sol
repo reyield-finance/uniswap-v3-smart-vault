@@ -4,7 +4,6 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
-import "@openzeppelin/contracts/proxy/Initializable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
 import "./libraries/ERC20Helper.sol";
@@ -19,7 +18,7 @@ import "./Storage.sol";
  * @notice  vault works for multiple positions
  */
 
-contract PositionManager is IPositionManager, ERC721Holder, Initializable {
+contract PositionManager is IPositionManager, ERC721Holder {
     using SafeMath for uint256;
 
     uint256[] private runningPositionIds;
