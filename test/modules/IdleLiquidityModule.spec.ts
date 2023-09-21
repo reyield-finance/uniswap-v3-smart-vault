@@ -511,17 +511,7 @@ describe("IdleLiquidityModule.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          500,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 500, "2000", 2, "3");
 
       const txDeposit = await depositRecipes.connect(user).singleTokenDepositListedStrategy({
         token0: token0.address,
@@ -738,17 +728,7 @@ describe("IdleLiquidityModule.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          500,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 500, "2000", 2, "3");
 
       const txDeposit = await depositRecipes.connect(user).singleTokenDepositListedStrategy({
         token0: token0.address,
@@ -969,17 +949,7 @@ describe("IdleLiquidityModule.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          500,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 500, "2000", 2, "3");
 
       const txDeposit = await depositRecipes.connect(user).singleTokenDepositListedStrategy({
         token0: token0.address,
@@ -1096,17 +1066,7 @@ describe("IdleLiquidityModule.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          500,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 500, "2000", 2, "3");
 
       const txDeposit = await depositRecipes.connect(user).singleTokenDepositListedStrategy({
         token0: token0.address,
@@ -1223,17 +1183,7 @@ describe("IdleLiquidityModule.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          500,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 500, "2000", 2, "3");
 
       const txDeposit = await depositRecipes.connect(user).singleTokenDepositListedStrategy({
         token0: token0.address,
@@ -1350,17 +1300,7 @@ describe("IdleLiquidityModule.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          500,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 500, "2000", 2, "3");
 
       const txDeposit = await depositRecipes.connect(user).singleTokenDepositListedStrategy({
         token0: token0.address,

@@ -444,17 +444,7 @@ describe("WithdrawRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", "2", "3");
 
       const txDeposit = await depositRecipes.connect(user).depositListedStrategy({
         token0: token0.address,
@@ -785,17 +775,7 @@ describe("WithdrawRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", "1", "3");
 
       const txDeposit = await depositRecipes.connect(user).depositListedStrategy({
         token0: token0.address,
@@ -927,6 +907,8 @@ describe("WithdrawRecipes.sol", function () {
         }
       }
       expect(tokenIdClosed).to.be.equal(tokenIdInLog);
+      expect(performanceFeeAmount0).to.be.equal(0);
+      expect(serviceFeeAmount0).to.be.equal(0);
       const user0BalanceAfterWithdraw = await token0.balanceOf(user.address);
       const user1BalanceAfterWithdraw = await token1.balanceOf(user.address);
       const serviceFeeRecipient0BalanceAfterWithdraw = await token0.balanceOf(serviceFeeRecipient.address);
@@ -989,17 +971,7 @@ describe("WithdrawRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", "2", "3");
 
       const txDeposit = await depositRecipes.connect(user).depositListedStrategy({
         token0: token0.address,
@@ -1204,17 +1176,7 @@ describe("WithdrawRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", "2", "3");
 
       const txDeposit = await depositRecipes.connect(user).depositListedStrategy({
         token0: token0.address,

@@ -351,17 +351,7 @@ describe("DepositRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", 2, "3");
 
       const txDeposit = await depositRecipes.connect(user).depositListedStrategy({
         token0: token0.address,
@@ -449,17 +439,7 @@ describe("DepositRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", 2, "3");
 
       const txDeposit = await depositRecipes.connect(user).depositListedStrategy({
         token0: token0.address,
@@ -680,17 +660,7 @@ describe("DepositRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", 2, "3");
 
       const txDeposit = await depositRecipes.connect(user).singleTokenDepositListedStrategy({
         token0: token0.address,
@@ -780,17 +750,7 @@ describe("DepositRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", 2, "3");
 
       const txDeposit = await depositRecipes.connect(user).depositListedStrategy({
         token0: token0.address,
@@ -939,17 +899,7 @@ describe("DepositRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", "2", "3");
 
       const txDeposit = await depositRecipes.connect(user).depositListedStrategy({
         token0: token0.address,
@@ -1109,17 +1059,7 @@ describe("DepositRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", "2", "3");
 
       // provider do not create wallet
       await expect(
@@ -1154,17 +1094,7 @@ describe("DepositRecipes.sol", function () {
       // pool not match
       await poolFixture(tokenOP, tokenUSDT, 500, uniswapV3Factory, -1);
       const strategyId2 = ethers.utils.hexZeroPad(ethers.utils.hexlify(2), 16);
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId2,
-          token0.address,
-          token1.address,
-          500,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId2, token0.address, token1.address, 500, "2000", "2", "3");
 
       await expect(
         depositRecipes.connect(user).depositListedStrategy({
@@ -1203,17 +1133,7 @@ describe("DepositRecipes.sol", function () {
       )) as StrategyProviderWallet;
 
       await poolFixture(tokenREYLD, tokenUSDT, 3000, uniswapV3Factory, -1);
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", "2", "3");
 
       await expect(
         depositRecipes.connect(user).depositListedStrategy({
@@ -1251,17 +1171,7 @@ describe("DepositRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", "2", "3");
 
       // provider do not create wallet
       await expect(

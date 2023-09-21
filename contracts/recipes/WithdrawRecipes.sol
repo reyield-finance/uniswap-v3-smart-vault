@@ -98,7 +98,7 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
                 amount1: amount1Removed.add(amount1CollectedFee).add(pInfo.amount1Leftover),
                 originalDepositUsdValue: pInfo.totalDepositUSDValue,
                 performanceFeeRecipient: strategyProviderWallet,
-                performanceFeeReceivedToken: sInfo.receivedToken,
+                performanceFeeReceivedToken: _parseReceivedTokenType(sInfo.receivedTokenType, token0, token1),
                 performanceFeeRatio: sInfo.performanceFeeRatio,
                 serviceFeeRatio: registry().getServiceFeeRatioFromLicenseAmount(sInfo.licenseAmount)
             });
@@ -183,7 +183,7 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
                 amount1: amount1Removed.add(amount1CollectedFee).add(pInfo.amount1Leftover),
                 originalDepositUsdValue: pInfo.totalDepositUSDValue,
                 performanceFeeRecipient: strategyProviderWallet,
-                performanceFeeReceivedToken: sInfo.receivedToken,
+                performanceFeeReceivedToken: _parseReceivedTokenType(sInfo.receivedTokenType, token0, token1),
                 performanceFeeRatio: sInfo.performanceFeeRatio,
                 serviceFeeRatio: registry().getServiceFeeRatioFromLicenseAmount(sInfo.licenseAmount)
             });
@@ -243,5 +243,19 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
                 tokenAddress,
                 usdTokenAddress
             );
+    }
+
+    function _parseReceivedTokenType(
+        IStrategyProviderWallet.ReceivedTokenType receivedTokenType,
+        address token0,
+        address token1
+    ) internal pure returns (address receivedToken) {
+        if (receivedTokenType == IStrategyProviderWallet.ReceivedTokenType.Token0) {
+            receivedToken = token0;
+        } else if (receivedTokenType == IStrategyProviderWallet.ReceivedTokenType.Token1) {
+            receivedToken = token1;
+        } else {
+            receivedToken = address(0);
+        }
     }
 }

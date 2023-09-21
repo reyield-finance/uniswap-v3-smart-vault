@@ -190,14 +190,14 @@ describe("StrategyProviderWallet.sol", function () {
         token1.address,
         "500",
         "2000",
-        token0.address,
+        0,
         "3",
       );
       const sInfo = await SPW.getStrategyInfo(ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16));
       const poolAddress = await uniswapV3Factory.getPool(token0.address, token1.address, 500);
       expect(sInfo[0]).to.be.equal(poolAddress);
       expect(sInfo[1]).to.be.equal(2000);
-      expect(sInfo[2]).to.be.equal(token0.address);
+      expect(sInfo[2]).to.be.equal(0);
       expect(sInfo[3]).to.be.equal(3);
 
       const { wallets } = await SPWF.getStrategyProviderWallets(0, 30);
@@ -213,7 +213,7 @@ describe("StrategyProviderWallet.sol", function () {
         token1.address,
         "500",
         "10000",
-        token0.address,
+        0,
         "3",
       );
     });
@@ -226,10 +226,24 @@ describe("StrategyProviderWallet.sol", function () {
           token1.address,
           "500",
           "10000",
-          token0.address,
+          0,
           "3",
         ),
       ).to.be.revertedWith("SPWPFR");
+    });
+
+    it("Should fail add strategy with invalid received token type", async () => {
+      await expect(
+        SPW.connect(user).addStrategy(
+          ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16),
+          token0.address,
+          token1.address,
+          "500",
+          "2000",
+          3,
+          "3",
+        ),
+      ).to.be.revertedWithoutReason;
     });
 
     it("Should fail add strategy with invalid input", async () => {
@@ -239,7 +253,7 @@ describe("StrategyProviderWallet.sol", function () {
         token1.address,
         "500",
         "2000",
-        "0x0000000000000000000000000000000000000000",
+        2,
         "3",
       );
 
@@ -251,7 +265,7 @@ describe("StrategyProviderWallet.sol", function () {
           token1.address,
           "500",
           "2000",
-          token0.address,
+          0,
           "3",
         ),
       ).to.be.revertedWith("SPWSE");
@@ -263,7 +277,7 @@ describe("StrategyProviderWallet.sol", function () {
           token0.address,
           "500",
           "2000",
-          token2.address,
+          0,
           "3",
         ),
       ).to.be.revertedWith("SPWAP0");
@@ -274,7 +288,7 @@ describe("StrategyProviderWallet.sol", function () {
           token1.address,
           "100",
           "2000",
-          "0x0000000000000000000000000000000000000000",
+          2,
           "3",
         ),
       ).to.be.revertedWith("SPWAP0");
@@ -285,7 +299,7 @@ describe("StrategyProviderWallet.sol", function () {
           token1.address,
           "500",
           "8000",
-          "0x0000000000000000000000000000000000000000",
+          2,
           "3",
         ),
       ).to.be.revertedWith("SPWPFR");
@@ -296,7 +310,7 @@ describe("StrategyProviderWallet.sol", function () {
           token1.address,
           "500",
           "2000",
-          "0x0000000000000000000000000000000000000000",
+          2,
           "0",
         ),
       ).to.be.revertedWith("SPWLA");
@@ -336,7 +350,7 @@ describe("StrategyProviderWallet.sol", function () {
         token1.address,
         "500",
         "2000",
-        "0x0000000000000000000000000000000000000000",
+        2,
         "3",
       );
       await SPW.connect(user).collectAll(await user.getAddress());
@@ -350,7 +364,7 @@ describe("StrategyProviderWallet.sol", function () {
         token2.address,
         "500",
         "2000",
-        "0x0000000000000000000000000000000000000000",
+        2,
         "3",
       );
 
@@ -390,20 +404,17 @@ describe("StrategyProviderWallet.sol", function () {
         token1.address,
         "500",
         "2000",
-        "0x0000000000000000000000000000000000000000",
+        2,
         "3",
       );
 
-      await SPW.connect(user).updateStrategyReceivedToken(
-        ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16),
-        token1.address,
-      );
+      await SPW.connect(user).updateStrategyReceivedTokenType(ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16), 1);
 
       const sInfo = await SPW.getStrategyInfo(ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16));
       const poolAddress = await uniswapV3Factory.getPool(token0.address, token1.address, 500);
       expect(sInfo[0]).to.be.equal(poolAddress);
       expect(sInfo[1]).to.be.equal(2000);
-      expect(sInfo[2]).to.be.equal(token1.address);
+      expect(sInfo[2]).to.be.equal(1);
       expect(sInfo[3]).to.be.equal(3);
     });
 
@@ -415,7 +426,7 @@ describe("StrategyProviderWallet.sol", function () {
           token1.address,
           "500",
           "2000",
-          token0.address,
+          0,
           "3",
         ),
       ).to.be.revertedWith("SPWOO");
@@ -428,7 +439,7 @@ describe("StrategyProviderWallet.sol", function () {
         token1.address,
         "500",
         "2000",
-        "0x0000000000000000000000000000000000000000",
+        2,
         "3",
       );
       await SPW.connect(user).addStrategy(
@@ -437,7 +448,7 @@ describe("StrategyProviderWallet.sol", function () {
         token2.address,
         "500",
         "2000",
-        "0x0000000000000000000000000000000000000000",
+        2,
         "3",
       );
 
@@ -470,16 +481,29 @@ describe("StrategyProviderWallet.sol", function () {
         token1.address,
         "500",
         "2000",
-        "0x0000000000000000000000000000000000000000",
+        2,
         "3",
       );
 
       await expect(
-        SPW.connect(deployer).updateStrategyReceivedToken(
-          ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16),
-          token1.address,
-        ),
+        SPW.connect(deployer).updateStrategyReceivedTokenType(ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16), 1),
       ).to.be.revertedWith("SPWOO");
+    });
+
+    it("Should fail update strategy with invalid receivedTokenType", async () => {
+      await SPW.connect(user).addStrategy(
+        ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16),
+        token0.address,
+        token1.address,
+        "500",
+        "2000",
+        2,
+        "3",
+      );
+
+      await expect(
+        SPW.connect(user).updateStrategyReceivedTokenType(ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16), 3),
+      ).to.be.revertedWithoutReason;
     });
   });
 });
