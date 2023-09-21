@@ -93,7 +93,7 @@ contract PositionManager is IPositionManager, ERC721Holder {
     ///@param totalDepositUSDValue total deposit value in USD
     ///@param amount0Leftover amount of token0 leftover after increase liquidity
     ///@param amount1Leftover amount of token1 leftover after increase liquidity
-    event PositionInceasedLiquidity(
+    event PositionIncreasedLiquidity(
         address indexed from,
         uint256 indexed positionId,
         uint256 totalDepositUSDValue,
@@ -262,7 +262,7 @@ contract PositionManager is IPositionManager, ERC721Holder {
         positions[positionId].amount0Leftover = _amount0Leftover;
         positions[positionId].amount1Leftover = _amount1Leftover;
 
-        emit PositionInceasedLiquidity(
+        emit PositionIncreasedLiquidity(
             msg.sender,
             positionId,
             _totalDepositUSDValue,
@@ -497,8 +497,6 @@ contract PositionManager is IPositionManager, ERC721Holder {
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
         address owner = Storage.owner;
         uint256 got = ERC20Helper._withdrawTokens(tokenAddress, owner, amount);
-
-        require(amount == got, "PME");
         emit ERC20Withdrawn(tokenAddress, owner, got);
     }
 
