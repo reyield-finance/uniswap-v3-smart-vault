@@ -4,7 +4,7 @@ import { ethers } from "hardhat";
 
 import { MockUniswapHelper } from "../../types";
 
-describe("SwapHelper.sol", function () {
+describe("UniswapHelper.sol", function () {
   //GLOBAL VARIABLE - USE THIS
 
   let UniswapHelper: MockUniswapHelper;
@@ -150,6 +150,15 @@ describe("SwapHelper.sol", function () {
       expect(result).to.equal(true);
     });
 
+    it("should return true when check with opposite tokens ordering but existent pool", async function () {
+      // USDC/BOB
+      const token0 = "0xb0b195aefa3650a6908f15cdac7d92f8a5791b0b";
+      const token1 = "0x7f5c764cbc14f9669b88837ca1490cca17c31607";
+      const feeTiers = [100n, 500n, 3000n, 10000n];
+      const result = await UniswapHelper.isPoolExist(FactoryAddress, token0, token1, feeTiers);
+      expect(result).to.equal(true);
+    });
+
     it("should return false when check non-existent pool", async function () {
       // PERP/BOB
       const token0 = "0x9e1028f5f1d5ede59748ffcee5532509976840e0";
@@ -175,6 +184,26 @@ describe("SwapHelper.sol", function () {
       {
         const token0 = "0x4200000000000000000000000000000000000006";
         const token1 = "0x9e1028f5f1d5ede59748ffcee5532509976840e0";
+        const feeTiers = [100n, 500n, 3000n, 10000n];
+        const result = await UniswapHelper.findV3DeepestPool(FactoryAddress, token0, token1, feeTiers);
+        expect(result.toLowerCase()).to.equal("0x535541F1aa08416e69Dc4D610131099FA2Ae7222".toLowerCase());
+      }
+    });
+
+    it("should return deepest pool address with opposite tokens ordering", async function () {
+      // USDC/BOB
+      {
+        const token0 = "0xb0b195aefa3650a6908f15cdac7d92f8a5791b0b";
+        const token1 = "0x7f5c764cbc14f9669b88837ca1490cca17c31607";
+        const feeTiers = [100n, 500n, 3000n, 10000n];
+        const result = await UniswapHelper.findV3DeepestPool(FactoryAddress, token0, token1, feeTiers);
+        expect(result.toLowerCase()).to.equal("0x6432037739ccd0201987472604826097b55813e9".toLowerCase());
+      }
+
+      // WETH/PERP
+      {
+        const token0 = "0x9e1028f5f1d5ede59748ffcee5532509976840e0";
+        const token1 = "0x4200000000000000000000000000000000000006";
         const feeTiers = [100n, 500n, 3000n, 10000n];
         const result = await UniswapHelper.findV3DeepestPool(FactoryAddress, token0, token1, feeTiers);
         expect(result.toLowerCase()).to.equal("0x535541F1aa08416e69Dc4D610131099FA2Ae7222".toLowerCase());

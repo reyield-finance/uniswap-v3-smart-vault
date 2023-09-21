@@ -185,11 +185,6 @@ library UniswapHelper {
         uint256 amount0Desired,
         uint256 amount1Desired
     ) internal view returns (uint128 liquidity, uint256 amount0, uint256 amount1) {
-        bool isOrderChanged;
-        (token0, token1, isOrderChanged) = _reorderTokens(token0, token1);
-
-        if (isOrderChanged) (amount0Desired, amount1Desired) = (amount1Desired, amount0Desired);
-
         address poolAddress = UniswapHelper._getPool(factory, token0, token1, fee);
 
         IUniswapV3Pool pool = IUniswapV3Pool(poolAddress);
@@ -210,8 +205,6 @@ library UniswapHelper {
             tickUpper,
             sqrtRatioX96
         );
-
-        if (isOrderChanged) (amount0, amount1) = (amount1, amount0);
     }
 
     ///@notice find uniswap v3 deepest pool of specific pair
@@ -226,8 +219,6 @@ library UniswapHelper {
         uint24[] memory feeTiers
     ) internal view returns (address deepestPool) {
         uint128 largestLiquidity;
-
-        (token0, token1, ) = _reorderTokens(token0, token1);
 
         for (uint256 i; i < feeTiers.length; ++i) {
             if (feeTiers[i] == 0) {
@@ -261,8 +252,6 @@ library UniswapHelper {
         address token1,
         uint24[] memory feeTiers
     ) internal view returns (bool) {
-        (token0, token1, ) = _reorderTokens(token0, token1);
-
         for (uint256 i = 0; i < feeTiers.length; ++i) {
             if (feeTiers[i] == 0) {
                 continue;

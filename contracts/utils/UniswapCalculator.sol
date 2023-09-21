@@ -50,6 +50,13 @@ contract UniswapCalculator {
         uint256 amount0Desired,
         uint256 amount1Desired
     ) external view returns (uint128 liquidity, uint256 amount0, uint256 amount1) {
+        bool isOrderChanged;
+        (token0, token1, isOrderChanged) = UniswapHelper._reorderTokens(token0, token1);
+
+        (amount0Desired, amount1Desired) = isOrderChanged
+            ? (amount1Desired, amount0Desired)
+            : (amount0Desired, amount1Desired);
+
         address pool = IUniswapV3Factory(uniswapAddressHolder.uniswapV3FactoryAddress()).getPool(token0, token1, fee);
 
         require(pool != address(0), "UCP0");
