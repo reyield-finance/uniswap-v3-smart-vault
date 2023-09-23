@@ -181,7 +181,7 @@ library SwapHelper {
         if (baseToken == quoteToken) {
             return baseAmount;
         }
-        address deepestPool = UniswapHelper._findV3DeepestPool(factoryAddress, baseToken, quoteToken, feeTiers);
+        address deepestPool = UniswapHelper.findV3DeepestPool(factoryAddress, baseToken, quoteToken, feeTiers);
 
         (uint160 sqrtPriceX96, , , , , , ) = IUniswapV3Pool(deepestPool).slot0();
 

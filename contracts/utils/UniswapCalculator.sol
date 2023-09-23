@@ -51,7 +51,7 @@ contract UniswapCalculator {
         uint256 amount1Desired
     ) external view returns (uint128 liquidity, uint256 amount0, uint256 amount1) {
         bool isOrderChanged;
-        (token0, token1, isOrderChanged) = UniswapHelper._reorderTokens(token0, token1);
+        (token0, token1, isOrderChanged) = UniswapHelper.reorderTokens(token0, token1);
 
         (amount0Desired, amount1Desired) = isOrderChanged
             ? (amount1Desired, amount0Desired)
@@ -84,7 +84,7 @@ contract UniswapCalculator {
     ///@param token1 address of the token1
     ///@param fee fee tier of the pool
     function getPool(address token0, address token1, uint24 fee) external view returns (address pool) {
-        pool = UniswapHelper._getPool(uniswapAddressHolder.uniswapV3FactoryAddress(), token0, token1, fee);
+        pool = UniswapHelper.getPool(uniswapAddressHolder.uniswapV3FactoryAddress(), token0, token1, fee);
     }
 
     ///@notice reorder tokens to be in the same order as in the pool
@@ -97,7 +97,7 @@ contract UniswapCalculator {
         address token0,
         address token1
     ) external pure returns (address token0Reordered, address token1Reordered, bool isOrderChanged) {
-        (token0Reordered, token1Reordered, isOrderChanged) = UniswapHelper._reorderTokens(token0, token1);
+        (token0Reordered, token1Reordered, isOrderChanged) = UniswapHelper.reorderTokens(token0, token1);
     }
 
     ///@notice validate if a pool is valid

@@ -39,7 +39,7 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
         require(positionManager != address(0), "WRPM0");
 
         IPositionManager.PositionInfo memory pInfo = IPositionManager(positionManager).getPositionInfo(positionId);
-        (address token0, address token1, , , ) = UniswapHelper._getTokens(
+        (address token0, address token1, , , ) = UniswapHelper.getTokens(
             pInfo.tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
@@ -100,7 +100,7 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
 
         if (tokenAddress == usdTokenAddress) return amount;
 
-        address deepestPool = UniswapHelper._findV3DeepestPool(
+        address deepestPool = UniswapHelper.findV3DeepestPool(
             uniswapAddressHolder.uniswapV3FactoryAddress(),
             tokenAddress,
             usdTokenAddress,

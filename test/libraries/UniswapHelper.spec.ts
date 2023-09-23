@@ -1,3 +1,4 @@
+import { reset } from "@nomicfoundation/hardhat-network-helpers";
 import "@nomiclabs/hardhat-ethers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
@@ -12,6 +13,7 @@ describe("UniswapHelper.sol", function () {
   const NFTManager: string = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88";
 
   before(async function () {
+    await reset(process.env.ALCHEMY_OPTIMISM_MAINNET, 109860327);
     const MockUniswapHelperFactory = await ethers.getContractFactory("MockUniswapHelper");
     UniswapHelper = (await MockUniswapHelperFactory.deploy()) as MockUniswapHelper;
     await UniswapHelper.deployed();
@@ -56,7 +58,7 @@ describe("UniswapHelper.sol", function () {
     it("should change the order reorder tokens", async function () {
       const _token0 = "0xb0b195aefa3650a6908f15cdac7d92f8a5791b0b";
       const _token1 = "0x7f5c764cbc14f9669b88837ca1490cca17c31607";
-      const { token0, token1, isOrderChanged } = await UniswapHelper._reorderTokens(_token0, _token1);
+      const { token0, token1, isOrderChanged } = await UniswapHelper.reorderTokens(_token0, _token1);
       expect(token0.toLowerCase()).to.equal(_token1.toLowerCase());
       expect(token1.toLowerCase()).to.equal(_token0.toLowerCase());
       expect(isOrderChanged).to.equal(true);
@@ -65,7 +67,7 @@ describe("UniswapHelper.sol", function () {
     it("should not change the order reorder tokens", async function () {
       const _token0 = "0x7f5c764cbc14f9669b88837ca1490cca17c31607";
       const _token1 = "0xb0b195aefa3650a6908f15cdac7d92f8a5791b0b";
-      const { token0, token1, isOrderChanged } = await UniswapHelper._reorderTokens(_token0, _token1);
+      const { token0, token1, isOrderChanged } = await UniswapHelper.reorderTokens(_token0, _token1);
       expect(token0.toLowerCase()).to.equal(_token0.toLowerCase());
       expect(token1.toLowerCase()).to.equal(_token1.toLowerCase());
       expect(isOrderChanged).to.equal(false);
@@ -177,7 +179,7 @@ describe("UniswapHelper.sol", function () {
         const token1 = "0xb0b195aefa3650a6908f15cdac7d92f8a5791b0b";
         const feeTiers = [100n, 500n, 3000n, 10000n];
         const result = await UniswapHelper.findV3DeepestPool(FactoryAddress, token0, token1, feeTiers);
-        expect(result.toLowerCase()).to.equal("0x6432037739ccd0201987472604826097b55813e9".toLowerCase());
+        expect(result.toLowerCase()).to.equal("0x7b17Fc02d85Cb5589EC1d1C3dB507dC557590c79".toLowerCase());
       }
 
       // WETH/PERP
@@ -197,7 +199,7 @@ describe("UniswapHelper.sol", function () {
         const token1 = "0x7f5c764cbc14f9669b88837ca1490cca17c31607";
         const feeTiers = [100n, 500n, 3000n, 10000n];
         const result = await UniswapHelper.findV3DeepestPool(FactoryAddress, token0, token1, feeTiers);
-        expect(result.toLowerCase()).to.equal("0x6432037739ccd0201987472604826097b55813e9".toLowerCase());
+        expect(result.toLowerCase()).to.equal("0x7b17Fc02d85Cb5589EC1d1C3dB507dC557590c79".toLowerCase());
       }
 
       // WETH/PERP

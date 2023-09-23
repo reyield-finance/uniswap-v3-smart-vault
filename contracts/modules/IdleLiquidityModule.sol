@@ -160,7 +160,7 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
     function _closedAndRepayRebalance(
         _CloseAndRepayRebalanceParams memory params
     ) internal returns (_CloseAndRepayRebalanceResult memory res) {
-        (address token0, address token1, , , ) = UniswapHelper._getTokens(
+        (address token0, address token1, , , ) = UniswapHelper.getTokens(
             params.tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
@@ -209,7 +209,7 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
     }
 
     function _swapAndMint(_SwapAndMintParams memory params) internal returns (_SwapAndMintResult memory res) {
-        (address token0, address token1, uint24 fee, , ) = UniswapHelper._getTokens(
+        (address token0, address token1, uint24 fee, , ) = UniswapHelper.getTokens(
             params.tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
@@ -257,7 +257,7 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
     }
 
     function checkCurrentTickOutOfRange(uint256 tokenId) internal view {
-        (address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper) = UniswapHelper._getTokens(
+        (address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper) = UniswapHelper.getTokens(
             tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
@@ -275,7 +275,7 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
     }
 
     function checkDiffOfTicksRange(int24 tickLowerDiff, int24 tickUpperDiff, uint256 tokenId) internal view {
-        (, , uint24 fee, , ) = UniswapHelper._getTokens(
+        (, , uint24 fee, , ) = UniswapHelper.getTokens(
             tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );

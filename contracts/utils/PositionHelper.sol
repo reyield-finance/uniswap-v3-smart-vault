@@ -93,7 +93,7 @@ contract PositionHelper {
         IPositionManager.PositionInfo memory pInfo = IPositionManager(positionManager).getPositionInfo(positionId);
         require(pInfo.tokenId != 0, "PHT");
 
-        (address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper) = UniswapHelper._getTokens(
+        (address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper) = UniswapHelper.getTokens(
             pInfo.tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
@@ -129,11 +129,11 @@ contract PositionHelper {
             address token0;
             address token1;
             uint24 fee;
-            (token0, token1, fee, tickLower, tickUpper) = UniswapHelper._getTokens(
+            (token0, token1, fee, tickLower, tickUpper) = UniswapHelper.getTokens(
                 pInfo.tokenId,
                 INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
             );
-            address pool = UniswapHelper._getPool(uniswapAddressHolder.uniswapV3FactoryAddress(), token0, token1, fee);
+            address pool = UniswapHelper.getPool(uniswapAddressHolder.uniswapV3FactoryAddress(), token0, token1, fee);
 
             (, currentTick, , , , , ) = IUniswapV3Pool(pool).slot0();
         }
@@ -163,12 +163,12 @@ contract PositionHelper {
         uint24 fee;
         int24 tickLower;
         int24 tickUpper;
-        (output.token0, output.token1, fee, tickLower, tickUpper) = UniswapHelper._getTokens(
+        (output.token0, output.token1, fee, tickLower, tickUpper) = UniswapHelper.getTokens(
             pInfo.tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
 
-        address pool = UniswapHelper._getPool(
+        address pool = UniswapHelper.getPool(
             uniswapAddressHolder.uniswapV3FactoryAddress(),
             output.token0,
             output.token1,
@@ -182,7 +182,7 @@ contract PositionHelper {
         ).positions(pInfo.tokenId);
 
         pInfo = getPositionInfo(userAddress, positionId);
-        (output.amount0, output.amount1) = UniswapHelper._getAmountsFromLiquidity(
+        (output.amount0, output.amount1) = UniswapHelper.getAmountsFromLiquidity(
             liquidity,
             currentTick,
             tickLower,
@@ -535,7 +535,7 @@ contract PositionHelper {
     function _getBestSqrtPriceX96(address token0, address token1) private view returns (uint160 sqrtPriceX96) {
         uint24[] memory allowableFeeTiers = registry().getAllowableFeeTiers();
 
-        address deepestPool = UniswapHelper._findV3DeepestPool(
+        address deepestPool = UniswapHelper.findV3DeepestPool(
             uniswapAddressHolder.uniswapV3FactoryAddress(),
             token0,
             token1,

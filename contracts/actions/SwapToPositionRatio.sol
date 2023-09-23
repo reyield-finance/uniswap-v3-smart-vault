@@ -29,7 +29,7 @@ contract SwapToPositionRatio is ISwapToPositionRatio {
 
         {
             IUniswapV3Pool deepestPool = IUniswapV3Pool(
-                UniswapHelper._findV3DeepestPool(
+                UniswapHelper.findV3DeepestPool(
                     Storage.uniswapAddressHolder.uniswapV3FactoryAddress(),
                     inputs.token0Address,
                     inputs.token1Address,
@@ -37,7 +37,7 @@ contract SwapToPositionRatio is ISwapToPositionRatio {
                 )
             );
             IUniswapV3Pool pool = IUniswapV3Pool(
-                UniswapHelper._getPool(
+                UniswapHelper.getPool(
                     Storage.uniswapAddressHolder.uniswapV3FactoryAddress(),
                     inputs.token0Address,
                     inputs.token1Address,
@@ -117,7 +117,7 @@ contract SwapToPositionRatio is ISwapToPositionRatio {
 
         SwapHelper.checkDeviation(IUniswapV3Pool(deepestPool), registry.maxTwapDeviation(), registry.twapDuration());
 
-        ERC20Helper._approveToken(tokenIn, Storage.uniswapAddressHolder.swapRouterAddress(), amountIn);
+        ERC20Helper.approveToken(tokenIn, Storage.uniswapAddressHolder.swapRouterAddress(), amountIn);
 
         //snapshot balance before swap
         uint256 tokenInBalanceBeforeSwap = IERC20(tokenIn).balanceOf(address(this));

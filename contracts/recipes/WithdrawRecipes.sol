@@ -48,7 +48,7 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
 
         IPositionManager.PositionInfo memory pInfo = IPositionManager(positionManager).getPositionInfo(positionId);
 
-        (address token0, address token1, , , ) = UniswapHelper._getTokens(
+        (address token0, address token1, , , ) = UniswapHelper.getTokens(
             pInfo.tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
@@ -134,7 +134,7 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
 
         IPositionManager.PositionInfo memory pInfo = IPositionManager(positionManager).getPositionInfo(positionId);
 
-        (address token0, address token1, , , ) = UniswapHelper._getTokens(
+        (address token0, address token1, , , ) = UniswapHelper.getTokens(
             pInfo.tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );

@@ -24,7 +24,7 @@ library UniswapHelper {
     ///@param token1 address of the token1
     ///@param fee fee tier of the pool
     ///@return address address of the pool
-    function _getPool(address factory, address token0, address token1, uint24 fee) internal view returns (address) {
+    function getPool(address factory, address token0, address token1, uint24 fee) internal view returns (address) {
         address pool = IUniswapV3Factory(factory).getPool(token0, token1, fee);
         require(pool != address(0), "UHP0");
         return pool;
@@ -38,7 +38,7 @@ library UniswapHelper {
     ///@return fee fee tier of the pool
     ///@return tickLower of position
     ///@return tickUpper of position
-    function _getTokens(
+    function getTokens(
         uint256 tokenId,
         INonfungiblePositionManager nonfungiblePositionManager
     )
@@ -59,7 +59,7 @@ library UniswapHelper {
     ///@param sqrtPriceX96 square root of the price
     ///@return amount0 uint256 amount of token0
     ///@return amount1 uint256 amount of token1
-    function _getAmountsFromLiquidity(
+    function getAmountsFromLiquidity(
         uint128 liquidity,
         int24 currentTick,
         int24 tickLower,
@@ -107,7 +107,7 @@ library UniswapHelper {
     ///@param tickUpper upper tick range
     ///@param sqrtRatioX96 square root of the ratio
     ///@return liquidity The amount of liquidity received
-    function _getLiquidityFromAmounts(
+    function getLiquidityFromAmounts(
         uint256 amount0,
         uint256 amount1,
         int24 tickLower,
@@ -152,7 +152,7 @@ library UniswapHelper {
     ///@return token0 address of token0 after reordering
     ///@return token1 address of token1 after reordering
     ///@return isOrderChanged bool if the order was changed
-    function _reorderTokens(
+    function reorderTokens(
         address _token0,
         address _token1
     ) internal pure returns (address token0, address token1, bool isOrderChanged) {
@@ -186,12 +186,12 @@ library UniswapHelper {
         uint256 amount0Desired,
         uint256 amount1Desired
     ) internal view returns (uint128 liquidity, uint256 amount0, uint256 amount1) {
-        address poolAddress = UniswapHelper._getPool(factory, token0, token1, fee);
+        address poolAddress = UniswapHelper.getPool(factory, token0, token1, fee);
 
         IUniswapV3Pool pool = IUniswapV3Pool(poolAddress);
         (uint160 sqrtRatioX96, int24 tick, , , , , ) = pool.slot0();
 
-        liquidity = UniswapHelper._getLiquidityFromAmounts(
+        liquidity = UniswapHelper.getLiquidityFromAmounts(
             amount0Desired,
             amount1Desired,
             tickLower,
@@ -199,13 +199,7 @@ library UniswapHelper {
             sqrtRatioX96
         );
 
-        (amount0, amount1) = UniswapHelper._getAmountsFromLiquidity(
-            liquidity,
-            tick,
-            tickLower,
-            tickUpper,
-            sqrtRatioX96
-        );
+        (amount0, amount1) = UniswapHelper.getAmountsFromLiquidity(liquidity, tick, tickLower, tickUpper, sqrtRatioX96);
     }
 
     ///@notice find uniswap v3 deepest pool of specific pair
@@ -213,7 +207,7 @@ library UniswapHelper {
     ///@param token0 address of the token0
     ///@param token1 address of the token1
     ///@param feeTiers array of fee tiers to check
-    function _findV3DeepestPool(
+    function findV3DeepestPool(
         address factoryAddress,
         address token0,
         address token1,
@@ -247,7 +241,7 @@ library UniswapHelper {
     ///@param token0 address of the token0
     ///@param token1 address of the token1
     ///@param feeTiers array of fee tiers to check
-    function _isPoolExist(
+    function isPoolExist(
         address factoryAddress,
         address token0,
         address token1,

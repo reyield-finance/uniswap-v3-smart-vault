@@ -463,7 +463,7 @@ contract PositionManager is IPositionManager, ERC721Holder {
     function withdrawERC20ToOwner(address tokenAddress, uint256 amount) external onlyGovernance {
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
         address owner = Storage.owner;
-        uint256 got = ERC20Helper._withdrawTokens(tokenAddress, owner, amount);
+        uint256 got = ERC20Helper.withdrawTokens(tokenAddress, owner, amount);
         emit ERC20Withdrawn(tokenAddress, owner, got);
     }
 

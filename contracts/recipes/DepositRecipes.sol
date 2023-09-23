@@ -46,7 +46,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         require(input.amount0Desired != 0 || input.amount1Desired != 0, "DRA0");
         require(registry().isAllowableFeeTier(input.fee), "DRFT");
         bool isOrderChanged;
-        (input.token0, input.token1, isOrderChanged) = UniswapHelper._reorderTokens(input.token0, input.token1);
+        (input.token0, input.token1, isOrderChanged) = UniswapHelper.reorderTokens(input.token0, input.token1);
 
         checkTokensValid(input.token0, input.token1);
         checkDiffOfTicksRange(input.tickLowerDiff, input.tickUpperDiff, input.fee);
@@ -126,7 +126,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         require(registry().isAllowableFeeTier(input.fee), "DRFT");
 
         bool isOrderChanged;
-        (input.token0, input.token1, isOrderChanged) = UniswapHelper._reorderTokens(input.token0, input.token1);
+        (input.token0, input.token1, isOrderChanged) = UniswapHelper.reorderTokens(input.token0, input.token1);
 
         checkStrategyExist(input.strategyProvider, input.strategyId, input.token0, input.token1, input.fee);
         checkTokensValid(input.token0, input.token1);
@@ -222,7 +222,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
 
         IPositionManager.PositionInfo memory pInfo = IPositionManager(positionManager).getPositionInfo(positionId);
 
-        (address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper) = UniswapHelper._getTokens(
+        (address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper) = UniswapHelper.getTokens(
             pInfo.tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
@@ -274,7 +274,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         require(registry().isAllowableFeeTier(input.fee), "DRFT");
 
         bool isOrderChanged;
-        (input.token0, input.token1, isOrderChanged) = UniswapHelper._reorderTokens(input.token0, input.token1);
+        (input.token0, input.token1, isOrderChanged) = UniswapHelper.reorderTokens(input.token0, input.token1);
         input.isToken0In = isOrderChanged ? !input.isToken0In : input.isToken0In;
 
         checkTokensValid(input.token0, input.token1);
@@ -345,7 +345,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         require(registry().isAllowableFeeTier(input.fee), "DRFT");
 
         bool isOrderChanged;
-        (input.token0, input.token1, isOrderChanged) = UniswapHelper._reorderTokens(input.token0, input.token1);
+        (input.token0, input.token1, isOrderChanged) = UniswapHelper.reorderTokens(input.token0, input.token1);
         input.isToken0In = isOrderChanged ? !input.isToken0In : input.isToken0In;
 
         checkStrategyExist(input.strategyProvider, input.strategyId, input.token0, input.token1, input.fee);
@@ -429,7 +429,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
 
         IPositionManager.PositionInfo memory pInfo = IPositionManager(positionManager).getPositionInfo(positionId);
 
-        (address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper) = UniswapHelper._getTokens(
+        (address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper) = UniswapHelper.getTokens(
             pInfo.tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
@@ -535,7 +535,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         }
 
         require(
-            UniswapHelper._isPoolExist(
+            UniswapHelper.isPoolExist(
                 uniswapAddressHolder.uniswapV3FactoryAddress(),
                 token,
                 usdValueTokenAddress,

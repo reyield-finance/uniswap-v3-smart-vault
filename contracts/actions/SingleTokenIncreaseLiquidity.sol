@@ -36,7 +36,7 @@ contract SingleTokenIncreaseLiquidity is ISingleTokenIncreaseLiquidity {
         IUniswapV3Pool deepestPool;
         {
             deepestPool = IUniswapV3Pool(
-                UniswapHelper._findV3DeepestPool(
+                UniswapHelper.findV3DeepestPool(
                     Storage.uniswapAddressHolder.uniswapV3FactoryAddress(),
                     inputs.token0,
                     inputs.token1,
@@ -45,7 +45,7 @@ contract SingleTokenIncreaseLiquidity is ISingleTokenIncreaseLiquidity {
             );
 
             IUniswapV3Pool depositPool = IUniswapV3Pool(
-                UniswapHelper._getPool(
+                UniswapHelper.getPool(
                     Storage.uniswapAddressHolder.uniswapV3FactoryAddress(),
                     inputs.token0,
                     inputs.token1,
@@ -112,7 +112,7 @@ contract SingleTokenIncreaseLiquidity is ISingleTokenIncreaseLiquidity {
 
         SwapHelper.checkDeviation(IUniswapV3Pool(deepestPool), registry.maxTwapDeviation(), registry.twapDuration());
 
-        ERC20Helper._approveToken(tokenIn, Storage.uniswapAddressHolder.swapRouterAddress(), amountIn);
+        ERC20Helper.approveToken(tokenIn, Storage.uniswapAddressHolder.swapRouterAddress(), amountIn);
 
         //snapshot balance before swap
         uint256 tokenInBalanceBeforeSwap = IERC20(tokenIn).balanceOf(address(this));
@@ -149,8 +149,8 @@ contract SingleTokenIncreaseLiquidity is ISingleTokenIncreaseLiquidity {
 
         address nonfungiblePositionManagerAddress = Storage.uniswapAddressHolder.nonfungiblePositionManagerAddress();
 
-        ERC20Helper._approveToken(token0Address, nonfungiblePositionManagerAddress, amount0Desired);
-        ERC20Helper._approveToken(token1Address, nonfungiblePositionManagerAddress, amount1Desired);
+        ERC20Helper.approveToken(token0Address, nonfungiblePositionManagerAddress, amount0Desired);
+        ERC20Helper.approveToken(token1Address, nonfungiblePositionManagerAddress, amount1Desired);
 
         INonfungiblePositionManager.IncreaseLiquidityParams memory params = INonfungiblePositionManager
             .IncreaseLiquidityParams({

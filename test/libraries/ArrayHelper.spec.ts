@@ -1,5 +1,4 @@
 import "@nomiclabs/hardhat-ethers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import hre from "hardhat";
@@ -8,13 +7,11 @@ import { MockArrayHelper } from "../../types";
 
 describe("Test ArrayHelper", () => {
   //GLOBAL VARIABLE - USE THIS
-  let owner: SignerWithAddress;
 
   //Mock contract MathHelper
   let TestArrayHelper: MockArrayHelper;
 
   before(async function () {
-    owner = (await ethers.getSigners())[0];
     await hre.network.provider.send("hardhat_reset");
 
     //deploy the contract

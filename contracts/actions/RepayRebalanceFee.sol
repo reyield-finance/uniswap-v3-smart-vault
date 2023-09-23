@@ -32,7 +32,7 @@ contract RepayRebalanceFee is IRepayRebalanceFee {
         IRegistry registry = IRegistry(Storage.registryAddressHolder.registry());
         uint24[] memory allowableFeeTiers = registry.getAllowableFeeTiers();
 
-        address weth9MiddleTokenDeepestPool = UniswapHelper._findV3DeepestPool(
+        address weth9MiddleTokenDeepestPool = UniswapHelper.findV3DeepestPool(
             Storage.uniswapAddressHolder.uniswapV3FactoryAddress(),
             registry.weth9(),
             registry.usdValueTokenAddress(),
@@ -57,7 +57,7 @@ contract RepayRebalanceFee is IRepayRebalanceFee {
             // scope to avoid stack too deep errors
             uint256 token0MiddleTokenPrice;
             if (inputs.token0 != registry.usdValueTokenAddress()) {
-                token0MiddleTokenDeepestPool = UniswapHelper._findV3DeepestPool(
+                token0MiddleTokenDeepestPool = UniswapHelper.findV3DeepestPool(
                     Storage.uniswapAddressHolder.uniswapV3FactoryAddress(),
                     inputs.token0,
                     registry.usdValueTokenAddress(),
@@ -76,7 +76,7 @@ contract RepayRebalanceFee is IRepayRebalanceFee {
 
             uint256 token1MiddleTokenPrice;
             if (inputs.token1 != registry.usdValueTokenAddress()) {
-                token1MiddleTokenDeepestPool = UniswapHelper._findV3DeepestPool(
+                token1MiddleTokenDeepestPool = UniswapHelper.findV3DeepestPool(
                     Storage.uniswapAddressHolder.uniswapV3FactoryAddress(),
                     inputs.token1,
                     registry.usdValueTokenAddress(),
@@ -187,7 +187,7 @@ contract RepayRebalanceFee is IRepayRebalanceFee {
     ) internal returns (uint256 amountOut) {
         SwapHelper.checkDeviation(IUniswapV3Pool(deepestPool), maxTwapDeviation, twapDuration);
 
-        ERC20Helper._approveToken(tokenIn, swapRouterAddress, amountIn);
+        ERC20Helper.approveToken(tokenIn, swapRouterAddress, amountIn);
 
         //snapshot balance before swap
         uint256 tokenInBalanceBeforeSwap = IERC20(tokenIn).balanceOf(address(this));
