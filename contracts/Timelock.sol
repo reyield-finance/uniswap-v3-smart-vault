@@ -52,6 +52,7 @@ contract Timelock {
     }
 
     constructor(address _admin, uint256 _delay) ValidDeplay(_delay) {
+        require(_admin != address(0), "TVD0");
         admin = _admin;
         delay = _delay;
     }
@@ -67,6 +68,7 @@ contract Timelock {
     /// @param _pendingAdmin the pending admin
     function setNewPendingAdmin(address _pendingAdmin) public onlyAdmin {
         require(pendingAdmin == address(0), "Timelock::setNewPendingAdmin: Pending admin already set.");
+        require(_pendingAdmin != address(0), "Timelock::setNewPendingAdmin: Cannot set pendingAdmin to address(0).");
         pendingAdmin = _pendingAdmin;
         pendingAdminAccepted[_pendingAdmin] = false;
 
