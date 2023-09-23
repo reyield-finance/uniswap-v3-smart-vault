@@ -104,8 +104,7 @@ contract PositionManager is IPositionManager, ERC721Holder {
 
     ///@notice modifier to check if the msg.sender is the owner
     modifier onlyOwner() {
-        StorageStruct storage Storage = PositionManagerStorage.getStorage();
-        require(msg.sender == Storage.owner, "PMOO");
+        require(msg.sender == PositionManagerStorage.getStorage().owner, "PMOO");
         _;
     }
 
@@ -129,11 +128,10 @@ contract PositionManager is IPositionManager, ERC721Holder {
 
     ///@notice modifier to check if the position is owned by the positionManager
     modifier onlyOwnedPosition(uint256 tokenId) {
-        StorageStruct storage Storage = PositionManagerStorage.getStorage();
         require(
-            INonfungiblePositionManager(Storage.uniswapAddressHolder.nonfungiblePositionManagerAddress()).ownerOf(
-                tokenId
-            ) == address(this),
+            INonfungiblePositionManager(
+                PositionManagerStorage.getStorage().uniswapAddressHolder.nonfungiblePositionManagerAddress()
+            ).ownerOf(tokenId) == address(this),
             "PMOOP"
         );
         _;
@@ -177,8 +175,7 @@ contract PositionManager is IPositionManager, ERC721Holder {
     ///@notice get IRegistry from registryAddressHolder
     ///@return IRegistry interface of registry
     function registry() private view returns (IRegistry) {
-        StorageStruct storage Storage = PositionManagerStorage.getStorage();
-        return IRegistry(Storage.registryAddressHolder.registry());
+        return IRegistry(PositionManagerStorage.getStorage().registryAddressHolder.registry());
     }
 
     ///@notice generate position ID
@@ -458,8 +455,7 @@ contract PositionManager is IPositionManager, ERC721Holder {
     ///@notice return the address of this position manager owner
     ///@return address of the owner
     function getOwner() external view override returns (address) {
-        StorageStruct storage Storage = PositionManagerStorage.getStorage();
-        return Storage.owner;
+        return PositionManagerStorage.getStorage().owner;
     }
 
     ///@notice transfer ERC20 tokens stuck in Position Manager to owner

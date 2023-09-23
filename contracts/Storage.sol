@@ -63,8 +63,10 @@ library PositionManagerStorage {
 
     ///@notice make sure that a function is called by the PositionManagerFactory contract
     function enforceIsGovernance() internal view {
-        StorageStruct storage ds = getStorage();
-        require(msg.sender == IRegistry(ds.registryAddressHolder.registry()).positionManagerFactoryAddress(), "SMF");
+        require(
+            msg.sender == IRegistry(getStorage().registryAddressHolder.registry()).positionManagerFactoryAddress(),
+            "SMF"
+        );
     }
 
     ///@notice emitted when a facet is cut into the diamond
