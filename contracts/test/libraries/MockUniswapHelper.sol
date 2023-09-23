@@ -102,14 +102,14 @@ contract MockUniswapHelper {
         address token1,
         uint24 fee
     ) public view returns (int24 currentTick) {
-        return UniswapHelper._getCurrentTick(factoryAddress, token0, token1, fee);
+        return UniswapHelper.getCurrentTick(factoryAddress, token0, token1, fee);
     }
 
-    function _adjustDepositTick(
+    function adjustDepositTick(
         address factoryAddress,
         int24 currentTick,
         uint24 fee
     ) external view returns (int24 currentTickAdjusted) {
-        return UniswapHelper._adjustDepositTick(factoryAddress, currentTick, fee);
+        return UniswapHelper.adjustDepositTick(factoryAddress, currentTick, fee);
     }
 }

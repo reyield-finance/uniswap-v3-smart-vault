@@ -9,6 +9,7 @@ import "./interfaces/IStrategyProviderWalletFactory.sol";
 import "./interfaces/IUniswapAddressHolder.sol";
 import "./interfaces/IRegistryAddressHolder.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "./libraries/ArrayHelper.sol";
 
 contract StrategyProviderWalletFactory is IStrategyProviderWalletFactory {
     using SafeMath for uint256;
@@ -90,17 +91,7 @@ contract StrategyProviderWalletFactory is IStrategyProviderWalletFactory {
         uint256 cursor,
         uint256 howMany
     ) public view returns (address[] memory wallets, uint256 newCursor) {
-        uint256 length = howMany;
-        if (length > strategyProviderWallets.length - cursor) {
-            length = strategyProviderWallets.length - cursor;
-        }
-
-        wallets = new address[](length);
-        for (uint256 i = 0; i < length; i++) {
-            wallets[i] = strategyProviderWallets[cursor + i];
-        }
-
-        return (wallets, cursor + length);
+        return ArrayHelper.sliceAddress(strategyProviderWallets, cursor, howMany);
     }
 
     ///@notice get the length of the strategy provider wallet array

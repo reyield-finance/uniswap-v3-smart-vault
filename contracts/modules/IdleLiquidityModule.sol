@@ -214,7 +214,7 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
 
-        int24 currentTick = UniswapHelper._getDepositCurrentTick(
+        int24 currentTick = UniswapHelper.getDepositCurrentTick(
             uniswapAddressHolder.uniswapV3FactoryAddress(),
             token0,
             token1,
@@ -262,7 +262,7 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
 
-        int24 currentTick = UniswapHelper._getCurrentTick(
+        int24 currentTick = UniswapHelper.getCurrentTick(
             uniswapAddressHolder.uniswapV3FactoryAddress(),
             token0,
             token1,

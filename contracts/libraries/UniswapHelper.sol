@@ -12,6 +12,7 @@ import "@uniswap/v3-core/contracts/libraries/SqrtPriceMath.sol";
 import "@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol";
 import "./MathHelper.sol";
 import "./SafeInt24Math.sol";
+import "./SwapHelper.sol";
 
 ///@title library to interact with NFT token and do some useful function with it
 library UniswapHelper {
@@ -265,16 +266,16 @@ library UniswapHelper {
         return false;
     }
 
-    function _getDepositCurrentTick(
+    function getDepositCurrentTick(
         address factoryAddress,
         address token0,
         address token1,
         uint24 fee
     ) internal view returns (int24 currentTick) {
-        return _adjustDepositTick(factoryAddress, _getCurrentTick(factoryAddress, token0, token1, fee), fee);
+        return adjustDepositTick(factoryAddress, getCurrentTick(factoryAddress, token0, token1, fee), fee);
     }
 
-    function _getCurrentTick(
+    function getCurrentTick(
         address factoryAddress,
         address token0,
         address token1,
@@ -286,7 +287,7 @@ library UniswapHelper {
         (, currentTick, , , , , ) = IUniswapV3Pool(pool).slot0();
     }
 
-    function _adjustDepositTick(
+    function adjustDepositTick(
         address factoryAddress,
         int24 currentTick,
         uint24 fee

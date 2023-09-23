@@ -61,7 +61,7 @@ contract UniswapCalculator {
 
         require(pool != address(0), "UCP0");
 
-        int24 currentTick = UniswapHelper._getDepositCurrentTick(
+        int24 currentTick = UniswapHelper.getDepositCurrentTick(
             uniswapAddressHolder.uniswapV3FactoryAddress(),
             token0,
             token1,

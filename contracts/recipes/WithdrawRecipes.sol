@@ -214,35 +214,20 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
         uint256 amount1
     ) internal view returns (uint256 token0UsdValue, uint256 token1UsdValue) {
         uint24[] memory allowableFeeTiers = registry().getAllowableFeeTiers();
-        token0UsdValue = _toUsdValue(token0, amount0, allowableFeeTiers);
-        token1UsdValue = _toUsdValue(token1, amount1, allowableFeeTiers);
-    }
-
-    function _toUsdValue(
-        address tokenAddress,
-        uint256 amount,
-        uint24[] memory allowableFeeTiers
-    ) internal view returns (uint256) {
-        address usdTokenAddress = registry().usdValueTokenAddress();
-
-        if (tokenAddress == usdTokenAddress) return amount;
-
-        address deepestPool = UniswapHelper._findV3DeepestPool(
+        token0UsdValue = SwapHelper.getQuoteFromDeepestPool(
             uniswapAddressHolder.uniswapV3FactoryAddress(),
-            tokenAddress,
-            usdTokenAddress,
+            token0,
+            registry().usdValueTokenAddress(),
+            amount0,
             allowableFeeTiers
         );
-
-        (uint160 sqrtPriceX96, , , , , , ) = IUniswapV3Pool(deepestPool).slot0();
-
-        return
-            SwapHelper.getQuoteFromSqrtRatioX96(
-                sqrtPriceX96,
-                MathHelper.fromUint256ToUint128(amount),
-                tokenAddress,
-                usdTokenAddress
-            );
+        token1UsdValue = SwapHelper.getQuoteFromDeepestPool(
+            uniswapAddressHolder.uniswapV3FactoryAddress(),
+            token1,
+            registry().usdValueTokenAddress(),
+            amount1,
+            allowableFeeTiers
+        );
     }
 
     function _parseReceivedTokenType(

@@ -59,7 +59,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
             ? (input.amount1Desired, input.amount0Desired)
             : (input.amount0Desired, input.amount1Desired);
 
-        int24 currentTick = UniswapHelper._getDepositCurrentTick(
+        int24 currentTick = UniswapHelper.getDepositCurrentTick(
             uniswapAddressHolder.uniswapV3FactoryAddress(),
             input.token0,
             input.token1,
@@ -140,7 +140,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
             ? (input.amount1Desired, input.amount0Desired)
             : (input.amount0Desired, input.amount1Desired);
 
-        int24 currentTick = UniswapHelper._getDepositCurrentTick(
+        int24 currentTick = UniswapHelper.getDepositCurrentTick(
             uniswapAddressHolder.uniswapV3FactoryAddress(),
             input.token0,
             input.token1,
@@ -284,7 +284,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
             .userToPositionManager(msg.sender);
         require(positionManager != address(0), "DRPM0");
 
-        int24 currentTick = UniswapHelper._getDepositCurrentTick(
+        int24 currentTick = UniswapHelper.getDepositCurrentTick(
             uniswapAddressHolder.uniswapV3FactoryAddress(),
             input.token0,
             input.token1,
@@ -356,7 +356,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
             .userToPositionManager(msg.sender);
         require(positionManager != address(0), "DRPM0");
 
-        int24 currentTick = UniswapHelper._getDepositCurrentTick(
+        int24 currentTick = UniswapHelper.getDepositCurrentTick(
             uniswapAddressHolder.uniswapV3FactoryAddress(),
             input.token0,
             input.token1,
@@ -505,35 +505,23 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         uint256 amount1
     ) internal view returns (uint256 totalUsdValue) {
         uint24[] memory allowableFeeTiers = registry().getAllowableFeeTiers();
-        totalUsdValue = _toUsdValue(token0, amount0, allowableFeeTiers).add(
-            _toUsdValue(token1, amount1, allowableFeeTiers)
-        );
-    }
 
-    function _toUsdValue(
-        address tokenAddress,
-        uint256 amount,
-        uint24[] memory allowableFeeTiers
-    ) internal view returns (uint256) {
-        address usdTokenAddress = registry().usdValueTokenAddress();
-
-        if (tokenAddress == usdTokenAddress) return amount;
-
-        address deepestPool = UniswapHelper._findV3DeepestPool(
-            uniswapAddressHolder.uniswapV3FactoryAddress(),
-            tokenAddress,
-            usdTokenAddress,
-            allowableFeeTiers
-        );
-
-        (uint160 sqrtPriceX96, , , , , , ) = IUniswapV3Pool(deepestPool).slot0();
-
-        return
-            SwapHelper.getQuoteFromSqrtRatioX96(
-                sqrtPriceX96,
-                MathHelper.fromUint256ToUint128(amount),
-                tokenAddress,
-                usdTokenAddress
+        totalUsdValue = SwapHelper
+            .getQuoteFromDeepestPool(
+                uniswapAddressHolder.uniswapV3FactoryAddress(),
+                token0,
+                registry().usdValueTokenAddress(),
+                amount0,
+                allowableFeeTiers
+            )
+            .add(
+                SwapHelper.getQuoteFromDeepestPool(
+                    uniswapAddressHolder.uniswapV3FactoryAddress(),
+                    token1,
+                    registry().usdValueTokenAddress(),
+                    amount1,
+                    allowableFeeTiers
+                )
             );
     }
 

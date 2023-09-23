@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
 import "./libraries/ERC20Helper.sol";
+import "./libraries/ArrayHelper.sol";
 import "./Storage.sol";
 
 /**
@@ -378,17 +379,7 @@ contract PositionManager is IPositionManager, ERC721Holder {
         uint256 cursor,
         uint256 howMany
     ) public view returns (uint256[] memory nfts, uint256 newCursor) {
-        uint256 length = howMany;
-        if (length > tokenIds.length - cursor) {
-            length = tokenIds.length - cursor;
-        }
-
-        nfts = new uint256[](length);
-        for (uint256 i = 0; i < length; i++) {
-            nfts[i] = tokenIds[cursor + i];
-        }
-
-        return (nfts, cursor + length);
+        return ArrayHelper.sliceUint256(tokenIds, cursor, howMany);
     }
 
     ///@notice return the length of the uniswap NFTs array
@@ -406,17 +397,7 @@ contract PositionManager is IPositionManager, ERC721Holder {
         uint256 cursor,
         uint256 howMany
     ) public view returns (uint256[] memory runningPositions, uint256 newCursor) {
-        uint256 length = howMany;
-        if (length > runningPositionIds.length - cursor) {
-            length = runningPositionIds.length - cursor;
-        }
-
-        runningPositions = new uint256[](length);
-        for (uint256 i = 0; i < length; i++) {
-            runningPositions[i] = runningPositionIds[cursor + i];
-        }
-
-        return (runningPositions, cursor + length);
+        return ArrayHelper.sliceUint256(runningPositionIds, cursor, howMany);
     }
 
     ///@notice return the length of the running positions array
@@ -434,17 +415,7 @@ contract PositionManager is IPositionManager, ERC721Holder {
         uint256 cursor,
         uint256 howMany
     ) public view returns (uint256[] memory closedPositions, uint256 newCursor) {
-        uint256 length = howMany;
-        if (length > closedPositionIds.length - cursor) {
-            length = closedPositionIds.length - cursor;
-        }
-
-        closedPositions = new uint256[](length);
-        for (uint256 i = 0; i < length; i++) {
-            closedPositions[i] = closedPositionIds[cursor + i];
-        }
-
-        return (closedPositions, cursor + length);
+        return ArrayHelper.sliceUint256(closedPositionIds, cursor, howMany);
     }
 
     ///@notice return the length of the closed positions array

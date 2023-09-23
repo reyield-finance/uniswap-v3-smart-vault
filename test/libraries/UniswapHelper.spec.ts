@@ -226,113 +226,113 @@ describe("UniswapHelper.sol", function () {
       {
         const currentTick = 276229;
         const fee = 100n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(currentTick);
       }
       {
         const currentTick = -276229;
         const fee = 100n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(currentTick);
       }
       {
         const currentTick = 0;
         const fee = 500n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(currentTick);
       }
 
       {
         const currentTick = 15;
         const fee = 500n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(20);
       }
       {
         const currentTick = 14;
         const fee = 500n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(10);
       }
 
       {
         const currentTick = -1;
         const fee = 500n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(0);
       }
 
       {
         const currentTick = -6;
         const fee = 500n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(-10);
       }
 
       {
         const currentTick = -5;
         const fee = 500n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(-10);
       }
 
       {
         const currentTick = -4;
         const fee = 500n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(0);
       }
 
       {
         const currentTick = -6;
         const fee = 3000n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(0);
       }
 
       {
         const currentTick = -30;
         const fee = 3000n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(-60);
       }
 
       {
         const currentTick = 100;
         const fee = 3000n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(120);
       }
 
       {
         const currentTick = 89;
         const fee = 3000n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(60);
       }
       {
         const currentTick = 120;
         const fee = 3000n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(120);
       }
       {
         const currentTick = -60;
         const fee = 3000n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(-60);
       }
 
       {
         const currentTick = 89;
         const fee = 10000n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(0);
       }
       {
         const currentTick = 100;
         const fee = 10000n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(200);
       }
     });

@@ -13,6 +13,7 @@ import "../interfaces/IERC20Extended.sol";
 import "./SafeInt24Math.sol";
 import "./SafeInt56Math.sol";
 import "./MathHelper.sol";
+import "./UniswapHelper.sol";
 
 ///@title library to help with swap amounts calculations
 library SwapHelper {
@@ -168,5 +169,23 @@ library SwapHelper {
                 ? FullMath.mulDiv(ratioX128, baseAmount, 1 << 128)
                 : FullMath.mulDiv(1 << 128, baseAmount, ratioX128);
         }
+    }
+
+    function getQuoteFromDeepestPool(
+        address factoryAddress,
+        address baseToken,
+        address quoteToken,
+        uint256 baseAmount,
+        uint24[] memory feeTiers
+    ) internal view returns (uint256 quoteAmount) {
+        if (baseToken == quoteToken) {
+            return baseAmount;
+        }
+        address deepestPool = UniswapHelper._findV3DeepestPool(factoryAddress, baseToken, quoteToken, feeTiers);
+
+        (uint160 sqrtPriceX96, , , , , , ) = IUniswapV3Pool(deepestPool).slot0();
+
+        return
+            getQuoteFromSqrtRatioX96(sqrtPriceX96, MathHelper.fromUint256ToUint128(baseAmount), baseToken, quoteToken);
     }
 }

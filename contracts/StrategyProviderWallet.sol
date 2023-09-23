@@ -11,6 +11,7 @@ import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "./libraries/ArrayHelper.sol";
 
 contract StrategyProviderWallet is IStrategyProviderWallet {
     using SafeERC20 for IERC20;
@@ -236,17 +237,7 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
         uint256 cursor,
         uint256 howMany
     ) external view returns (address[] memory tokens, uint256 newCursor) {
-        uint256 length = howMany;
-        if (length > receivedTokens.length - cursor) {
-            length = receivedTokens.length - cursor;
-        }
-
-        tokens = new address[](length);
-        for (uint256 i = 0; i < length; i++) {
-            tokens[i] = receivedTokens[cursor + i];
-        }
-
-        return (tokens, cursor + length);
+        return ArrayHelper.sliceAddress(receivedTokens, cursor, howMany);
     }
 
     function _collect(address token, uint256 amount, address recipient) internal {
