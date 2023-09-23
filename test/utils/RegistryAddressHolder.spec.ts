@@ -69,6 +69,9 @@ describe("RegistryAddressHolder.sol", function () {
       await expect(registryAddressHolder.connect(deployer).setRegistryAddress(zeroAddress)).to.be.revertedWith(
         "RAHERC165",
       );
+      await expect(registryAddressHolder.connect(deployer).setRegistryAddress(tokenWETH.address)).to.be.revertedWith(
+        "RAHERC165",
+      );
     });
 
     it("should fail set address from non-governance", async function () {
