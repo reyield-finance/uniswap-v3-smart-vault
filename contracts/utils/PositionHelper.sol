@@ -380,8 +380,8 @@ contract PositionHelper {
             token0 = ufOutput.token0;
             token1 = ufOutput.token1;
             pInfo = getPositionInfo(userAddress, positionId);
-            amount0Returned = gaOutput.amount0.add(ufOutput.amount0).add(pInfo.amount0Leftover);
-            amount1Returned = gaOutput.amount1.add(ufOutput.amount1).add(pInfo.amount1Leftover);
+            amount0Returned = gaOutput.amount0.add(ufOutput.amount0);
+            amount1Returned = gaOutput.amount1.add(ufOutput.amount1);
         }
 
         if (pInfo.strategyProvider == address(0)) {
