@@ -208,20 +208,6 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
 
             res.amount0Repaid = rrfOutput.token0Repaid;
             res.amount1Repaid = rrfOutput.token1Repaid;
-
-            // if (rrfOutput.token0Repaid > res.amount0CollectedFee) {
-            //     res.amount0CollectedFee = 0;
-            //     res.amount0Removed = res.amount0Removed.sub(rrfOutput.token0Repaid.sub(res.amount0CollectedFee));
-            // } else {
-            //     res.amount0CollectedFee = res.amount0CollectedFee.sub(rrfOutput.token0Repaid);
-            // }
-
-            // if (rrfOutput.token1Repaid > res.amount1CollectedFee) {
-            //     res.amount1CollectedFee = 0;
-            //     res.amount1Removed = res.amount1Removed.sub(rrfOutput.token1Repaid.sub(res.amount1CollectedFee));
-            // } else {
-            //     res.amount1CollectedFee = res.amount1CollectedFee.sub(rrfOutput.token1Repaid);
-            // }
         }
     }
 
