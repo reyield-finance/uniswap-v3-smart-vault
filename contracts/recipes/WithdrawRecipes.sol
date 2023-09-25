@@ -48,11 +48,10 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
 
         IPositionManager.PositionInfo memory pInfo = IPositionManager(positionManager).getPositionInfo(positionId);
 
-        (address token0, address token1, , , ) = UniswapHelper.getTokens(
+        UniswapHelper.getTokensOutput memory tokensOutput = UniswapHelper.getTokens(
             pInfo.tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
-
         ///@dev close position
         (
             uint256 amount0CollectedFee,
@@ -66,8 +65,8 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
 
         if (pInfo.strategyProvider == address(0)) {
             IReturnProfit.ReturnProfitInput memory rpInput = IReturnProfit.ReturnProfitInput({
-                token0: token0,
-                token1: token1,
+                token0: tokensOutput.token0,
+                token1: tokensOutput.token1,
                 amount0: amount0Removed.add(amount0CollectedFee).add(pInfo.amount0Leftover),
                 amount1: amount1Removed.add(amount1CollectedFee).add(pInfo.amount1Leftover),
                 returnedToken: address(0)
@@ -77,8 +76,8 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
             mwInput.amount0Returned = rpOutput.amount0Returned;
             mwInput.amount1Returned = rpOutput.amount1Returned;
             (mwInput.amount0ReturnedUsdValue, mwInput.amount1ReturnedUsdValue) = _calTokensUsdValue(
-                token0,
-                token1,
+                tokensOutput.token0,
+                tokensOutput.token1,
                 rpOutput.amount0Returned,
                 rpOutput.amount1Returned
             );
@@ -91,14 +90,18 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
                 .getStrategyInfo(pInfo.strategyId);
 
             IShareProfit.ShareProfitInput memory spInput = IShareProfit.ShareProfitInput({
-                token0: token0,
-                token1: token1,
+                token0: tokensOutput.token0,
+                token1: tokensOutput.token1,
                 returnedToken: address(0),
                 amount0: amount0Removed.add(amount0CollectedFee).add(pInfo.amount0Leftover),
                 amount1: amount1Removed.add(amount1CollectedFee).add(pInfo.amount1Leftover),
-                originalDepositUsdValue: pInfo.totalDepositUSDValue,
+                originalDepositUsdValue: pInfo.amount0DepositedUsdValue.add(pInfo.amount1DepositedUsdValue),
                 performanceFeeRecipient: strategyProviderWallet,
-                performanceFeeReceivedToken: _parseReceivedTokenType(sInfo.receivedTokenType, token0, token1),
+                performanceFeeReceivedToken: _parseReceivedTokenType(
+                    sInfo.receivedTokenType,
+                    tokensOutput.token0,
+                    tokensOutput.token1
+                ),
                 performanceFeeRatio: sInfo.performanceFeeRatio,
                 serviceFeeRatio: registry().getServiceFeeRatioFromLicenseAmount(sInfo.licenseAmount)
             });
@@ -108,8 +111,8 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
             mwInput.amount0Returned = spOutput.amount0Returned;
             mwInput.amount1Returned = spOutput.amount1Returned;
             (mwInput.amount0ReturnedUsdValue, mwInput.amount1ReturnedUsdValue) = _calTokensUsdValue(
-                token0,
-                token1,
+                tokensOutput.token0,
+                tokensOutput.token1,
                 spOutput.amount0Returned,
                 spOutput.amount1Returned
             );
@@ -134,7 +137,7 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
 
         IPositionManager.PositionInfo memory pInfo = IPositionManager(positionManager).getPositionInfo(positionId);
 
-        (address token0, address token1, , , ) = UniswapHelper.getTokens(
+        UniswapHelper.getTokensOutput memory tokensOutput = UniswapHelper.getTokens(
             pInfo.tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
@@ -151,19 +154,19 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
         mwInput.positionId = positionId;
         if (pInfo.strategyProvider == address(0)) {
             IReturnProfit.ReturnProfitInput memory rpInput = IReturnProfit.ReturnProfitInput({
-                token0: token0,
-                token1: token1,
+                token0: tokensOutput.token0,
+                token1: tokensOutput.token1,
                 amount0: amount0Removed.add(amount0CollectedFee).add(pInfo.amount0Leftover),
                 amount1: amount1Removed.add(amount1CollectedFee).add(pInfo.amount1Leftover),
-                returnedToken: isReturnedToken0 ? token0 : token1
+                returnedToken: isReturnedToken0 ? tokensOutput.token0 : tokensOutput.token1
             });
             ///@dev return profit to user
             IReturnProfit.ReturnProfitOutput memory rpOutput = IReturnProfit(positionManager).returnProfit(rpInput);
             mwInput.amount0Returned = rpOutput.amount0Returned;
             mwInput.amount1Returned = rpOutput.amount1Returned;
             (mwInput.amount0ReturnedUsdValue, mwInput.amount1ReturnedUsdValue) = _calTokensUsdValue(
-                token0,
-                token1,
+                tokensOutput.token0,
+                tokensOutput.token1,
                 rpOutput.amount0Returned,
                 rpOutput.amount1Returned
             );
@@ -176,14 +179,18 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
                 .getStrategyInfo(pInfo.strategyId);
 
             IShareProfit.ShareProfitInput memory spInput = IShareProfit.ShareProfitInput({
-                token0: token0,
-                token1: token1,
-                returnedToken: isReturnedToken0 ? token0 : token1,
+                token0: tokensOutput.token0,
+                token1: tokensOutput.token1,
+                returnedToken: isReturnedToken0 ? tokensOutput.token0 : tokensOutput.token1,
                 amount0: amount0Removed.add(amount0CollectedFee).add(pInfo.amount0Leftover),
                 amount1: amount1Removed.add(amount1CollectedFee).add(pInfo.amount1Leftover),
-                originalDepositUsdValue: pInfo.totalDepositUSDValue,
+                originalDepositUsdValue: pInfo.amount0DepositedUsdValue.add(pInfo.amount1DepositedUsdValue),
                 performanceFeeRecipient: strategyProviderWallet,
-                performanceFeeReceivedToken: _parseReceivedTokenType(sInfo.receivedTokenType, token0, token1),
+                performanceFeeReceivedToken: _parseReceivedTokenType(
+                    sInfo.receivedTokenType,
+                    tokensOutput.token0,
+                    tokensOutput.token1
+                ),
                 performanceFeeRatio: sInfo.performanceFeeRatio,
                 serviceFeeRatio: registry().getServiceFeeRatioFromLicenseAmount(sInfo.licenseAmount)
             });
@@ -193,8 +200,8 @@ contract WithdrawRecipes is BaseRecipes, IWithdrawRecipes {
             mwInput.amount0Returned = spOutput.amount0Returned;
             mwInput.amount1Returned = spOutput.amount1Returned;
             (mwInput.amount0ReturnedUsdValue, mwInput.amount1ReturnedUsdValue) = _calTokensUsdValue(
-                token0,
-                token1,
+                tokensOutput.token0,
+                tokensOutput.token1,
                 spOutput.amount0Returned,
                 spOutput.amount1Returned
             );

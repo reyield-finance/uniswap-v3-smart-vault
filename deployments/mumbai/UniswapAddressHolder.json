@@ -1,8 +1,13 @@
 {
-  "address": "0x99c4bEa3DbC7C2670B0D781946071cAC215aC86D",
+  "address": "0xC847FD0bFADCAb154FDFAD397BA236280C45239E",
   "abi": [
     {
       "inputs": [
+        {
+          "internalType": "address",
+          "name": "_registryAddressHolder",
+          "type": "address"
+        },
         {
           "internalType": "address",
           "name": "_nonfungiblePositionManagerAddress",
@@ -17,15 +22,67 @@
           "internalType": "address",
           "name": "_swapRouterAddress",
           "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_registry",
-          "type": "address"
         }
       ],
       "stateMutability": "nonpayable",
       "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "oldAddress",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "newAddress",
+          "type": "address"
+        }
+      ],
+      "name": "FactoryAddressSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "oldAddress",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "newAddress",
+          "type": "address"
+        }
+      ],
+      "name": "NonFungibleAddressSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "oldAddress",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "newAddress",
+          "type": "address"
+        }
+      ],
+      "name": "SwapRouterAddressSet",
+      "type": "event"
     },
     {
       "inputs": [],
@@ -42,10 +99,10 @@
     },
     {
       "inputs": [],
-      "name": "registry",
+      "name": "registryAddressHolder",
       "outputs": [
         {
-          "internalType": "contract IRegistry",
+          "internalType": "contract IRegistryAddressHolder",
           "name": "",
           "type": "address"
         }
@@ -75,19 +132,6 @@
         }
       ],
       "name": "setNonFungibleAddress",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "newAddress",
-          "type": "address"
-        }
-      ],
-      "name": "setRegistry",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -132,50 +176,70 @@
       "type": "function"
     }
   ],
-  "transactionHash": "0x60c21494adfdb043c02a42d48037423893e783cd9404f5ee9babc7406bf22081",
+  "transactionHash": "0x57d16d31da9487d74be47036466731aabed6ebceb9ed02053e42e54b6bb689d2",
   "receipt": {
     "to": null,
-    "from": "0x565d490806A6D8eF532f4d29eC00EF6aAC71A17A",
-    "contractAddress": "0x99c4bEa3DbC7C2670B0D781946071cAC215aC86D",
-    "transactionIndex": 31,
-    "gasUsed": "448590",
-    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000020000000000000002000000000000000000000000008000000000000000000000000000000000000000000000000000000000800000000000000000000100000000000000000000000000000000000000000000000000000000000080000000000000000000002000000000000000000000000000000000000000000000000000000020200800000000000000000000000000000000000000000000000000000000004000000000000000000001000000000000000000000000000000100000000000000000000000000080000000000000000000000000000000000000000000100000",
-    "blockHash": "0x16b9e9adab297b150164b3746c5b7469142b73dea36c15cbd84d6cf8401ae0a5",
-    "transactionHash": "0x60c21494adfdb043c02a42d48037423893e783cd9404f5ee9babc7406bf22081",
+    "from": "0xDedAd387474099d24F9489bCDD05C21F8A3245FC",
+    "contractAddress": "0xC847FD0bFADCAb154FDFAD397BA236280C45239E",
+    "transactionIndex": 15,
+    "gasUsed": "547786",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000020000000000000002000000000000000000000000008000000000000000000000000000000000000000000000000000000000800000000000000000000100000000000000000000000000004000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000004000000000100000000001000000000000000000000000000000100000000000002000000000000080000000000000000000000000000000000000000000100000",
+    "blockHash": "0xf8af1d83553e2ed24afe7a2172143b2968469cb311ec3869f3554e492c974c99",
+    "transactionHash": "0x57d16d31da9487d74be47036466731aabed6ebceb9ed02053e42e54b6bb689d2",
     "logs": [
       {
-        "transactionIndex": 31,
-        "blockNumber": 39534337,
-        "transactionHash": "0x60c21494adfdb043c02a42d48037423893e783cd9404f5ee9babc7406bf22081",
+        "transactionIndex": 15,
+        "blockNumber": 40466338,
+        "transactionHash": "0x57d16d31da9487d74be47036466731aabed6ebceb9ed02053e42e54b6bb689d2",
         "address": "0x0000000000000000000000000000000000001010",
         "topics": [
           "0x4dfe1bbbcf077ddc3e01291eea2d5c70c2b422b415d95645b9adcfd678cb1d63",
           "0x0000000000000000000000000000000000000000000000000000000000001010",
-          "0x000000000000000000000000565d490806a6d8ef532f4d29ec00ef6aac71a17a",
+          "0x000000000000000000000000dedad387474099d24f9489bcdd05c21f8a3245fc",
           "0x0000000000000000000000005082f249cdb2f2c1ee035e4f423c46ea2dab3ab1"
         ],
-        "data": "0x00000000000000000000000000000000000000000000000000026c2527ded28400000000000000000000000000000000000000000000000006d755898a54000000000000000000000000000000000000000000000000007e4d3824af601af1da00000000000000000000000000000000000000000000000006d4e96462752d7c00000000000000000000000000000000000000000000007e4d3a90d487f9c45e",
-        "logIndex": 181,
-        "blockHash": "0x16b9e9adab297b150164b3746c5b7469142b73dea36c15cbd84d6cf8401ae0a5"
+        "data": "0x0000000000000000000000000000000000000000000000000002f546e030db60000000000000000000000000000000000000000000000000045210bc7b3d6ad6000000000000000000000000000000000000000000000206a7506fccbb71c9b8000000000000000000000000000000000000000000000000044f1b759b0c8f76000000000000000000000000000000000000000000000206a75365139ba2a518",
+        "logIndex": 79,
+        "blockHash": "0xf8af1d83553e2ed24afe7a2172143b2968469cb311ec3869f3554e492c974c99"
       }
     ],
-    "blockNumber": 39534337,
-    "cumulativeGasUsed": "5340569",
+    "blockNumber": 40466338,
+    "cumulativeGasUsed": "2684176",
     "status": 1,
     "byzantium": true
   },
   "args": [
+    "0x1BdcF8Fea00691B61a1fA48c4785A23E9a6b4180",
     "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
     "0x1F98431c8aD98523631AE4a59f267346ea31F984",
-    "0xE592427A0AEce92De3Edee1F18E0157C05861564",
-    "0x2833242BAC2E2a196d240ADe39ff6D2b912D9edb"
+    "0xE592427A0AEce92De3Edee1F18E0157C05861564"
   ],
-  "numDeployments": 2,
-  "solcInputHash": "d6decf1baad82ada54f9f25242ad304c",
-  "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_nonfungiblePositionManagerAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_uniswapV3FactoryAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_swapRouterAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_registry\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"nonfungiblePositionManagerAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"registry\",\"outputs\":[{\"internalType\":\"contract IRegistry\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"setFactoryAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"setNonFungibleAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"setRegistry\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"setSwapRouterAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"swapRouterAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"uniswapV3FactoryAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"setFactoryAddress(address)\":{\"params\":{\"newAddress\":\"The address of the Uniswap V3 factory\"}},\"setNonFungibleAddress(address)\":{\"params\":{\"newAddress\":\"The address of the non fungible position manager\"}},\"setRegistry(address)\":{\"params\":{\"newAddress\":\"The address of the registry\"}},\"setSwapRouterAddress(address)\":{\"params\":{\"newAddress\":\"The address of the swap router\"}}},\"stateVariables\":{\"nonfungiblePositionManagerAddress\":{\"return\":\"address The address of the non fungible position manager\"},\"swapRouterAddress\":{\"return\":\"address The address of the swap router\"},\"uniswapV3FactoryAddress\":{\"return\":\"address The address of the Uniswap V3 factory\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"nonfungiblePositionManagerAddress()\":{\"notice\":\"default getter for nonfungiblePositionManagerAddress\"},\"setFactoryAddress(address)\":{\"notice\":\"Set the address of the Uniswap V3 factory\"},\"setNonFungibleAddress(address)\":{\"notice\":\"Set the address of the non fungible position manager\"},\"setRegistry(address)\":{\"notice\":\"Set the address of the registry\"},\"setSwapRouterAddress(address)\":{\"notice\":\"Set the address of the swap router\"},\"swapRouterAddress()\":{\"notice\":\"default getter for swapRouterAddress\"},\"uniswapV3FactoryAddress()\":{\"notice\":\"default getter for uniswapV3FactoryAddress\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/utils/UniswapAddressHolder.sol\":\"UniswapAddressHolder\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/interfaces/IRegistry.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-2.0\\npragma solidity 0.7.6;\\npragma abicoder v2;\\n\\ninterface IRegistry {\\n    struct Entry {\\n        address contractAddress;\\n        bytes32 defaultData;\\n    }\\n\\n    ///@notice check if the fee tier is allowable\\n    ///@param feeTier the fee tier to check\\n    ///@return true if the fee tier is allowable, false otherwise\\n    function isAllowableFeeTier(uint24 feeTier) external view returns (bool);\\n\\n    ///@notice get the list of fee tiers\\n    ///@return array of fee tiers\\n    function getFeeTiers() external view returns (uint24[] memory);\\n\\n    ///@notice get the list of allowable fee tiers\\n    ///@return array of allowable fee tiers\\n    function getAllowableFeeTiers() external view returns (uint24[] memory);\\n\\n    ///@notice return the address of PositionManagerFactory\\n    ///@return address of PositionManagerFactory\\n    function positionManagerFactoryAddress() external view returns (address);\\n\\n    ///@notice return the address of StrategyProviderWalletFactory\\n    ///@return address of StrategyProviderWalletFactory\\n    function strategyProviderWalletFactoryAddress() external view returns (address);\\n\\n    ///@notice return the address of weth9\\n    ///@return address of weth9\\n    function weth9() external view returns (address);\\n\\n    ///@notice return the address of Governance\\n    ///@return address of Governance\\n    function governance() external view returns (address);\\n\\n    ///@notice return the address of recipient of service fee\\n    ///@return address of recipient of service fee\\n    function serviceFeeRecipient() external view returns (address);\\n\\n    ///@notice return the max twap deviation\\n    ///@return int24 max twap deviation\\n    function maxTwapDeviation() external view returns (int24);\\n\\n    ///@notice return the twap duration\\n    ///@return uint32 twap duration\\n    function twapDuration() external view returns (uint32);\\n\\n    ///@notice return the address of USD value token\\n    ///@return address of USD value token\\n    function usdValueTokenAddress() external view returns (address);\\n\\n    ///@notice return the denominator of service fee ratio\\n    ///@return uint32 denominator of service fee ratio\\n    function serviceFeeDenominator() external view returns (uint32);\\n\\n    ///@notice return the address of Governance\\n    ///@return address of Governance\\n    function getModuleKeys() external view returns (bytes32[] memory);\\n\\n    ///@notice checks if the address is whitelisted as a keeper\\n    ///@param _keeper address to check\\n    ///@return bool true if the address is withelisted, false otherwise\\n    function whitelistedKeepers(address _keeper) external view returns (bool);\\n\\n    ///@notice get the module info by id\\n    ///@param _id id of the module\\n    ///@return Entry module info\\n    function getModuleInfo(bytes32 _id) external view returns (Entry memory);\\n\\n    ///@notice get service fee ratio for a given license amount\\n    ///@param _licenseAmount license amount to get service fee ratio\\n    function getServiceFeeRatioFromLicenseAmount(uint32 _licenseAmount) external view returns (uint32 ratio);\\n}\\n\",\"keccak256\":\"0xf01491fbe7aec6e223f1a90b69cc36b5ecee1386f23e0f052f19ff802195fe20\",\"license\":\"GPL-2.0\"},\"contracts/interfaces/IUniswapAddressHolder.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-2.0\\n\\npragma solidity 0.7.6;\\npragma abicoder v2;\\n\\ninterface IUniswapAddressHolder {\\n    ///@notice default getter for nonfungiblePositionManagerAddress\\n    ///@return address The address of the non fungible position manager\\n    function nonfungiblePositionManagerAddress() external view returns (address);\\n\\n    ///@notice default getter for uniswapV3FactoryAddress\\n    ///@return address The address of the Uniswap V3 factory\\n    function uniswapV3FactoryAddress() external view returns (address);\\n\\n    ///@notice default getter for swapRouterAddress\\n    ///@return address The address of the swap router\\n    function swapRouterAddress() external view returns (address);\\n\\n    ///@notice Set the address of nonfungible position manager\\n    ///@param newAddress new address of nonfungible position manager\\n    function setNonFungibleAddress(address newAddress) external;\\n\\n    ///@notice Set the address of the Uniswap V3 factory\\n    ///@param newAddress new address of the Uniswap V3 factory\\n    function setFactoryAddress(address newAddress) external;\\n\\n    ///@notice Set the address of uniV3 swap router\\n    ///@param newAddress new address of univ3 swap router\\n    function setSwapRouterAddress(address newAddress) external;\\n\\n    ///@notice Set the address of the registry\\n    ///@param newAddress The address of the registry\\n    function setRegistry(address newAddress) external;\\n}\\n\",\"keccak256\":\"0xa374214150de7a23de55401eeb0f118c4ec739211b215fe9de989db5fbfecdf1\",\"license\":\"GPL-2.0\"},\"contracts/utils/UniswapAddressHolder.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-2.0\\n\\npragma solidity 0.7.6;\\npragma abicoder v2;\\n\\nimport \\\"../interfaces/IUniswapAddressHolder.sol\\\";\\nimport \\\"../interfaces/IRegistry.sol\\\";\\n\\ncontract UniswapAddressHolder is IUniswapAddressHolder {\\n    address public override nonfungiblePositionManagerAddress;\\n    address public override uniswapV3FactoryAddress;\\n    address public override swapRouterAddress;\\n    IRegistry public registry;\\n\\n    constructor(\\n        address _nonfungiblePositionManagerAddress,\\n        address _uniswapV3FactoryAddress,\\n        address _swapRouterAddress,\\n        address _registry\\n    ) {\\n        nonfungiblePositionManagerAddress = _nonfungiblePositionManagerAddress;\\n        uniswapV3FactoryAddress = _uniswapV3FactoryAddress;\\n        swapRouterAddress = _swapRouterAddress;\\n        registry = IRegistry(_registry);\\n    }\\n\\n    ///@notice Set the address of the non fungible position manager\\n    ///@param newAddress The address of the non fungible position manager\\n    function setNonFungibleAddress(address newAddress) external override onlyGovernance {\\n        nonfungiblePositionManagerAddress = newAddress;\\n    }\\n\\n    ///@notice Set the address of the Uniswap V3 factory\\n    ///@param newAddress The address of the Uniswap V3 factory\\n    function setFactoryAddress(address newAddress) external override onlyGovernance {\\n        uniswapV3FactoryAddress = newAddress;\\n    }\\n\\n    ///@notice Set the address of the swap router\\n    ///@param newAddress The address of the swap router\\n    function setSwapRouterAddress(address newAddress) external override onlyGovernance {\\n        swapRouterAddress = newAddress;\\n    }\\n\\n    ///@notice Set the address of the registry\\n    ///@param newAddress The address of the registry\\n    function setRegistry(address newAddress) external override onlyGovernance {\\n        registry = IRegistry(newAddress);\\n    }\\n\\n    ///@notice restrict some function called only by governance\\n    modifier onlyGovernance() {\\n        require(msg.sender == registry.governance(), \\\"UOG\\\");\\n        _;\\n    }\\n}\\n\",\"keccak256\":\"0x163e86e83080b4a7ac253435e48332aa7f1e00528aa6507222d95ea618e97c01\",\"license\":\"GPL-2.0\"}},\"version\":1}",
-  "bytecode": "0x608060405234801561001057600080fd5b5060405161067438038061067483398101604081905261002f9161009e565b600080546001600160a01b039586166001600160a01b03199182161790915560018054948616948216949094179093556002805492851692841692909217909155600380549190931691161790556100f1565b80516001600160a01b038116811461009957600080fd5b919050565b600080600080608085870312156100b3578384fd5b6100bc85610082565b93506100ca60208601610082565b92506100d860408601610082565b91506100e660608601610082565b905092959194509250565b610574806101006000396000f3fe608060405234801561001057600080fd5b50600436106100885760003560e01c806380f5db8c1161005b57806380f5db8c146100db57806383c17c55146100e357806390fcdb36146100f6578063a91ee0dc146100fe57610088565b80635249961b1461008d5780635bfccac9146100a257806370608600146100c05780637b103999146100d3575b600080fd5b6100a061009b3660046104b6565b610111565b005b6100aa6101f2565b6040516100b791906104f5565b60405180910390f35b6100a06100ce3660046104b6565b610201565b6100aa6102d9565b6100aa6102e8565b6100a06100f13660046104b6565b6102f7565b6100aa6103cf565b6100a061010c3660046104b6565b6103de565b600360009054906101000a90046001600160a01b03166001600160a01b0316635aa6e6756040518163ffffffff1660e01b815260040160206040518083038186803b15801561015f57600080fd5b505afa158015610173573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061019791906104d9565b6001600160a01b0316336001600160a01b0316146101d05760405162461bcd60e51b81526004016101c790610509565b60405180910390fd5b600280546001600160a01b0319166001600160a01b0392909216919091179055565b6000546001600160a01b031681565b600360009054906101000a90046001600160a01b03166001600160a01b0316635aa6e6756040518163ffffffff1660e01b815260040160206040518083038186803b15801561024f57600080fd5b505afa158015610263573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061028791906104d9565b6001600160a01b0316336001600160a01b0316146102b75760405162461bcd60e51b81526004016101c790610509565b600080546001600160a01b0319166001600160a01b0392909216919091179055565b6003546001600160a01b031681565b6001546001600160a01b031681565b600360009054906101000a90046001600160a01b03166001600160a01b0316635aa6e6756040518163ffffffff1660e01b815260040160206040518083038186803b15801561034557600080fd5b505afa158015610359573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061037d91906104d9565b6001600160a01b0316336001600160a01b0316146103ad5760405162461bcd60e51b81526004016101c790610509565b600180546001600160a01b0319166001600160a01b0392909216919091179055565b6002546001600160a01b031681565b600360009054906101000a90046001600160a01b03166001600160a01b0316635aa6e6756040518163ffffffff1660e01b815260040160206040518083038186803b15801561042c57600080fd5b505afa158015610440573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061046491906104d9565b6001600160a01b0316336001600160a01b0316146104945760405162461bcd60e51b81526004016101c790610509565b600380546001600160a01b0319166001600160a01b0392909216919091179055565b6000602082840312156104c7578081fd5b81356104d281610526565b9392505050565b6000602082840312156104ea578081fd5b81516104d281610526565b6001600160a01b0391909116815260200190565b602080825260039082015262554f4760e81b604082015260600190565b6001600160a01b038116811461053b57600080fd5b5056fea2646970667358221220736b25f6df800b8c6bcf2610f4e4aa8989bd5502aa6bad5872485d3a2824434e64736f6c63430007060033",
-  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100885760003560e01c806380f5db8c1161005b57806380f5db8c146100db57806383c17c55146100e357806390fcdb36146100f6578063a91ee0dc146100fe57610088565b80635249961b1461008d5780635bfccac9146100a257806370608600146100c05780637b103999146100d3575b600080fd5b6100a061009b3660046104b6565b610111565b005b6100aa6101f2565b6040516100b791906104f5565b60405180910390f35b6100a06100ce3660046104b6565b610201565b6100aa6102d9565b6100aa6102e8565b6100a06100f13660046104b6565b6102f7565b6100aa6103cf565b6100a061010c3660046104b6565b6103de565b600360009054906101000a90046001600160a01b03166001600160a01b0316635aa6e6756040518163ffffffff1660e01b815260040160206040518083038186803b15801561015f57600080fd5b505afa158015610173573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061019791906104d9565b6001600160a01b0316336001600160a01b0316146101d05760405162461bcd60e51b81526004016101c790610509565b60405180910390fd5b600280546001600160a01b0319166001600160a01b0392909216919091179055565b6000546001600160a01b031681565b600360009054906101000a90046001600160a01b03166001600160a01b0316635aa6e6756040518163ffffffff1660e01b815260040160206040518083038186803b15801561024f57600080fd5b505afa158015610263573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061028791906104d9565b6001600160a01b0316336001600160a01b0316146102b75760405162461bcd60e51b81526004016101c790610509565b600080546001600160a01b0319166001600160a01b0392909216919091179055565b6003546001600160a01b031681565b6001546001600160a01b031681565b600360009054906101000a90046001600160a01b03166001600160a01b0316635aa6e6756040518163ffffffff1660e01b815260040160206040518083038186803b15801561034557600080fd5b505afa158015610359573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061037d91906104d9565b6001600160a01b0316336001600160a01b0316146103ad5760405162461bcd60e51b81526004016101c790610509565b600180546001600160a01b0319166001600160a01b0392909216919091179055565b6002546001600160a01b031681565b600360009054906101000a90046001600160a01b03166001600160a01b0316635aa6e6756040518163ffffffff1660e01b815260040160206040518083038186803b15801561042c57600080fd5b505afa158015610440573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061046491906104d9565b6001600160a01b0316336001600160a01b0316146104945760405162461bcd60e51b81526004016101c790610509565b600380546001600160a01b0319166001600160a01b0392909216919091179055565b6000602082840312156104c7578081fd5b81356104d281610526565b9392505050565b6000602082840312156104ea578081fd5b81516104d281610526565b6001600160a01b0391909116815260200190565b602080825260039082015262554f4760e81b604082015260600190565b6001600160a01b038116811461053b57600080fd5b5056fea2646970667358221220736b25f6df800b8c6bcf2610f4e4aa8989bd5502aa6bad5872485d3a2824434e64736f6c63430007060033",
+  "numDeployments": 1,
+  "solcInputHash": "55336bc26235c2a8ef1da4e9acf1a7fc",
+  "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_registryAddressHolder\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_nonfungiblePositionManagerAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_uniswapV3FactoryAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_swapRouterAddress\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"oldAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"FactoryAddressSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"oldAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"NonFungibleAddressSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"oldAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"SwapRouterAddressSet\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"nonfungiblePositionManagerAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"registryAddressHolder\",\"outputs\":[{\"internalType\":\"contract IRegistryAddressHolder\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"setFactoryAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"setNonFungibleAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"setSwapRouterAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"swapRouterAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"uniswapV3FactoryAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"events\":{\"FactoryAddressSet(address,address)\":{\"params\":{\"newAddress\":\"The address of the Uniswap V3 factory\",\"oldAddress\":\"The address of the Uniswap V3 factory\"}},\"NonFungibleAddressSet(address,address)\":{\"params\":{\"newAddress\":\"The address of the non fungible position manager\",\"oldAddress\":\"The address of the non fungible position manager\"}},\"SwapRouterAddressSet(address,address)\":{\"params\":{\"newAddress\":\"The address of the swap router\",\"oldAddress\":\"The address of the swap router\"}}},\"kind\":\"dev\",\"methods\":{\"setFactoryAddress(address)\":{\"params\":{\"newAddress\":\"The address of the Uniswap V3 factory\"}},\"setNonFungibleAddress(address)\":{\"params\":{\"newAddress\":\"The address of the non fungible position manager\"}},\"setSwapRouterAddress(address)\":{\"params\":{\"newAddress\":\"The address of the swap router\"}}},\"stateVariables\":{\"nonfungiblePositionManagerAddress\":{\"return\":\"address The address of the non fungible position manager\"},\"swapRouterAddress\":{\"return\":\"address The address of the swap router\"},\"uniswapV3FactoryAddress\":{\"return\":\"address The address of the Uniswap V3 factory\"}},\"version\":1},\"userdoc\":{\"events\":{\"FactoryAddressSet(address,address)\":{\"notice\":\"emitted when the address of the Uniswap V3 factory is set\"},\"NonFungibleAddressSet(address,address)\":{\"notice\":\"emitted when the address of the non fungible position manager is set\"},\"SwapRouterAddressSet(address,address)\":{\"notice\":\"emitted when the address of the swap router is set\"}},\"kind\":\"user\",\"methods\":{\"nonfungiblePositionManagerAddress()\":{\"notice\":\"default getter for nonfungiblePositionManagerAddress\"},\"setFactoryAddress(address)\":{\"notice\":\"Set the address of the Uniswap V3 factory\"},\"setNonFungibleAddress(address)\":{\"notice\":\"Set the address of the non fungible position manager\"},\"setSwapRouterAddress(address)\":{\"notice\":\"Set the address of the swap router\"},\"swapRouterAddress()\":{\"notice\":\"default getter for swapRouterAddress\"},\"uniswapV3FactoryAddress()\":{\"notice\":\"default getter for uniswapV3FactoryAddress\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/utils/UniswapAddressHolder.sol\":\"UniswapAddressHolder\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/interfaces/IRegistry.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-2.0\\npragma solidity 0.7.6;\\npragma abicoder v2;\\n\\ninterface IRegistry {\\n    ///@notice emitted when governance address is changed\\n    ///@param oldGovernance the old governance address\\n    ///@param newGovernance the new governance address\\n    event GovernanceChanged(address oldGovernance, address newGovernance);\\n\\n    ///@notice emitted when service fee recipient address is changed\\n    ///@param oldServiceFeeRecipient the old service fee recipient address\\n    ///@param newServiceFeeRecipient the new service fee recipient address\\n    event ServiceFeeRecipientChanged(address oldServiceFeeRecipient, address newServiceFeeRecipient);\\n\\n    ///@notice emitted when position manager factory address is changed\\n    ///@param oldPositionManagerFactory the old position manager factory address\\n    ///@param newPositionManagerFactory the new position manager factory address\\n    event PositionManagerFactoryChanged(address oldPositionManagerFactory, address newPositionManagerFactory);\\n\\n    ///@notice emitted when strategy provider wallet factory address is changed\\n    ///@param oldStrategyProviderWalletFactory the old strategy provider wallet factory address\\n    ///@param newStrategyProviderWalletFactory the new strategy provider wallet factory address\\n    event StrategyProviderWalletFactoryChanged(\\n        address oldStrategyProviderWalletFactory,\\n        address newStrategyProviderWalletFactory\\n    );\\n\\n    ///@notice emitted when official account address is changed\\n    ///@param newOfficialAccount the new official account address\\n    event OfficialAccountChanged(address oldOfficialAccount, address newOfficialAccount);\\n\\n    ///@notice emitted when a contract is added to registry\\n    ///@param newContract address of the new contract\\n    ///@param contractId keccak of contract name\\n    event ContractAdded(address newContract, bytes32 contractId);\\n\\n    ///@notice emitted when a contract address is updated\\n    ///@param oldContract address of the contract before update\\n    ///@param newContract address of the contract after update\\n    ///@param contractId keccak of contract name\\n    event ContractChanged(address oldContract, address newContract, bytes32 contractId);\\n\\n    ///@notice emitted when a contract address is removed\\n    ///@param contractAddress address of the removed contract\\n    ///@param contractId keccak of removed contract name\\n    event ContractRemoved(address contractAddress, bytes32 contractId);\\n\\n    ///@notice emitted when a keeper is added to whitelist\\n    ///@param keeper address of the added keeper\\n    event KeeperAdded(address keeper);\\n\\n    ///@notice emitted when a keeper is removed from whitelist\\n    ///@param keeper address of the removed keeper\\n    event KeeperRemoved(address keeper);\\n\\n    ///@notice emitted when a fee tier is activated\\n    ///@param feeTier fee tier activated\\n    event FeeTierActivated(uint24 feeTier);\\n\\n    ///@notice emitted when a fee tier is deactivated\\n    ///@param feeTier fee tier deactivated\\n    event FeeTierDeactivated(uint24 feeTier);\\n\\n    ///@notice emitted when service fee ratio is updated\\n    ///@param licenseAmount license amount to update service fee ratio\\n    ///@param serviceFeeRatio service fee ratio to update\\n    event ServiceFeeRatioUpdated(uint32 licenseAmount, uint32 serviceFeeRatio);\\n\\n    ///@notice emitted when usd value token address is updated\\n    ///@param oldUsdValueTokenAddress the old usd value token address\\n    ///@param newUsdValueTokenAddress the new usd value token address\\n    event UsdValueTokenAddressUpdated(address oldUsdValueTokenAddress, address newUsdValueTokenAddress);\\n\\n    ///@notice emitted when weth9 address is updated\\n    ///@param oldWeth9 the old weth9 address\\n    ///@param newWeth9 the new weth9 address\\n    event Weth9Updated(address oldWeth9, address newWeth9);\\n\\n    ///@notice emitted when max twap deviation is updated\\n    ///@param oldMaxTwapDeviation the old twap deviation\\n    ///@param newMaxTwapDeviation the new twap deviation\\n    event MaxTwapDeviationUpdated(int24 oldMaxTwapDeviation, int24 newMaxTwapDeviation);\\n\\n    ///@notice emitted when twap duration is updated\\n    ///@param oldTwapDuration the old twap duration\\n    ///@param newTwapDuration the new twap duration\\n    event TwapDurationUpdated(uint32 oldTwapDuration, uint32 newTwapDuration);\\n\\n    ///@notice emitted when module data is updated\\n    ///@param id keccak256 of module id string\\n    ///@param contractAddress address of the module\\n    ///@param defaultData default data of the module\\n    event ModuleDataUpdated(bytes32 id, address contractAddress, bytes32 defaultData);\\n\\n    struct Entry {\\n        bytes32 id;\\n        address contractAddress;\\n        bytes32 defaultData;\\n    }\\n\\n    ///@notice check if the fee tier is allowable\\n    ///@param feeTier the fee tier to check\\n    ///@return true if the fee tier is allowable, false otherwise\\n    function isAllowableFeeTier(uint24 feeTier) external view returns (bool);\\n\\n    ///@notice get the list of fee tiers\\n    ///@return array of fee tiers\\n    function getFeeTiers() external view returns (uint24[] memory);\\n\\n    ///@notice get the list of allowable fee tiers\\n    ///@return array of allowable fee tiers\\n    function getAllowableFeeTiers() external view returns (uint24[] memory);\\n\\n    ///@notice return the address of PositionManagerFactory\\n    ///@return address of PositionManagerFactory\\n    function positionManagerFactoryAddress() external view returns (address);\\n\\n    ///@notice return the address of StrategyProviderWalletFactory\\n    ///@return address of StrategyProviderWalletFactory\\n    function strategyProviderWalletFactoryAddress() external view returns (address);\\n\\n    ///@notice return the address of officialAccount\\n    ///@return address of officialAccount\\n    function officialAccount() external view returns (address);\\n\\n    ///@notice return the address of weth9\\n    ///@return address of weth9\\n    function weth9() external view returns (address);\\n\\n    ///@notice return the address of Governance\\n    ///@return address of Governance\\n    function governance() external view returns (address);\\n\\n    ///@notice return the address of recipient of service fee\\n    ///@return address of recipient of service fee\\n    function serviceFeeRecipient() external view returns (address);\\n\\n    ///@notice return the max twap deviation\\n    ///@return int24 max twap deviation\\n    function maxTwapDeviation() external view returns (int24);\\n\\n    ///@notice return the twap duration\\n    ///@return uint32 twap duration\\n    function twapDuration() external view returns (uint32);\\n\\n    ///@notice return the address of USD value token\\n    ///@return address of USD value token\\n    function usdValueTokenAddress() external view returns (address);\\n\\n    ///@notice return the denominator of service fee ratio\\n    ///@return uint32 denominator of service fee ratio\\n    function serviceFeeDenominator() external view returns (uint32);\\n\\n    ///@notice return the address of Governance\\n    ///@return address of Governance\\n    function getModuleKeys() external view returns (bytes32[] memory);\\n\\n    ///@notice checks if the address is whitelisted as a keeper\\n    ///@param _keeper address to check\\n    ///@return bool true if the address is withelisted, false otherwise\\n    function whitelistedKeepers(address _keeper) external view returns (bool);\\n\\n    ///@notice get the module info by id\\n    ///@param _id id of the module\\n    ///@return Entry module info\\n    function getModuleInfo(bytes32 _id) external view returns (Entry memory);\\n\\n    ///@notice check if the module is active\\n    ///@param _contractAddress address of the module\\n    ///@return bool true if the module is active, false otherwise\\n    function activeModule(address _contractAddress) external view returns (bool);\\n\\n    ///@notice get service fee ratio for a given license amount\\n    ///@param _licenseAmount license amount to get service fee ratio\\n    function getServiceFeeRatioFromLicenseAmount(uint32 _licenseAmount) external view returns (uint32 ratio);\\n}\\n\",\"keccak256\":\"0xcfdebc23759b625576394a17289e6690cd5e5d6da8699da8c6d36bcbc25b46ef\",\"license\":\"GPL-2.0\"},\"contracts/interfaces/IRegistryAddressHolder.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-2.0\\n\\npragma solidity 0.7.6;\\npragma abicoder v2;\\n\\ninterface IRegistryAddressHolder {\\n    ///@notice default getter for regitsry address\\n    ///@return address The address of the registry\\n    function registry() external view returns (address);\\n\\n    ///@notice Set the address of registry\\n    ///@param newAddress new address of registry\\n    function setRegistryAddress(address newAddress) external;\\n}\\n\",\"keccak256\":\"0x5eb7fcc946db90f955527b80acaf1dbb7ce4734c215ae6c38220ccf371b70d9d\",\"license\":\"GPL-2.0\"},\"contracts/interfaces/IUniswapAddressHolder.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-2.0\\n\\npragma solidity 0.7.6;\\npragma abicoder v2;\\n\\ninterface IUniswapAddressHolder {\\n    ///@notice default getter for nonfungiblePositionManagerAddress\\n    ///@return address The address of the non fungible position manager\\n    function nonfungiblePositionManagerAddress() external view returns (address);\\n\\n    ///@notice default getter for uniswapV3FactoryAddress\\n    ///@return address The address of the Uniswap V3 factory\\n    function uniswapV3FactoryAddress() external view returns (address);\\n\\n    ///@notice default getter for swapRouterAddress\\n    ///@return address The address of the swap router\\n    function swapRouterAddress() external view returns (address);\\n\\n    ///@notice Set the address of nonfungible position manager\\n    ///@param newAddress new address of nonfungible position manager\\n    function setNonFungibleAddress(address newAddress) external;\\n\\n    ///@notice Set the address of the Uniswap V3 factory\\n    ///@param newAddress new address of the Uniswap V3 factory\\n    function setFactoryAddress(address newAddress) external;\\n\\n    ///@notice Set the address of uniV3 swap router\\n    ///@param newAddress new address of univ3 swap router\\n    function setSwapRouterAddress(address newAddress) external;\\n}\\n\",\"keccak256\":\"0x781c4d8062cd513f4f8d308b0473a3a61975d9d907b8ded998797cfc0ad13e9d\",\"license\":\"GPL-2.0\"},\"contracts/utils/UniswapAddressHolder.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-2.0\\n\\npragma solidity 0.7.6;\\npragma abicoder v2;\\n\\nimport \\\"../interfaces/IUniswapAddressHolder.sol\\\";\\nimport \\\"../interfaces/IRegistryAddressHolder.sol\\\";\\nimport \\\"../interfaces/IRegistry.sol\\\";\\n\\ncontract UniswapAddressHolder is IUniswapAddressHolder {\\n    address public override nonfungiblePositionManagerAddress;\\n    address public override uniswapV3FactoryAddress;\\n    address public override swapRouterAddress;\\n    IRegistryAddressHolder public immutable registryAddressHolder;\\n\\n    ///@notice emitted when the address of the non fungible position manager is set\\n    ///@param oldAddress The address of the non fungible position manager\\n    ///@param newAddress The address of the non fungible position manager\\n    event NonFungibleAddressSet(address oldAddress, address newAddress);\\n\\n    ///@notice emitted when the address of the Uniswap V3 factory is set\\n    ///@param oldAddress The address of the Uniswap V3 factory\\n    ///@param newAddress The address of the Uniswap V3 factory\\n    event FactoryAddressSet(address oldAddress, address newAddress);\\n\\n    ///@notice emitted when the address of the swap router is set\\n    ///@param oldAddress The address of the swap router\\n    ///@param newAddress The address of the swap router\\n    event SwapRouterAddressSet(address oldAddress, address newAddress);\\n\\n    ///@notice restrict some function called only by governance\\n    modifier onlyGovernance() {\\n        require(msg.sender == IRegistry(registryAddressHolder.registry()).governance(), \\\"UAHOG\\\");\\n        _;\\n    }\\n\\n    constructor(\\n        address _registryAddressHolder,\\n        address _nonfungiblePositionManagerAddress,\\n        address _uniswapV3FactoryAddress,\\n        address _swapRouterAddress\\n    ) {\\n        require(_registryAddressHolder != address(0), \\\"UAHRAH0\\\");\\n        require(_nonfungiblePositionManagerAddress != address(0), \\\"UAHNPA0\\\");\\n        require(_uniswapV3FactoryAddress != address(0), \\\"UAHFA0\\\");\\n        require(_swapRouterAddress != address(0), \\\"UAHSRA0\\\");\\n\\n        registryAddressHolder = IRegistryAddressHolder(_registryAddressHolder);\\n        nonfungiblePositionManagerAddress = _nonfungiblePositionManagerAddress;\\n        uniswapV3FactoryAddress = _uniswapV3FactoryAddress;\\n        swapRouterAddress = _swapRouterAddress;\\n    }\\n\\n    ///@notice Set the address of the non fungible position manager\\n    ///@param newAddress The address of the non fungible position manager\\n    function setNonFungibleAddress(address newAddress) external override onlyGovernance {\\n        require(newAddress != address(0), \\\"UAHNPA0\\\");\\n        address oldAddress = nonfungiblePositionManagerAddress;\\n        nonfungiblePositionManagerAddress = newAddress;\\n        emit NonFungibleAddressSet(oldAddress, newAddress);\\n    }\\n\\n    ///@notice Set the address of the Uniswap V3 factory\\n    ///@param newAddress The address of the Uniswap V3 factory\\n    function setFactoryAddress(address newAddress) external override onlyGovernance {\\n        require(newAddress != address(0), \\\"UAHFA0\\\");\\n        address oldAddress = uniswapV3FactoryAddress;\\n        uniswapV3FactoryAddress = newAddress;\\n        emit FactoryAddressSet(oldAddress, newAddress);\\n    }\\n\\n    ///@notice Set the address of the swap router\\n    ///@param newAddress The address of the swap router\\n    function setSwapRouterAddress(address newAddress) external override onlyGovernance {\\n        require(newAddress != address(0), \\\"UAHSRA0\\\");\\n        address oldAddress = swapRouterAddress;\\n        swapRouterAddress = newAddress;\\n        emit SwapRouterAddressSet(oldAddress, newAddress);\\n    }\\n}\\n\",\"keccak256\":\"0x7238ea234da747ad6a3862c5e6a06aed1dafa6e16d17e39ba856dc4aec15cc7f\",\"license\":\"GPL-2.0\"}},\"version\":1}",
+  "bytecode": "0x60a060405234801561001057600080fd5b506040516109d53803806109d583398101604081905261002f91610141565b6001600160a01b03841661005e5760405162461bcd60e51b8152600401610055906101f6565b60405180910390fd5b6001600160a01b0383166100845760405162461bcd60e51b815260040161005590610194565b6001600160a01b0382166100aa5760405162461bcd60e51b8152600401610055906101b5565b6001600160a01b0381166100d05760405162461bcd60e51b8152600401610055906101d5565b60609390931b6001600160601b031916608052600080546001600160a01b03199081166001600160a01b0394851617909155600180548216928416929092179091556002805490911691909216179055610217565b80516001600160a01b038116811461013c57600080fd5b919050565b60008060008060808587031215610156578384fd5b61015f85610125565b935061016d60208601610125565b925061017b60408601610125565b915061018960608601610125565b905092959194509250565b60208082526007908201526605541484e5041360cc1b604082015260600190565b60208082526006908201526505541484641360d41b604082015260600190565b6020808252600790820152660554148535241360cc1b604082015260600190565b6020808252600790820152660554148524148360cc1b604082015260600190565b60805160601c6107936102426000398060f552806102c3528061047c528061063552506107936000f3fe608060405234801561001057600080fd5b506004361061007d5760003560e01c806380f5db8c1161005b57806380f5db8c146100c857806383c17c55146100d057806390fcdb36146100e3578063974914d5146100eb5761007d565b80635249961b146100825780635bfccac91461009757806370608600146100b5575b600080fd5b610095610090366004610657565b6100f3565b005b61009f6102b2565b6040516100ac9190610696565b60405180910390f35b6100956100c3366004610657565b6102c1565b61009f61046b565b6100956100de366004610657565b61047a565b61009f610624565b61009f610633565b7f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316637b1039996040518163ffffffff1660e01b815260040160206040518083038186803b15801561014c57600080fd5b505afa158015610160573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610184919061067a565b6001600160a01b0316635aa6e6756040518163ffffffff1660e01b815260040160206040518083038186803b1580156101bc57600080fd5b505afa1580156101d0573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906101f4919061067a565b6001600160a01b0316336001600160a01b03161461022d5760405162461bcd60e51b815260040161022490610726565b60405180910390fd5b6001600160a01b0381166102535760405162461bcd60e51b815260040161022490610705565b600280546001600160a01b038381166001600160a01b03198316179092556040519116907ffd491d6ce14e136a40aca5aa4793796c5051c98a15232f7a7a0d7b8d4bf321e3906102a690839085906106aa565b60405180910390a15050565b6000546001600160a01b031681565b7f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316637b1039996040518163ffffffff1660e01b815260040160206040518083038186803b15801561031a57600080fd5b505afa15801561032e573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610352919061067a565b6001600160a01b0316635aa6e6756040518163ffffffff1660e01b815260040160206040518083038186803b15801561038a57600080fd5b505afa15801561039e573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906103c2919061067a565b6001600160a01b0316336001600160a01b0316146103f25760405162461bcd60e51b815260040161022490610726565b6001600160a01b0381166104185760405162461bcd60e51b8152600401610224906106c4565b600080546001600160a01b038381166001600160a01b03198316179092556040519116907fc8e6637fb05f14eb2b05c10727d90b5e471b7fe789269f75b86fc9c08dc0fa6f906102a690839085906106aa565b6001546001600160a01b031681565b7f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316637b1039996040518163ffffffff1660e01b815260040160206040518083038186803b1580156104d357600080fd5b505afa1580156104e7573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061050b919061067a565b6001600160a01b0316635aa6e6756040518163ffffffff1660e01b815260040160206040518083038186803b15801561054357600080fd5b505afa158015610557573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061057b919061067a565b6001600160a01b0316336001600160a01b0316146105ab5760405162461bcd60e51b815260040161022490610726565b6001600160a01b0381166105d15760405162461bcd60e51b8152600401610224906106e5565b600180546001600160a01b038381166001600160a01b03198316179092556040519116907f6a9bd4e17a6d985ad89591b1b2f538e9c3b602734dd4f0a94fcafc288e0127bd906102a690839085906106aa565b6002546001600160a01b031681565b7f000000000000000000000000000000000000000000000000000000000000000081565b600060208284031215610668578081fd5b813561067381610745565b9392505050565b60006020828403121561068b578081fd5b815161067381610745565b6001600160a01b0391909116815260200190565b6001600160a01b0392831681529116602082015260400190565b60208082526007908201526605541484e5041360cc1b604082015260600190565b60208082526006908201526505541484641360d41b604082015260600190565b6020808252600790820152660554148535241360cc1b604082015260600190565b6020808252600590820152645541484f4760d81b604082015260600190565b6001600160a01b038116811461075a57600080fd5b5056fea2646970667358221220a83c06633b87c1d4cd28cc86b002b75cc54ac35a1c5775ca9d8289aea7d40e0864736f6c63430007060033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061007d5760003560e01c806380f5db8c1161005b57806380f5db8c146100c857806383c17c55146100d057806390fcdb36146100e3578063974914d5146100eb5761007d565b80635249961b146100825780635bfccac91461009757806370608600146100b5575b600080fd5b610095610090366004610657565b6100f3565b005b61009f6102b2565b6040516100ac9190610696565b60405180910390f35b6100956100c3366004610657565b6102c1565b61009f61046b565b6100956100de366004610657565b61047a565b61009f610624565b61009f610633565b7f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316637b1039996040518163ffffffff1660e01b815260040160206040518083038186803b15801561014c57600080fd5b505afa158015610160573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610184919061067a565b6001600160a01b0316635aa6e6756040518163ffffffff1660e01b815260040160206040518083038186803b1580156101bc57600080fd5b505afa1580156101d0573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906101f4919061067a565b6001600160a01b0316336001600160a01b03161461022d5760405162461bcd60e51b815260040161022490610726565b60405180910390fd5b6001600160a01b0381166102535760405162461bcd60e51b815260040161022490610705565b600280546001600160a01b038381166001600160a01b03198316179092556040519116907ffd491d6ce14e136a40aca5aa4793796c5051c98a15232f7a7a0d7b8d4bf321e3906102a690839085906106aa565b60405180910390a15050565b6000546001600160a01b031681565b7f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316637b1039996040518163ffffffff1660e01b815260040160206040518083038186803b15801561031a57600080fd5b505afa15801561032e573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610352919061067a565b6001600160a01b0316635aa6e6756040518163ffffffff1660e01b815260040160206040518083038186803b15801561038a57600080fd5b505afa15801561039e573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906103c2919061067a565b6001600160a01b0316336001600160a01b0316146103f25760405162461bcd60e51b815260040161022490610726565b6001600160a01b0381166104185760405162461bcd60e51b8152600401610224906106c4565b600080546001600160a01b038381166001600160a01b03198316179092556040519116907fc8e6637fb05f14eb2b05c10727d90b5e471b7fe789269f75b86fc9c08dc0fa6f906102a690839085906106aa565b6001546001600160a01b031681565b7f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316637b1039996040518163ffffffff1660e01b815260040160206040518083038186803b1580156104d357600080fd5b505afa1580156104e7573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061050b919061067a565b6001600160a01b0316635aa6e6756040518163ffffffff1660e01b815260040160206040518083038186803b15801561054357600080fd5b505afa158015610557573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061057b919061067a565b6001600160a01b0316336001600160a01b0316146105ab5760405162461bcd60e51b815260040161022490610726565b6001600160a01b0381166105d15760405162461bcd60e51b8152600401610224906106e5565b600180546001600160a01b038381166001600160a01b03198316179092556040519116907f6a9bd4e17a6d985ad89591b1b2f538e9c3b602734dd4f0a94fcafc288e0127bd906102a690839085906106aa565b6002546001600160a01b031681565b7f000000000000000000000000000000000000000000000000000000000000000081565b600060208284031215610668578081fd5b813561067381610745565b9392505050565b60006020828403121561068b578081fd5b815161067381610745565b6001600160a01b0391909116815260200190565b6001600160a01b0392831681529116602082015260400190565b60208082526007908201526605541484e5041360cc1b604082015260600190565b60208082526006908201526505541484641360d41b604082015260600190565b6020808252600790820152660554148535241360cc1b604082015260600190565b6020808252600590820152645541484f4760d81b604082015260600190565b6001600160a01b038116811461075a57600080fd5b5056fea2646970667358221220a83c06633b87c1d4cd28cc86b002b75cc54ac35a1c5775ca9d8289aea7d40e0864736f6c63430007060033",
   "devdoc": {
+    "events": {
+      "FactoryAddressSet(address,address)": {
+        "params": {
+          "newAddress": "The address of the Uniswap V3 factory",
+          "oldAddress": "The address of the Uniswap V3 factory"
+        }
+      },
+      "NonFungibleAddressSet(address,address)": {
+        "params": {
+          "newAddress": "The address of the non fungible position manager",
+          "oldAddress": "The address of the non fungible position manager"
+        }
+      },
+      "SwapRouterAddressSet(address,address)": {
+        "params": {
+          "newAddress": "The address of the swap router",
+          "oldAddress": "The address of the swap router"
+        }
+      }
+    },
     "kind": "dev",
     "methods": {
       "setFactoryAddress(address)": {
@@ -186,11 +250,6 @@
       "setNonFungibleAddress(address)": {
         "params": {
           "newAddress": "The address of the non fungible position manager"
-        }
-      },
-      "setRegistry(address)": {
-        "params": {
-          "newAddress": "The address of the registry"
         }
       },
       "setSwapRouterAddress(address)": {
@@ -213,6 +272,17 @@
     "version": 1
   },
   "userdoc": {
+    "events": {
+      "FactoryAddressSet(address,address)": {
+        "notice": "emitted when the address of the Uniswap V3 factory is set"
+      },
+      "NonFungibleAddressSet(address,address)": {
+        "notice": "emitted when the address of the non fungible position manager is set"
+      },
+      "SwapRouterAddressSet(address,address)": {
+        "notice": "emitted when the address of the swap router is set"
+      }
+    },
     "kind": "user",
     "methods": {
       "nonfungiblePositionManagerAddress()": {
@@ -223,9 +293,6 @@
       },
       "setNonFungibleAddress(address)": {
         "notice": "Set the address of the non fungible position manager"
-      },
-      "setRegistry(address)": {
-        "notice": "Set the address of the registry"
       },
       "setSwapRouterAddress(address)": {
         "notice": "Set the address of the swap router"
@@ -242,7 +309,7 @@
   "storageLayout": {
     "storage": [
       {
-        "astId": 22637,
+        "astId": 23758,
         "contract": "contracts/utils/UniswapAddressHolder.sol:UniswapAddressHolder",
         "label": "nonfungiblePositionManagerAddress",
         "offset": 0,
@@ -250,7 +317,7 @@
         "type": "t_address"
       },
       {
-        "astId": 22640,
+        "astId": 23761,
         "contract": "contracts/utils/UniswapAddressHolder.sol:UniswapAddressHolder",
         "label": "uniswapV3FactoryAddress",
         "offset": 0,
@@ -258,31 +325,18 @@
         "type": "t_address"
       },
       {
-        "astId": 22643,
+        "astId": 23764,
         "contract": "contracts/utils/UniswapAddressHolder.sol:UniswapAddressHolder",
         "label": "swapRouterAddress",
         "offset": 0,
         "slot": "2",
         "type": "t_address"
-      },
-      {
-        "astId": 22645,
-        "contract": "contracts/utils/UniswapAddressHolder.sol:UniswapAddressHolder",
-        "label": "registry",
-        "offset": 0,
-        "slot": "3",
-        "type": "t_contract(IRegistry)14015"
       }
     ],
     "types": {
       "t_address": {
         "encoding": "inplace",
         "label": "address",
-        "numberOfBytes": "20"
-      },
-      "t_contract(IRegistry)14015": {
-        "encoding": "inplace",
-        "label": "contract IRegistry",
         "numberOfBytes": "20"
       }
     }

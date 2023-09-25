@@ -45,13 +45,13 @@ contract Timelock {
     mapping(address => bool) public pendingAdminAccepted;
     mapping(bytes32 => bool) public queuedTransactions;
 
-    modifier ValidDeplay(uint256 _delay) {
+    modifier ValidDelay(uint256 _delay) {
         require(_delay >= MINIMUM_DELAY, "TVDMIN");
         require(_delay <= MAXIMUM_DELAY, "TVDMAX");
         _;
     }
 
-    constructor(address _admin, uint256 _delay) ValidDeplay(_delay) {
+    constructor(address _admin, uint256 _delay) ValidDelay(_delay) {
         require(_admin != address(0), "TVD0");
         admin = _admin;
         delay = _delay;
@@ -59,7 +59,7 @@ contract Timelock {
 
     /// @notice Sets the minimum time delay
     /// @param _delay the new delay
-    function setDelay(uint256 _delay) public onlyAdmin ValidDeplay(_delay) {
+    function setDelay(uint256 _delay) public onlyAdmin ValidDelay(_delay) {
         delay = _delay;
         emit NewDelay(delay);
     }
@@ -67,8 +67,8 @@ contract Timelock {
     /// @notice Sets a new address as pending admin
     /// @param _pendingAdmin the pending admin
     function setNewPendingAdmin(address _pendingAdmin) public onlyAdmin {
-        require(pendingAdmin == address(0), "Timelock::setNewPendingAdmin: Pending admin already set.");
-        require(_pendingAdmin != address(0), "Timelock::setNewPendingAdmin: Cannot set pendingAdmin to address(0).");
+        require(pendingAdmin == address(0), "TSPAN0");
+        require(_pendingAdmin != address(0), "TSPA0");
         pendingAdmin = _pendingAdmin;
         pendingAdminAccepted[_pendingAdmin] = false;
 
@@ -77,16 +77,13 @@ contract Timelock {
 
     /// @notice Pending admin accepts its role of new admin
     function acceptAdminRole() public {
-        require(msg.sender == pendingAdmin, "Timelock::acceptAdminRole: Call must come from pendingAdmin.");
+        require(msg.sender == pendingAdmin, "TAANPA");
         pendingAdminAccepted[msg.sender] = true;
     }
 
     /// @notice Confirms the pending admin as new admin after he accepted the role
     function confirmNewAdmin() public onlyAdmin {
-        require(
-            pendingAdminAccepted[pendingAdmin],
-            "Timelock::confirmNewAdmin: Pending admin must accept admin role first."
-        );
+        require(pendingAdminAccepted[pendingAdmin], "TCANA");
         admin = pendingAdmin;
         pendingAdmin = address(0);
         pendingAdminAccepted[pendingAdmin] = false;
@@ -108,10 +105,7 @@ contract Timelock {
         bytes memory data,
         uint256 eta
     ) public onlyAdmin returns (bytes32) {
-        require(
-            eta >= getBlockTimestamp().add(delay),
-            "Timelock::queueTransaction: Estimated execution block must satisfy delay."
-        );
+        require(eta >= getBlockTimestamp().add(delay), "TQTNSD");
 
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
         queuedTransactions[txHash] = true;
@@ -154,9 +148,11 @@ contract Timelock {
         uint256 eta
     ) public payable onlyAdmin returns (bytes memory) {
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
-        require(queuedTransactions[txHash], "Timelock::executeTransaction: Transaction hasn't been queued.");
-        require(getBlockTimestamp() >= eta, "Timelock::executeTransaction: Transaction hasn't surpassed time lock.");
-        require(getBlockTimestamp() <= eta.add(GRACE_PERIOD), "Timelock::executeTransaction: Transaction is stale.");
+        require(queuedTransactions[txHash], "TETNQ");
+        require(getBlockTimestamp() >= eta, "TETNSTL");
+
+        ///NOTE:Transaction is stale if it has been queued for more than GRACE_PERIOD
+        require(getBlockTimestamp() <= eta.add(GRACE_PERIOD), "TETMGP");
 
         queuedTransactions[txHash] = false;
 
@@ -169,7 +165,7 @@ contract Timelock {
         }
 
         (bool success, bytes memory returnData) = target.call{ value: value }(callData);
-        require(success, "Timelock::executeTransaction: Transaction execution reverted.");
+        require(success, "TETRV");
 
         emit ExecuteTransaction(txHash, target, value, signature, data, eta);
 
@@ -185,7 +181,7 @@ contract Timelock {
 
     /// @notice modifier to check if the sender is the admin
     modifier onlyAdmin() {
-        require(msg.sender == admin, "Timelock::onlyAdmin: Call must come from admin.");
+        require(msg.sender == admin, "TOA");
         _;
     }
 }

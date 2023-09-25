@@ -14,20 +14,20 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const registryAddressHolder = await deployments.get("RegistryAddressHolder");
   const uniswapAddressHolder = await deployments.get("UniswapAddressHolder");
 
-  await deploy("IdleLiquidityModule", {
+  await deploy("IncreaseLiquidityRecipes", {
     from: deployer,
     args: [registryAddressHolder.address, uniswapAddressHolder.address],
     log: true,
     autoMine: true,
     gasLimit: Config[chainId].gasLimit,
     gasPrice: Config[chainId].gasPrice,
-    nonce: 15,
+    nonce: 17,
   });
 
   await new Promise((resolve) => setTimeout(resolve, Config[chainId].sleep));
-  console.log(":: Deployed IdleLiquidityModule: ", (await deployments.get("IdleLiquidityModule")).address);
+  console.log(":: Deployed IncreaseLiquidityRecipes: ", (await deployments.get("IncreaseLiquidityRecipes")).address);
 };
 
 export default func;
-func.tags = ["SmartVault", "Module", "IdleLiquidityModule"];
+func.tags = ["SmartVault", "Recipes", "IncreaseLiquidityRecipes"];
 func.dependencies = ["UniswapAddressHolder", "Registry"];

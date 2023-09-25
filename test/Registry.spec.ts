@@ -174,6 +174,7 @@ describe("Registry.sol", function () {
       const limID = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("IdleLiquidityModule"));
       await Registry.connect(deployer).addNewContract(limID, ILM.address, hre.ethers.utils.formatBytes32String("1"));
       const moduleInfo = await Registry.getModuleInfo(limID);
+      expect(await Registry.activeModule(ILM.address)).to.true;
 
       expect(moduleInfo.contractAddress).to.be.equal(ILM.address);
       expect(moduleInfo.defaultData).to.be.equal(hre.ethers.utils.formatBytes32String("1"));
@@ -181,14 +182,14 @@ describe("Registry.sol", function () {
       const drID = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("DepositRecipes"));
       await Registry.connect(deployer).addNewContract(drID, DR.address, hre.ethers.utils.formatBytes32String("2"));
       const moduleInfo2 = await Registry.getModuleInfo(drID);
-
+      expect(await Registry.activeModule(DR.address)).to.true;
       expect(moduleInfo2.contractAddress).to.be.equal(DR.address);
       expect(moduleInfo2.defaultData).to.be.equal(hre.ethers.utils.formatBytes32String("2"));
 
       const wrID = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("WithdrawRecipes"));
       await Registry.connect(deployer).addNewContract(wrID, WR.address, hre.ethers.utils.formatBytes32String("3"));
       const moduleInfo3 = await Registry.getModuleInfo(wrID);
-
+      expect(await Registry.activeModule(WR.address)).to.true;
       expect(moduleInfo3.contractAddress).to.be.equal(WR.address);
       expect(moduleInfo3.defaultData).to.be.equal(hre.ethers.utils.formatBytes32String("3"));
     });
@@ -197,13 +198,13 @@ describe("Registry.sol", function () {
       const limID = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("IdleLiquidityModule"));
       await Registry.connect(deployer).addNewContract(limID, ILM.address, hre.ethers.utils.formatBytes32String("1"));
       const moduleInfo = await Registry.getModuleInfo(limID);
-
+      expect(await Registry.activeModule(ILM.address)).to.true;
       expect(moduleInfo.contractAddress).to.be.equal(ILM.address);
       expect(moduleInfo.defaultData).to.be.equal(hre.ethers.utils.formatBytes32String("1"));
 
       await Registry.connect(deployer).removeContract(limID);
       const module2Info = await Registry.getModuleInfo(limID);
-
+      expect(await Registry.activeModule(ILM.address)).to.false;
       expect(module2Info.contractAddress).to.be.equal(hre.ethers.constants.AddressZero);
       expect(module2Info.defaultData).to.be.equal(hre.ethers.constants.HashZero);
 
@@ -217,20 +218,46 @@ describe("Registry.sol", function () {
       const limID = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("IdleLiquidityModule"));
       await Registry.connect(deployer).addNewContract(limID, ILM.address, hre.ethers.utils.formatBytes32String("1"));
       const moduleInfo = await Registry.getModuleInfo(limID);
+      expect(await Registry.activeModule(ILM.address)).to.true;
+      expect(await Registry.activeModule(DR.address)).to.false;
       expect(moduleInfo.contractAddress).to.be.equal(ILM.address);
       expect(moduleInfo.defaultData).to.be.equal(hre.ethers.utils.formatBytes32String("1"));
 
       await Registry.connect(deployer).changeContract(limID, DR.address);
       const module2Info = await Registry.getModuleInfo(limID);
-
+      expect(await Registry.activeModule(ILM.address)).to.false;
+      expect(await Registry.activeModule(DR.address)).to.true;
       expect(module2Info.contractAddress).to.be.equal(DR.address);
       expect(module2Info.defaultData).to.be.equal(hre.ethers.utils.formatBytes32String("1"));
+    });
+
+    it("Should fail if add the exist module", async function () {
+      const limID = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("IdleLiquidityModule"));
+      await Registry.connect(deployer).addNewContract(limID, ILM.address, hre.ethers.utils.formatBytes32String("1"));
+      const moduleInfo = await Registry.getModuleInfo(limID);
+      expect(await Registry.activeModule(ILM.address)).to.true;
+      expect(moduleInfo.contractAddress).to.be.equal(ILM.address);
+      expect(moduleInfo.defaultData).to.be.equal(hre.ethers.utils.formatBytes32String("1"));
+
+      await expect(
+        Registry.connect(deployer).addNewContract(limID, ILM.address, hre.ethers.utils.formatBytes32String("2")),
+      ).to.be.revertedWith("RAC");
+
+      await expect(
+        Registry.connect(deployer).addNewContract(limID, DR.address, hre.ethers.utils.formatBytes32String("2")),
+      ).to.be.revertedWith("RAC");
+
+      const drID = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("DepositRecipes"));
+      await expect(
+        Registry.connect(deployer).addNewContract(drID, ILM.address, hre.ethers.utils.formatBytes32String("2")),
+      ).to.be.revertedWith("RAC");
     });
 
     it("Should success if governance set module default data", async function () {
       const limID = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("IdleLiquidityModule"));
       await Registry.connect(deployer).addNewContract(limID, ILM.address, abiCoder.encode(["uint256"], ["69"]));
       const moduleInfo = await Registry.getModuleInfo(limID);
+      expect(await Registry.activeModule(ILM.address)).to.true;
       expect(moduleInfo.contractAddress).to.be.equal(ILM.address);
       expect(moduleInfo.defaultData).to.be.equal(abiCoder.encode(["uint256"], ["69"]));
 

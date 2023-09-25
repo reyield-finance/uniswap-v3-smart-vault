@@ -26,6 +26,7 @@ contract Registry is IRegistry, ERC165 {
     // for modules
     mapping(bytes32 => Entry) public modules;
     bytes32[] public moduleKeys;
+    mapping(address => bool) public override activeModule;
 
     // uniswap allowable fee tiers
     mapping(uint24 => bool) public allowableFeeTiers;
@@ -234,9 +235,14 @@ contract Registry is IRegistry, ERC165 {
     ///@param _contractAddress address of the new contract
     ///@param _defaultValue default value of the contract
     function addNewContract(bytes32 _id, address _contractAddress, bytes32 _defaultValue) external onlyGovernance {
-        require(modules[_id].contractAddress == address(0), "RAE");
-        require(_contractAddress != address(0), "RA0");
-        modules[_id] = Entry({ contractAddress: _contractAddress, defaultData: _defaultValue });
+        require(
+            modules[_id].contractAddress == address(0) &&
+                _contractAddress != address(0) &&
+                !activeModule[_contractAddress],
+            "RAC"
+        );
+        modules[_id] = Entry({ id: _id, contractAddress: _contractAddress, defaultData: _defaultValue });
+        activeModule[_contractAddress] = true;
         moduleKeys.push(_id);
         emit ContractAdded(_contractAddress, _id);
     }
@@ -245,9 +251,16 @@ contract Registry is IRegistry, ERC165 {
     ///@param _id keccak256 of contract id string
     ///@param _newContractAddress address of the new contract
     function changeContract(bytes32 _id, address _newContractAddress) external onlyGovernance {
-        require(modules[_id].contractAddress != address(0), "RCE");
-        require(_newContractAddress != address(0), "RCE0");
+        require(
+            modules[_id].contractAddress != address(0) &&
+                _newContractAddress != address(0) &&
+                !activeModule[_newContractAddress] &&
+                activeModule[modules[_id].contractAddress],
+            "RCC"
+        );
         address origMoudleAddress = modules[_id].contractAddress;
+        delete activeModule[origMoudleAddress];
+        activeModule[_newContractAddress] = true;
         modules[_id].contractAddress = _newContractAddress;
         emit ContractChanged(origMoudleAddress, _newContractAddress, _id);
     }
@@ -255,8 +268,9 @@ contract Registry is IRegistry, ERC165 {
     ///@notice Removes a contract
     ///@param _id keccak256 of contract id string
     function removeContract(bytes32 _id) external onlyGovernance {
-        require(modules[_id].contractAddress != address(0), "RRE");
+        require(modules[_id].contractAddress != address(0) && activeModule[modules[_id].contractAddress], "RRC");
         address origMoudleAddress = modules[_id].contractAddress;
+        delete activeModule[origMoudleAddress];
         delete modules[_id];
         for (uint256 i; i < moduleKeys.length; ++i) {
             if (moduleKeys[i] == _id) {

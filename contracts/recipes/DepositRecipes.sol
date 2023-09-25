@@ -11,8 +11,6 @@ import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "../interfaces/recipes/IDepositRecipes.sol";
 import "../interfaces/actions/IMint.sol";
 import "../interfaces/actions/IZapIn.sol";
-import "../interfaces/actions/IIncreaseLiquidity.sol";
-import "../interfaces/actions/ISingleTokenIncreaseLiquidity.sol";
 import "../interfaces/IPositionManager.sol";
 import "../interfaces/IPositionManagerFactory.sol";
 import "../interfaces/IUniswapAddressHolder.sol";
@@ -48,7 +46,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         bool isOrderChanged;
         (input.token0, input.token1, isOrderChanged) = UniswapHelper.reorderTokens(input.token0, input.token1);
 
-        checkTokensValid(input.token0, input.token1);
+        checkPoolValid(input.token0, input.token1, input.fee);
         checkDiffOfTicksRange(input.tickLowerDiff, input.tickUpperDiff, input.fee);
 
         address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
@@ -97,15 +95,29 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
             })
         );
 
-        // calculate total usd value of the position
-        uint256 totalUsdValue = _calTotalDepositUsdValue(input.token0, input.token1, amount0Deposit, amount1Deposit);
+        uint24[] memory allowableFeeTiers = registry().getAllowableFeeTiers();
 
         uint256 positionId = IPositionManager(positionManager).createPosition(
             IPositionManager.CreatePositionInput({
                 tokenId: tokenId,
                 strategyProvider: address(0),
                 strategyId: input.strategyId,
-                totalDepositUSDValue: totalUsdValue,
+                amount0Deposited: amount0Deposit,
+                amount1Deposited: amount1Deposit,
+                amount0DepositedUsdValue: SwapHelper.getQuoteFromDeepestPool(
+                    uniswapAddressHolder.uniswapV3FactoryAddress(),
+                    input.token0,
+                    registry().usdValueTokenAddress(),
+                    amount0Deposit,
+                    allowableFeeTiers
+                ),
+                amount1DepositedUsdValue: SwapHelper.getQuoteFromDeepestPool(
+                    uniswapAddressHolder.uniswapV3FactoryAddress(),
+                    input.token1,
+                    registry().usdValueTokenAddress(),
+                    amount1Deposit,
+                    allowableFeeTiers
+                ),
                 tickLowerDiff: input.tickLowerDiff,
                 tickUpperDiff: input.tickUpperDiff,
                 amount0Leftover: 0,
@@ -128,8 +140,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         bool isOrderChanged;
         (input.token0, input.token1, isOrderChanged) = UniswapHelper.reorderTokens(input.token0, input.token1);
 
-        checkStrategyExist(input.strategyProvider, input.strategyId, input.token0, input.token1, input.fee);
-        checkTokensValid(input.token0, input.token1);
+        checkStrategyInfo(input.strategyProvider, input.strategyId, input.token0, input.token1, input.fee);
         checkDiffOfTicksRange(input.tickLowerDiff, input.tickUpperDiff, input.fee);
 
         address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
@@ -163,33 +174,44 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         IERC20(input.token0).safeTransferFrom(msg.sender, positionManager, input.amount0Desired);
         IERC20(input.token1).safeTransferFrom(msg.sender, positionManager, input.amount1Desired);
 
-        uint256 totalUsdValue;
-        {
-            uint256 amount0Deposit;
-            uint256 amount1Deposit;
-            (tokenId, amount0Deposit, amount1Deposit) = IMint(positionManager).mint(
-                IMint.MintInput({
-                    token0Address: input.token0,
-                    token1Address: input.token1,
-                    fee: input.fee,
-                    tickLower: currentTick.add(input.tickLowerDiff),
-                    tickUpper: currentTick.add(input.tickUpperDiff),
-                    amount0Desired: input.amount0Desired,
-                    amount1Desired: input.amount1Desired,
-                    isReturnLeftOver: true
-                })
-            );
+        uint256 amount0Deposit;
+        uint256 amount1Deposit;
+        (tokenId, amount0Deposit, amount1Deposit) = IMint(positionManager).mint(
+            IMint.MintInput({
+                token0Address: input.token0,
+                token1Address: input.token1,
+                fee: input.fee,
+                tickLower: currentTick.add(input.tickLowerDiff),
+                tickUpper: currentTick.add(input.tickUpperDiff),
+                amount0Desired: input.amount0Desired,
+                amount1Desired: input.amount1Desired,
+                isReturnLeftOver: true
+            })
+        );
 
-            // calculate total usd value of the position
-            totalUsdValue = _calTotalDepositUsdValue(input.token0, input.token1, amount0Deposit, amount1Deposit);
-        }
+        uint24[] memory allowableFeeTiers = registry().getAllowableFeeTiers();
 
         uint256 positionId = IPositionManager(positionManager).createPosition(
             IPositionManager.CreatePositionInput({
                 tokenId: tokenId,
                 strategyProvider: input.strategyProvider,
                 strategyId: input.strategyId,
-                totalDepositUSDValue: totalUsdValue,
+                amount0Deposited: amount0Deposit,
+                amount1Deposited: amount1Deposit,
+                amount0DepositedUsdValue: SwapHelper.getQuoteFromDeepestPool(
+                    uniswapAddressHolder.uniswapV3FactoryAddress(),
+                    input.token0,
+                    registry().usdValueTokenAddress(),
+                    amount0Deposit,
+                    allowableFeeTiers
+                ),
+                amount1DepositedUsdValue: SwapHelper.getQuoteFromDeepestPool(
+                    uniswapAddressHolder.uniswapV3FactoryAddress(),
+                    input.token1,
+                    registry().usdValueTokenAddress(),
+                    amount1Deposit,
+                    allowableFeeTiers
+                ),
                 tickLowerDiff: input.tickLowerDiff,
                 tickUpperDiff: input.tickUpperDiff,
                 amount0Leftover: 0,
@@ -206,66 +228,6 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         );
     }
 
-    ///@notice increases liquidity of a position
-    ///@param positionId id of the position
-    ///@param amount0Desired amount of token0 to be added to the position
-    ///@param amount1Desired amount of token1 to be added to the position
-    function increaseLiquidity(
-        uint256 positionId,
-        uint256 amount0Desired,
-        uint256 amount1Desired
-    ) external whenNotPaused {
-        require(amount0Desired != 0 || amount1Desired != 0, "DRA0");
-        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
-            .userToPositionManager(msg.sender);
-        require(positionManager != address(0), "DRPM0");
-
-        IPositionManager.PositionInfo memory pInfo = IPositionManager(positionManager).getPositionInfo(positionId);
-
-        (address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper) = UniswapHelper.getTokens(
-            pInfo.tokenId,
-            INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
-        );
-
-        ///@dev calculate the correct amounts before transferring tokens to position manager
-        (, amount0Desired, amount1Desired) = UniswapHelper.calLiquidityAndAmounts(
-            uniswapAddressHolder.uniswapV3FactoryAddress(),
-            token0,
-            token1,
-            fee,
-            tickLower,
-            tickUpper,
-            amount0Desired,
-            amount1Desired
-        );
-
-        ///@dev send tokens to position manager to be able to call the increase liquidity action
-        IERC20(token0).safeTransferFrom(msg.sender, positionManager, amount0Desired);
-        IERC20(token1).safeTransferFrom(msg.sender, positionManager, amount1Desired);
-
-        (uint256 amount0Increased, uint256 amount1Increased) = IIncreaseLiquidity(positionManager).increaseLiquidity(
-            IIncreaseLiquidity.IncreaseLiquidityInput({
-                tokenId: pInfo.tokenId,
-                token0Address: token0,
-                token1Address: token1,
-                amount0Desired: amount0Desired,
-                amount1Desired: amount1Desired
-            })
-        );
-
-        // calculate total usd value of the position
-        uint256 totalUsdValue = _calTotalDepositUsdValue(token0, token1, amount0Increased, amount1Increased);
-
-        IPositionManager(positionManager).middlewareIncreaseLiquidity(
-            positionId,
-            pInfo.totalDepositUSDValue.add(totalUsdValue),
-            pInfo.amount0Leftover,
-            pInfo.amount1Leftover
-        );
-
-        emit PositionIncreasedLiquidity(positionManager, msg.sender, positionId);
-    }
-
     ///@notice mints a uni NFT with a single input token
     ///@param input struct of SingleTokenDepositInput parameters
     ///@return tokenId the ID of the minted NFT
@@ -277,7 +239,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         (input.token0, input.token1, isOrderChanged) = UniswapHelper.reorderTokens(input.token0, input.token1);
         input.isToken0In = isOrderChanged ? !input.isToken0In : input.isToken0In;
 
-        checkTokensValid(input.token0, input.token1);
+        checkPoolValid(input.token0, input.token1, input.fee);
         checkDiffOfTicksRange(input.tickLowerDiff, input.tickUpperDiff, input.fee);
 
         address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
@@ -311,20 +273,29 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         );
         tokenId = zapInOutput.tokenId;
 
-        // calculate total usd value of the position
-        uint256 totalUsdValue = _calTotalDepositUsdValue(
-            input.token0,
-            input.token1,
-            zapInOutput.amount0Deposited.add(zapInOutput.amount0Leftover),
-            zapInOutput.amount1Deposited.add(zapInOutput.amount1Leftover)
-        );
+        uint24[] memory allowableFeeTiers = registry().getAllowableFeeTiers();
 
         uint256 positionId = IPositionManager(positionManager).createPosition(
             IPositionManager.CreatePositionInput({
                 tokenId: zapInOutput.tokenId,
                 strategyProvider: address(0),
                 strategyId: input.strategyId,
-                totalDepositUSDValue: totalUsdValue,
+                amount0Deposited: zapInOutput.amount0Deposited.add(zapInOutput.amount0Leftover),
+                amount1Deposited: zapInOutput.amount1Deposited.add(zapInOutput.amount1Leftover),
+                amount0DepositedUsdValue: SwapHelper.getQuoteFromDeepestPool(
+                    uniswapAddressHolder.uniswapV3FactoryAddress(),
+                    input.token0,
+                    registry().usdValueTokenAddress(),
+                    zapInOutput.amount0Deposited.add(zapInOutput.amount0Leftover),
+                    allowableFeeTiers
+                ),
+                amount1DepositedUsdValue: SwapHelper.getQuoteFromDeepestPool(
+                    uniswapAddressHolder.uniswapV3FactoryAddress(),
+                    input.token1,
+                    registry().usdValueTokenAddress(),
+                    zapInOutput.amount1Deposited.add(zapInOutput.amount1Leftover),
+                    allowableFeeTiers
+                ),
                 tickLowerDiff: input.tickLowerDiff,
                 tickUpperDiff: input.tickUpperDiff,
                 amount0Leftover: zapInOutput.amount0Leftover,
@@ -348,8 +319,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         (input.token0, input.token1, isOrderChanged) = UniswapHelper.reorderTokens(input.token0, input.token1);
         input.isToken0In = isOrderChanged ? !input.isToken0In : input.isToken0In;
 
-        checkStrategyExist(input.strategyProvider, input.strategyId, input.token0, input.token1, input.fee);
-        checkTokensValid(input.token0, input.token1);
+        checkStrategyInfo(input.strategyProvider, input.strategyId, input.token0, input.token1, input.fee);
         checkDiffOfTicksRange(input.tickLowerDiff, input.tickUpperDiff, input.fee);
 
         address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
@@ -370,37 +340,41 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
             input.amountIn
         );
 
-        uint256 totalUsdValue;
-        IZapIn.ZapInOutput memory zapInOutput;
-        {
-            zapInOutput = IZapIn(positionManager).zapIn(
-                IZapIn.ZapInInput(
-                    input.token0,
-                    input.token1,
-                    input.isToken0In,
-                    input.amountIn,
-                    currentTick.add(input.tickLowerDiff),
-                    currentTick.add(input.tickUpperDiff),
-                    input.fee
-                )
-            );
-            tokenId = zapInOutput.tokenId;
-
-            // calculate total usd value of the position
-            totalUsdValue = _calTotalDepositUsdValue(
+        IZapIn.ZapInOutput memory zapInOutput = IZapIn(positionManager).zapIn(
+            IZapIn.ZapInInput(
                 input.token0,
                 input.token1,
-                zapInOutput.amount0Deposited,
-                zapInOutput.amount1Deposited
-            );
-        }
+                input.isToken0In,
+                input.amountIn,
+                currentTick.add(input.tickLowerDiff),
+                currentTick.add(input.tickUpperDiff),
+                input.fee
+            )
+        );
+        tokenId = zapInOutput.tokenId;
 
+        uint24[] memory allowableFeeTiers = registry().getAllowableFeeTiers();
         uint256 positionId = IPositionManager(positionManager).createPosition(
             IPositionManager.CreatePositionInput({
                 tokenId: zapInOutput.tokenId,
                 strategyProvider: input.strategyProvider,
                 strategyId: input.strategyId,
-                totalDepositUSDValue: totalUsdValue,
+                amount0Deposited: zapInOutput.amount0Deposited.add(zapInOutput.amount0Leftover),
+                amount1Deposited: zapInOutput.amount1Deposited.add(zapInOutput.amount1Leftover),
+                amount0DepositedUsdValue: SwapHelper.getQuoteFromDeepestPool(
+                    uniswapAddressHolder.uniswapV3FactoryAddress(),
+                    input.token0,
+                    registry().usdValueTokenAddress(),
+                    zapInOutput.amount0Deposited.add(zapInOutput.amount0Leftover),
+                    allowableFeeTiers
+                ),
+                amount1DepositedUsdValue: SwapHelper.getQuoteFromDeepestPool(
+                    uniswapAddressHolder.uniswapV3FactoryAddress(),
+                    input.token1,
+                    registry().usdValueTokenAddress(),
+                    zapInOutput.amount1Deposited.add(zapInOutput.amount1Leftover),
+                    allowableFeeTiers
+                ),
                 tickLowerDiff: input.tickLowerDiff,
                 tickUpperDiff: input.tickUpperDiff,
                 amount0Leftover: zapInOutput.amount0Leftover,
@@ -417,60 +391,7 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         );
     }
 
-    ///@notice increases liquidity of a position with sigle token
-    ///@param positionId id of the position
-    ///@param isToken0In true if the input token is token0, false if the input token is token1
-    ///@param amount amount of input token
-    function singleTokenIncreaseLiquidity(uint256 positionId, bool isToken0In, uint256 amount) external whenNotPaused {
-        require(amount != 0, "DRA0");
-        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
-            .userToPositionManager(msg.sender);
-        require(positionManager != address(0), "DRPM0");
-
-        IPositionManager.PositionInfo memory pInfo = IPositionManager(positionManager).getPositionInfo(positionId);
-
-        (address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper) = UniswapHelper.getTokens(
-            pInfo.tokenId,
-            INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
-        );
-
-        ///@dev send tokens to position manager to be able to call the sigleTokenIncreaseLiquidity action
-        IERC20(isToken0In ? token0 : token1).safeTransferFrom(msg.sender, positionManager, amount);
-
-        ISingleTokenIncreaseLiquidity.SingleTokenIncreaseLiquidityOutput
-            memory singleTokenIncreaseLiquidityOutput = ISingleTokenIncreaseLiquidity(positionManager)
-                .singleTokenIncreaseLiquidity(
-                    ISingleTokenIncreaseLiquidity.SingleTokenIncreaseLiquidityInput({
-                        tokenId: pInfo.tokenId,
-                        token0: token0,
-                        token1: token1,
-                        isToken0In: isToken0In,
-                        amountIn: amount,
-                        tickLower: tickLower,
-                        tickUpper: tickUpper,
-                        fee: fee
-                    })
-                );
-
-        // calculate total usd value of the position
-        uint256 totalUsdValue = _calTotalDepositUsdValue(
-            token0,
-            token1,
-            singleTokenIncreaseLiquidityOutput.amount0Increased,
-            singleTokenIncreaseLiquidityOutput.amount1Increased
-        );
-
-        IPositionManager(positionManager).middlewareIncreaseLiquidity(
-            positionId,
-            pInfo.totalDepositUSDValue.add(totalUsdValue),
-            pInfo.amount0Leftover.add(singleTokenIncreaseLiquidityOutput.amount0Leftover),
-            pInfo.amount1Leftover.add(singleTokenIncreaseLiquidityOutput.amount1Leftover)
-        );
-
-        emit PositionIncreasedLiquidity(positionManager, msg.sender, positionId);
-    }
-
-    function checkStrategyExist(
+    function checkStrategyInfo(
         address provider,
         bytes16 strategyId,
         address token0,
@@ -492,56 +413,18 @@ contract DepositRecipes is BaseRecipes, IDepositRecipes {
         }
     }
 
-    function checkTokensValid(address token0, address token1) internal view {
-        require(token0 != token1, "DRT");
-        _checkTokenCanBeSwapToWETH9(token0);
-        _checkTokenCanBeSwapToWETH9(token1);
-    }
-
-    function _calTotalDepositUsdValue(
-        address token0,
-        address token1,
-        uint256 amount0,
-        uint256 amount1
-    ) internal view returns (uint256 totalUsdValue) {
-        uint24[] memory allowableFeeTiers = registry().getAllowableFeeTiers();
-
-        totalUsdValue = SwapHelper
-            .getQuoteFromDeepestPool(
-                uniswapAddressHolder.uniswapV3FactoryAddress(),
-                token0,
-                registry().usdValueTokenAddress(),
-                amount0,
-                allowableFeeTiers
-            )
-            .add(
-                SwapHelper.getQuoteFromDeepestPool(
-                    uniswapAddressHolder.uniswapV3FactoryAddress(),
-                    token1,
-                    registry().usdValueTokenAddress(),
-                    amount1,
-                    allowableFeeTiers
-                )
-            );
-    }
-
-    function _checkTokenCanBeSwapToWETH9(address token) internal view {
+    function checkPoolValid(address token0, address token1, uint24 fee) internal view {
+        address pool = UniswapHelper.getPool(uniswapAddressHolder.uniswapV3FactoryAddress(), token0, token1, fee);
         IRegistry registry = registry();
-        address weth = registry.weth9();
-        address usdValueTokenAddress = registry.usdValueTokenAddress();
-
-        if (token == weth || token == usdValueTokenAddress) {
-            return;
-        }
-
         require(
-            UniswapHelper.isPoolExist(
+            UniswapHelper.isPoolValid(
                 uniswapAddressHolder.uniswapV3FactoryAddress(),
-                token,
-                usdValueTokenAddress,
+                pool,
+                registry.weth9(),
+                registry.usdValueTokenAddress(),
                 registry.getAllowableFeeTiers()
             ),
-            "DRCSTW"
+            "DRCPV"
         );
     }
 

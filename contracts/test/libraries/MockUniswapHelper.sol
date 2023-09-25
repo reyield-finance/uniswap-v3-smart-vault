@@ -30,7 +30,12 @@ contract MockUniswapHelper {
         uint256 tokenId,
         INonfungiblePositionManager nonfungiblePositionManager
     ) public view returns (address token0address, address token1address, uint24 fee, int24 tickLower, int24 tickUpper) {
-        return UniswapHelper.getTokens(tokenId, nonfungiblePositionManager);
+        UniswapHelper.getTokensOutput memory output = UniswapHelper.getTokens(tokenId, nonfungiblePositionManager);
+        token0address = output.token0;
+        token1address = output.token1;
+        fee = output.fee;
+        tickLower = output.tickLower;
+        tickUpper = output.tickUpper;
     }
 
     ///@notice Reorder tokens to be in the correct order for the pool

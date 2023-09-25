@@ -15,9 +15,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const twapDuration = 3;
   const usdcAddress = Config[chainId].usdcAddress;
   const wethAddress = Config[chainId].wethAddress;
-  const governance = Config[chainId].governance;
-  const serviceFeeRecipient = Config[chainId].serviceFeeRecipient;
-
+  const { governance, serviceFeeRecipient, official, keeper } = await getNamedAccounts();
   await deploy("Registry", {
     from: deployer,
     args: [governance, serviceFeeRecipient, maxTwapDeviation, twapDuration, usdcAddress, wethAddress],

@@ -222,7 +222,7 @@ describe("Timelock.sol", function () {
 
       await expect(
         Timelock.connect(deployer).executeTransaction(target, value, signature, data, eta),
-      ).to.be.revertedWith("Timelock::executeTransaction: Transaction hasn't surpassed time lock.");
+      ).to.be.revertedWith("TETNSTL");
     });
   });
 });

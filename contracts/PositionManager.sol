@@ -22,13 +22,12 @@ import "./Storage.sol";
 contract PositionManager is IPositionManager, ERC721Holder {
     using SafeMath for uint256;
 
-    uint256[] private runningPositionIds;
-    uint256[] private closedPositionIds;
-    uint256 private positionIdCounter;
+    uint256 public override positionIdCounter;
     uint256[] private tokenIds;
 
     mapping(uint256 => PositionInfo) public positions;
-
+    mapping(uint256 => PositionSettlement) public positionSettlement;
+    mapping(uint256 => PositionStatus) public override positionStatus;
     mapping(uint256 => mapping(address => bytes32)) public positionToModuleData;
 
     ///@notice emitted when a ERC20 is withdrawn
@@ -43,7 +42,8 @@ contract PositionManager is IPositionManager, ERC721Holder {
     ///@param tokenId ID of the NFT
     ///@param strategyProvider address of the strategy provider
     ///@param strategyId ID of the strategy
-    ///@param totalDepositUSDValue total deposit value in USD
+    ///@param token0Deposited amount of token0 deposited
+    ///@param token1Deposited amount of token1 deposited
     ///@param amount0Leftover amount of token0 leftover after increase liquidity
     ///@param amount1Leftover amount of token1 leftover after increase liquidity
     ///@param tickLowerDiff difference between the current tick and the tickLower
@@ -54,7 +54,8 @@ contract PositionManager is IPositionManager, ERC721Holder {
         uint256 tokenId,
         address strategyProvider,
         bytes16 strategyId,
-        uint256 totalDepositUSDValue,
+        uint256 token0Deposited,
+        uint256 token1Deposited,
         uint256 amount0Leftover,
         uint256 amount1Leftover,
         int24 tickLowerDiff,
@@ -70,36 +71,38 @@ contract PositionManager is IPositionManager, ERC721Holder {
     ///@param from address of the caller
     ///@param positionId ID of the position
     ///@param newTokenId ID of the new NFT
-    ///@param tickLowerDiff difference between the current tick and the tickLower
-    ///@param tickUpperDiff difference between the current tick and the tickUpper
-    ///@param amount0CollectedFee amount of token0 total collected fee after rebalance
-    ///@param amount1CollectedFee amount of token1 total collected fee after rebalance
-    ///@param amount0Leftover amount of token0 leftover after rebalance
-    ///@param amount1Leftover amount of token1 leftover after rebalance
+    ///@param tickLowerDiffAfterRebalanced difference between the current tick and the tickLower after rebalanced
+    ///@param tickUpperDiffAfterRebalanced difference between the current tick and the tickUpper after rebalanced
+    ///@param amount0CollectedFeeAfterRebalanced amount of token0 total collected fee after rebalanced
+    ///@param amount1CollectedFeeAfterRebalanced amount of token1 total collected fee after rebalanced
+    ///@param amount0LeftoverAfterRebalanced amount of token0 leftover after rebalanced
+    ///@param amount1LeftoverAfterRebalanced amount of token1 leftover after rebalanced
     event PositionRebalanced(
         address indexed from,
         uint256 indexed positionId,
         uint256 newTokenId,
-        int24 tickLowerDiff,
-        int24 tickUpperDiff,
-        uint256 amount0CollectedFee,
-        uint256 amount1CollectedFee,
-        uint256 amount0Leftover,
-        uint256 amount1Leftover
+        int24 tickLowerDiffAfterRebalanced,
+        int24 tickUpperDiffAfterRebalanced,
+        uint256 amount0CollectedFeeAfterRebalanced,
+        uint256 amount1CollectedFeeAfterRebalanced,
+        uint256 amount0LeftoverAfterRebalanced,
+        uint256 amount1LeftoverAfterRebalanced
     );
 
     ///@notice emitted when a position is increased liquidity
     ///@param from address of the caller
     ///@param positionId ID of the position
-    ///@param totalDepositUSDValue total deposit value in USD
-    ///@param amount0Leftover amount of token0 leftover after increase liquidity
-    ///@param amount1Leftover amount of token1 leftover after increase liquidity
+    ///@param token0DepositedAfterIncreased amount of token0 deposited after increase liquidity
+    ///@param token1DepositedAfterIncreased amount of token1 deposited after increase liquidity
+    ///@param amount0LeftoverAfterIncreased amount of token0 leftover after increase liquidity
+    ///@param amount1LeftoverAfterIncreased amount of token1 leftover after increase liquidity
     event PositionIncreasedLiquidity(
         address indexed from,
         uint256 indexed positionId,
-        uint256 totalDepositUSDValue,
-        uint256 amount0Leftover,
-        uint256 amount1Leftover
+        uint256 token0DepositedAfterIncreased,
+        uint256 token1DepositedAfterIncreased,
+        uint256 amount0LeftoverAfterIncreased,
+        uint256 amount1LeftoverAfterIncreased
     );
 
     ///@notice modifier to check if the msg.sender is the owner
@@ -116,7 +119,7 @@ contract PositionManager is IPositionManager, ERC721Holder {
 
     ///@notice modifier to check if the msg.sender is whitelisted
     modifier onlyWhitelisted() {
-        require(_calledFromActiveModule(msg.sender) || msg.sender == address(this), "PMOW");
+        require(registry().activeModule(msg.sender) || msg.sender == address(this), "PMOW");
         _;
     }
 
@@ -134,12 +137,6 @@ contract PositionManager is IPositionManager, ERC721Holder {
             ).ownerOf(tokenId) == address(this),
             "PMOOP"
         );
-        _;
-    }
-
-    ///@notice modifier to check if the position exists
-    modifier positionExists(uint256 positionId) {
-        require(positions[positionId].tokenId != 0, "PMPE");
         _;
     }
 
@@ -191,22 +188,21 @@ contract PositionManager is IPositionManager, ERC721Holder {
         IPositionManager.CreatePositionInput calldata inputs
     ) external override onlyWhitelisted returns (uint256 positionId) {
         positionId = _genPositionId();
-        runningPositionIds.push(positionId);
+        positionStatus[positionId] = PositionStatus.Running;
         positions[positionId] = PositionInfo({
             tokenId: inputs.tokenId,
             strategyProvider: inputs.strategyProvider,
             strategyId: inputs.strategyId,
-            totalDepositUSDValue: inputs.totalDepositUSDValue,
+            amount0Deposited: inputs.amount0Deposited,
+            amount1Deposited: inputs.amount1Deposited,
+            amount0DepositedUsdValue: inputs.amount0DepositedUsdValue,
+            amount1DepositedUsdValue: inputs.amount1DepositedUsdValue,
             amount0CollectedFee: 0,
             amount1CollectedFee: 0,
             amount0Leftover: inputs.amount0Leftover,
             amount1Leftover: inputs.amount1Leftover,
             tickLowerDiff: inputs.tickLowerDiff,
-            tickUpperDiff: inputs.tickUpperDiff,
-            amount0Returned: 0,
-            amount1Returned: 0,
-            amount0ReturnedUsdValue: 0,
-            amount1ReturnedUsdValue: 0
+            tickUpperDiff: inputs.tickUpperDiff
         });
 
         _pushTokenId(inputs.tokenId);
@@ -218,7 +214,8 @@ contract PositionManager is IPositionManager, ERC721Holder {
             inputs.tokenId,
             inputs.strategyProvider,
             inputs.strategyId,
-            inputs.totalDepositUSDValue,
+            inputs.amount0Deposited,
+            inputs.amount1Deposited,
             inputs.amount0Leftover,
             inputs.amount1Leftover,
             inputs.tickLowerDiff,
@@ -226,68 +223,51 @@ contract PositionManager is IPositionManager, ERC721Holder {
         );
     }
 
-    ///@notice close position
-    ///@param positionId ID of the position
-    function _closePosition(uint256 positionId) internal positionRunning(positionId) {
-        _removeFromRunningPosition(positionId);
-        closedPositionIds.push(positionId);
-    }
-
-    ///@notice remove position from runningPositionIds array
-    ///@param positionId ID of the position
-    function _removeFromRunningPosition(uint256 positionId) internal {
-        for (uint256 i; i < runningPositionIds.length; ++i) {
-            if (runningPositionIds[i] == positionId) {
-                runningPositionIds[i] = runningPositionIds[runningPositionIds.length - 1];
-                runningPositionIds.pop();
-                break;
-            }
-        }
-    }
-
     ///@notice update position total deposit USD value
     ///@param positionId ID of the position
-    ///@param _totalDepositUSDValue The total deposit value in USD
-    ///@param _amount0Leftover The amount of token0 leftover after increase liquidity
-    ///@param _amount1Leftover The amount of token1 leftover after increase liquidity
+    ///@param amount0Deposited The amount of token0 deposited
+    ///@param amount1Deposited The amount of token1 deposited
+    ///@param amount0DepositedUsdValue The amount of token0 deposited in USD
+    ///@param amount1DepositedUsdValue The amount of token1 deposited in USD
+    ///@param amount0Leftover The amount of token0 leftover after increasing liquidity
+    ///@param amount1Leftover The amount of token1 leftover after increasing liquidity
     function middlewareIncreaseLiquidity(
         uint256 positionId,
-        uint256 _totalDepositUSDValue,
-        uint256 _amount0Leftover,
-        uint256 _amount1Leftover
-    ) external override onlyWhitelisted positionExists(positionId) {
-        positions[positionId].totalDepositUSDValue = _totalDepositUSDValue;
-        positions[positionId].amount0Leftover = _amount0Leftover;
-        positions[positionId].amount1Leftover = _amount1Leftover;
+        uint256 amount0Deposited,
+        uint256 amount1Deposited,
+        uint256 amount0DepositedUsdValue,
+        uint256 amount1DepositedUsdValue,
+        uint256 amount0Leftover,
+        uint256 amount1Leftover
+    ) external override onlyWhitelisted positionRunning(positionId) {
+        positions[positionId].amount0Deposited = amount0Deposited;
+        positions[positionId].amount1Deposited = amount1Deposited;
+        positions[positionId].amount0DepositedUsdValue = amount0DepositedUsdValue;
+        positions[positionId].amount1DepositedUsdValue = amount1DepositedUsdValue;
+        positions[positionId].amount0Leftover = amount0Leftover;
+        positions[positionId].amount1Leftover = amount1Leftover;
 
         emit PositionIncreasedLiquidity(
             msg.sender,
             positionId,
-            _totalDepositUSDValue,
-            _amount0Leftover,
-            _amount1Leftover
+            amount0Deposited,
+            amount1Deposited,
+            amount0Leftover,
+            amount1Leftover
         );
     }
 
     ///@notice get position info from tokenId
     ///@param tokenId ID of the position
-    ///@return positionInfo PositionInfo struct
-    function getPositionInfoFromTokenId(
-        uint256 tokenId
-    ) external view override returns (PositionInfo memory positionInfo) {
-        for (uint256 i; i < runningPositionIds.length; ++i) {
-            uint256 positionId = runningPositionIds[i];
+    ///@return positionId
+    function getPositionIdFromTokenId(uint256 tokenId) external view override returns (uint256) {
+        for (uint256 i = 1; i <= positionIdCounter; ++i) {
+            uint256 positionId = i;
             if (positions[positionId].tokenId == tokenId) {
-                return positions[positionId];
+                return positionId;
             }
         }
-        for (uint256 i; i < closedPositionIds.length; ++i) {
-            uint256 positionId = closedPositionIds[i];
-            if (positions[positionId].tokenId == tokenId) {
-                return positions[positionId];
-            }
-        }
-        require(false, "PMS");
+        revert("PMGP");
     }
 
     ///@notice get position info from positionId
@@ -295,7 +275,16 @@ contract PositionManager is IPositionManager, ERC721Holder {
     ///@return positionInfo PositionInfo struct
     function getPositionInfo(uint256 positionId) external view override returns (PositionInfo memory positionInfo) {
         positionInfo = positions[positionId];
-        require(positionInfo.tokenId != 0, "PMS");
+        require(positionInfo.tokenId != 0 && positionStatus[positionId] != PositionStatus.Initial, "PMGP");
+    }
+
+    ///@notice get position settlement info from positionId
+    ///@param positionId ID of the position
+    ///@return positionSettlementInfo PositionSettlement struct
+    function getPositionSettlement(
+        uint256 positionId
+    ) external view override returns (PositionSettlement memory positionSettlementInfo) {
+        positionSettlementInfo = positionSettlement[positionId];
     }
 
     ///@notice check if the position is running
@@ -348,16 +337,19 @@ contract PositionManager is IPositionManager, ERC721Holder {
     ///@notice middleware function to update position info for withdraw
     ///@param input MiddlewareWithdrawInput struct
     function middlewareWithdraw(MiddlewareWithdrawInput memory input) external override onlyWhitelisted {
+        positionStatus[input.positionId] = PositionStatus.Closed;
+
         positions[input.positionId].amount0CollectedFee = input.amount0CollectedFee;
         positions[input.positionId].amount1CollectedFee = input.amount1CollectedFee;
-        positions[input.positionId].amount0Returned = input.amount0Returned;
-        positions[input.positionId].amount1Returned = input.amount1Returned;
-        positions[input.positionId].amount0ReturnedUsdValue = input.amount0ReturnedUsdValue;
-        positions[input.positionId].amount1ReturnedUsdValue = input.amount1ReturnedUsdValue;
         positions[input.positionId].amount0Leftover = 0;
         positions[input.positionId].amount1Leftover = 0;
-        _closePosition(input.positionId);
 
+        positionSettlement[input.positionId] = PositionSettlement({
+            amount0Returned: input.amount0Returned,
+            amount1Returned: input.amount1Returned,
+            amount0ReturnedUsdValue: input.amount0ReturnedUsdValue,
+            amount1ReturnedUsdValue: input.amount1ReturnedUsdValue
+        });
         emit PositionClosed(msg.sender, input.positionId);
     }
 
@@ -383,42 +375,6 @@ contract PositionManager is IPositionManager, ERC721Holder {
     ///@return length of the array
     function getUniswapNFTsLength() external view returns (uint256) {
         return tokenIds.length;
-    }
-
-    ///@notice get the IDs of the running positions
-    ///@param cursor is the aforementioned cursor. It simply indicates the starting index for enumeration. The first call should pass 0, and subsequent calls should pass the returned newCursor.
-    ///@param howMany indicates how many items should be returned. If there aren’t enough remaining items in the array, the function will return fewer items.
-    ///@return runningPositions uint256[] return array of PositionManager running position IDs
-    ///@return newCursor uint256 return the new cursor
-    function getRunningPositions(
-        uint256 cursor,
-        uint256 howMany
-    ) public view returns (uint256[] memory runningPositions, uint256 newCursor) {
-        return ArrayHelper.sliceUint256(runningPositionIds, cursor, howMany);
-    }
-
-    ///@notice return the length of the running positions array
-    ///@return length of the array
-    function getRunningPositionsLength() external view returns (uint256) {
-        return runningPositionIds.length;
-    }
-
-    ///@notice get the IDs of the closed positions
-    ///@param cursor is the aforementioned cursor. It simply indicates the starting index for enumeration. The first call should pass 0, and subsequent calls should pass the returned newCursor.
-    ///@param howMany indicates how many items should be returned. If there aren’t enough remaining items in the array, the function will return fewer items.
-    ///@return closedPositions uint256[] return array of PositionManager closed position IDs
-    ///@return newCursor uint256 return the new cursor
-    function getClosedPositions(
-        uint256 cursor,
-        uint256 howMany
-    ) public view returns (uint256[] memory closedPositions, uint256 newCursor) {
-        return ArrayHelper.sliceUint256(closedPositionIds, cursor, howMany);
-    }
-
-    ///@notice return the length of the closed positions array
-    ///@return length of the array
-    function getClosedPositionsLength() external view returns (uint256) {
-        return closedPositionIds.length;
     }
 
     ///@notice set default data for every module
@@ -468,27 +424,7 @@ contract PositionManager is IPositionManager, ERC721Holder {
     }
 
     function _isPositionRunning(uint256 positionId) internal view returns (bool) {
-        for (uint256 i = 0; i < runningPositionIds.length; ++i) {
-            if (runningPositionIds[i] == positionId) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    ///@notice function to check if an address corresponds to an active module (or this contract)
-    ///@param _address input address
-    ///@return boolean true if the address is an active module
-    function _calledFromActiveModule(address _address) internal view returns (bool) {
-        bytes32[] memory keys = registry().getModuleKeys();
-
-        uint256 keysLength = keys.length;
-        for (uint256 i; i < keysLength; ++i) {
-            if (registry().getModuleInfo(keys[i]).contractAddress == _address) {
-                return true;
-            }
-        }
-        return false;
+        return positionStatus[positionId] == PositionStatus.Running;
     }
 
     fallback() external payable onlyWhitelisted {

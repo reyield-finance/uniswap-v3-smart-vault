@@ -12,6 +12,7 @@ import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./libraries/ArrayHelper.sol";
+import "./libraries/UniswapHelper.sol";
 
 contract StrategyProviderWallet is IStrategyProviderWallet {
     using SafeERC20 for IERC20;
@@ -40,10 +41,8 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
     ///@notice emitted when a strategy is updated
     event StrategyUpdated(
         bytes16 indexed strategyId,
-        address pool,
-        uint16 performanceFeeRatio,
-        ReceivedTokenType recievedTokenType,
-        uint32 licenseAmount
+        ReceivedTokenType oldRecievedTokenType,
+        ReceivedTokenType newRecievedTokenType
     );
 
     ///@notice emitted when token collected
@@ -104,10 +103,9 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
         address pool = IUniswapV3Factory(uniswapAddressHolder.uniswapV3FactoryAddress()).getPool(token0, token1, fee);
         require(pool != address(0), "SPWAP0");
 
+        checkPoolValid(pool);
         checkPerformanceFeeRatio(performanceFeeRatio);
-
         checkLicenseAmount(licenseAmount);
-
         addReceivedTokens(token0, token1, receivedTokenType);
 
         strategyIds.push(strategyId);
@@ -120,6 +118,20 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
         });
 
         emit StrategyAdded(strategyId, token0, token1, fee, performanceFeeRatio, receivedTokenType, licenseAmount);
+    }
+
+    function checkPoolValid(address pool) internal view {
+        IRegistry r = registry();
+        require(
+            UniswapHelper.isPoolValid(
+                uniswapAddressHolder.uniswapV3FactoryAddress(),
+                pool,
+                r.weth9(),
+                r.usdValueTokenAddress(),
+                r.getAllowableFeeTiers()
+            ),
+            "SPWCPV"
+        );
     }
 
     function checkPerformanceFeeRatio(uint16 performanceFeeRatio) internal view {
@@ -164,20 +176,13 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
         ReceivedTokenType receivedTokenType
     ) external onlyOwner {
         address pool = strategyIdToStrategyInfo[strategyId].pool;
-        require(pool != address(0), "SPWNS");
         address token0 = IUniswapV3Pool(pool).token0();
         address token1 = IUniswapV3Pool(pool).token1();
         addReceivedTokens(token0, token1, receivedTokenType);
-
+        ReceivedTokenType oldReceivedTokenType = strategyIdToStrategyInfo[strategyId].receivedTokenType;
         strategyIdToStrategyInfo[strategyId].receivedTokenType = receivedTokenType;
 
-        emit StrategyUpdated(
-            strategyId,
-            pool,
-            strategyIdToStrategyInfo[strategyId].performanceFeeRatio,
-            strategyIdToStrategyInfo[strategyId].receivedTokenType,
-            strategyIdToStrategyInfo[strategyId].licenseAmount
-        );
+        emit StrategyUpdated(strategyId, oldReceivedTokenType, receivedTokenType);
     }
 
     function getStrategyInfo(bytes16 _strategyId) external view override returns (StrategyInfo memory) {
@@ -186,7 +191,6 @@ contract StrategyProviderWallet is IStrategyProviderWallet {
 
     function collectFromStrategy(bytes16 strategyId, address recipient) external onlyOwner {
         StrategyInfo memory info = strategyIdToStrategyInfo[strategyId];
-        require(info.pool != address(0), "SPWNS");
 
         if (info.receivedTokenType == ReceivedTokenType.Token0) {
             _collect(

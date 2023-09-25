@@ -9,15 +9,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments;
 
   const { deployer } = await getNamedAccounts();
-  const Registry = await deployments.get("Registry");
+  const RegistryAddressHolder = await deployments.get("RegistryAddressHolder");
 
   await deploy("UniswapAddressHolder", {
     from: deployer,
     args: [
+      RegistryAddressHolder.address,
       Config[chainId].nonfungiblePositionManager, //nonfungiblePositionManager address
       Config[chainId].uniswapV3Factory, //uniswapv3Factory address
       Config[chainId].swapRouter, //swapRouter address
-      Registry.address,
     ],
     log: true,
     autoMine: true,

@@ -340,17 +340,21 @@ describe("WithdrawRecipes.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(zeroAddress);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(0);
       expect(positionInfo.amount1Leftover).to.be.equal(0);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
 
       // swap
       await swapRouter.connect(user2).exactInputSingle({
@@ -411,17 +415,21 @@ describe("WithdrawRecipes.sol", function () {
       expect(positionInfoClosed.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfoClosed.strategyProvider).to.be.equal(zeroAddress);
       expect(positionInfoClosed.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfoClosed.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfoClosed.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfoClosed.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfoClosed.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfoClosed.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfoClosed.amount0CollectedFee).to.be.equal(amount0CollectedFee);
       expect(positionInfoClosed.amount1CollectedFee).to.be.equal(amount1CollectedFee);
       expect(positionInfoClosed.amount0Leftover).to.be.equal(0);
       expect(positionInfoClosed.amount1Leftover).to.be.equal(0);
       expect(positionInfoClosed.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfoClosed.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfoClosed.amount0Returned).to.be.equal(amount0Removed.add(amount0CollectedFee));
-      expect(positionInfoClosed.amount1Returned).to.be.equal(amount1Removed.add(amount1CollectedFee));
-      expect(positionInfoClosed.amount0ReturnedUsdValue).to.be.greaterThan(0);
-      expect(positionInfoClosed.amount1ReturnedUsdValue).to.be.greaterThan(0);
+      const positionSettlementClosed = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlementClosed.amount0Returned).to.be.equal(amount0Removed.add(amount0CollectedFee));
+      expect(positionSettlementClosed.amount1Returned).to.be.equal(amount1Removed.add(amount1CollectedFee));
+      expect(positionSettlementClosed.amount0ReturnedUsdValue).to.be.greaterThan(0);
+      expect(positionSettlementClosed.amount1ReturnedUsdValue).to.be.greaterThan(0);
     });
 
     it("withdraw the position with strategy provider", async function () {
@@ -500,17 +508,21 @@ describe("WithdrawRecipes.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(user2.address);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(0);
       expect(positionInfo.amount1Leftover).to.be.equal(0);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
 
       // swap
       await swapRouter.connect(user2).exactInputSingle({
@@ -604,17 +616,21 @@ describe("WithdrawRecipes.sol", function () {
       expect(positionInfoClosed.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfoClosed.strategyProvider).to.be.equal(user2.address);
       expect(positionInfoClosed.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfoClosed.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfoClosed.amount0CollectedFee).to.be.equal(amount0CollectedFee);
       expect(positionInfoClosed.amount1CollectedFee).to.be.equal(amount1CollectedFee);
       expect(positionInfoClosed.amount0Leftover).to.be.equal(0);
       expect(positionInfoClosed.amount1Leftover).to.be.equal(0);
       expect(positionInfoClosed.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfoClosed.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfoClosed.amount0Returned).to.be.equal(returnedAmount0);
-      expect(positionInfoClosed.amount1Returned).to.be.equal(returnedAmount1);
-      expect(positionInfoClosed.amount0ReturnedUsdValue).to.be.greaterThan(0);
-      expect(positionInfoClosed.amount1ReturnedUsdValue).to.be.greaterThan(0);
+      const positionSettlementClosed = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlementClosed.amount0Returned).to.be.equal(returnedAmount0);
+      expect(positionSettlementClosed.amount1Returned).to.be.equal(returnedAmount1);
+      expect(positionSettlementClosed.amount0ReturnedUsdValue).to.be.greaterThan(0);
+      expect(positionSettlementClosed.amount1ReturnedUsdValue).to.be.greaterThan(0);
     });
 
     it("singleTokenWithdraw the position without strategy provider", async function () {
@@ -675,17 +691,21 @@ describe("WithdrawRecipes.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(zeroAddress);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(0);
       expect(positionInfo.amount1Leftover).to.be.equal(0);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
 
       // swap
       await swapRouter.connect(user2).exactInputSingle({
@@ -745,17 +765,21 @@ describe("WithdrawRecipes.sol", function () {
       expect(positionInfoClosed.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfoClosed.strategyProvider).to.be.equal(zeroAddress);
       expect(positionInfoClosed.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfoClosed.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfoClosed.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfoClosed.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfoClosed.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfoClosed.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfoClosed.amount0CollectedFee).to.be.equal(amount0CollectedFee);
       expect(positionInfoClosed.amount1CollectedFee).to.be.equal(amount1CollectedFee);
       expect(positionInfoClosed.amount0Leftover).to.be.equal(0);
       expect(positionInfoClosed.amount1Leftover).to.be.equal(0);
       expect(positionInfoClosed.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfoClosed.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfoClosed.amount0Returned).to.be.greaterThan(amount0Removed.add(amount0CollectedFee));
-      expect(positionInfoClosed.amount1Returned).to.be.equal(0);
-      expect(positionInfoClosed.amount0ReturnedUsdValue).to.be.greaterThan(0);
-      expect(positionInfoClosed.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlementClosed = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlementClosed.amount0Returned).to.be.greaterThan(amount0Removed.add(amount0CollectedFee));
+      expect(positionSettlementClosed.amount1Returned).to.be.equal(0);
+      expect(positionSettlementClosed.amount0ReturnedUsdValue).to.be.greaterThan(0);
+      expect(positionSettlementClosed.amount1ReturnedUsdValue).to.be.equal(0);
     });
 
     it("singleTokenWithdraw the position with strategy provider", async function () {
@@ -834,17 +858,21 @@ describe("WithdrawRecipes.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(user2.address);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(0);
       expect(positionInfo.amount1Leftover).to.be.equal(0);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
 
       // swap
       await swapRouter.connect(user2).exactInputSingle({
@@ -942,17 +970,21 @@ describe("WithdrawRecipes.sol", function () {
       expect(positionInfoClosed.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfoClosed.strategyProvider).to.be.equal(user2.address);
       expect(positionInfoClosed.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfoClosed.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfoClosed.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfoClosed.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfoClosed.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfoClosed.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfoClosed.amount0CollectedFee).to.be.equal(amount0CollectedFee);
       expect(positionInfoClosed.amount1CollectedFee).to.be.equal(amount1CollectedFee);
       expect(positionInfoClosed.amount0Leftover).to.be.equal(0);
       expect(positionInfoClosed.amount1Leftover).to.be.equal(0);
       expect(positionInfoClosed.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfoClosed.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfoClosed.amount0Returned).to.be.equal(returnedAmount0);
-      expect(positionInfoClosed.amount1Returned).to.be.equal(returnedAmount1);
-      expect(positionInfoClosed.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfoClosed.amount1ReturnedUsdValue).to.be.greaterThan(0);
+      const positionSettlementClosed = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlementClosed.amount0Returned).to.be.equal(returnedAmount0);
+      expect(positionSettlementClosed.amount1Returned).to.be.equal(returnedAmount1);
+      expect(positionSettlementClosed.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlementClosed.amount1ReturnedUsdValue).to.be.greaterThan(0);
     });
 
     it("should fail when withdraw recipes is paused", async function () {
@@ -1031,17 +1063,21 @@ describe("WithdrawRecipes.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(user2.address);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(0);
       expect(positionInfo.amount1Leftover).to.be.equal(0);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
 
       // swap
       await swapRouter.connect(user2).exactInputSingle({
@@ -1148,17 +1184,21 @@ describe("WithdrawRecipes.sol", function () {
       expect(positionInfoClosed.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfoClosed.strategyProvider).to.be.equal(user2.address);
       expect(positionInfoClosed.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfoClosed.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfoClosed.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfoClosed.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfoClosed.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfoClosed.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfoClosed.amount0CollectedFee).to.be.equal(amount0CollectedFee);
       expect(positionInfoClosed.amount1CollectedFee).to.be.equal(amount1CollectedFee);
       expect(positionInfoClosed.amount0Leftover).to.be.equal(0);
       expect(positionInfoClosed.amount1Leftover).to.be.equal(0);
       expect(positionInfoClosed.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfoClosed.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfoClosed.amount0Returned).to.be.equal(returnedAmount0);
-      expect(positionInfoClosed.amount1Returned).to.be.equal(returnedAmount1);
-      expect(positionInfoClosed.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfoClosed.amount1ReturnedUsdValue).to.be.greaterThan(0);
+      const positionSettlementClosed = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlementClosed.amount0Returned).to.be.equal(returnedAmount0);
+      expect(positionSettlementClosed.amount1Returned).to.be.equal(returnedAmount1);
+      expect(positionSettlementClosed.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlementClosed.amount1ReturnedUsdValue).to.be.greaterThan(0);
     });
 
     it("should fail when the position is not running", async function () {
@@ -1237,17 +1277,21 @@ describe("WithdrawRecipes.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(user2.address);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(0);
       expect(positionInfo.amount1Leftover).to.be.equal(0);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
 
       // swap
       await swapRouter.connect(user2).exactInputSingle({
@@ -1344,17 +1388,21 @@ describe("WithdrawRecipes.sol", function () {
       expect(positionInfoClosed.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfoClosed.strategyProvider).to.be.equal(user2.address);
       expect(positionInfoClosed.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfoClosed.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfoClosed.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfoClosed.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfoClosed.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfoClosed.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfoClosed.amount0CollectedFee).to.be.equal(amount0CollectedFee);
       expect(positionInfoClosed.amount1CollectedFee).to.be.equal(amount1CollectedFee);
       expect(positionInfoClosed.amount0Leftover).to.be.equal(0);
       expect(positionInfoClosed.amount1Leftover).to.be.equal(0);
       expect(positionInfoClosed.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfoClosed.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfoClosed.amount0Returned).to.be.equal(returnedAmount0);
-      expect(positionInfoClosed.amount1Returned).to.be.equal(returnedAmount1);
-      expect(positionInfoClosed.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfoClosed.amount1ReturnedUsdValue).to.be.greaterThan(0);
+      const positionSettlementClosed = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlementClosed.amount0Returned).to.be.equal(returnedAmount0);
+      expect(positionSettlementClosed.amount1Returned).to.be.equal(returnedAmount1);
+      expect(positionSettlementClosed.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlementClosed.amount1ReturnedUsdValue).to.be.greaterThan(0);
 
       await expect(withdrawRecipes.connect(user).singleTokenWithdraw(positionIdInLog, false)).to.be.revertedWith(
         "WRPIR",

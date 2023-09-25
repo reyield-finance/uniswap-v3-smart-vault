@@ -363,17 +363,21 @@ describe("IdleLiquidityModule.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(zeroAddress);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(0);
       expect(positionInfo.amount1Leftover).to.be.equal(0);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
       // swap for forcing out of tick range
       await swapRouter.connect(user2).exactInputSingle({
         tokenIn: token0.address,
@@ -478,17 +482,21 @@ describe("IdleLiquidityModule.sol", function () {
       expect(positionInfoAfterRebalance.tokenId).to.be.equal(mintedTokenIdInLogRebalance);
       expect(positionInfoAfterRebalance.strategyProvider).to.be.equal(zeroAddress);
       expect(positionInfoAfterRebalance.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfoAfterRebalance.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfoAfterRebalance.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfoAfterRebalance.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfoAfterRebalance.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfoAfterRebalance.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfoAfterRebalance.amount0CollectedFee).to.be.equal(collectedFee0InLogRebalance);
       expect(positionInfoAfterRebalance.amount1CollectedFee).to.be.equal(collectedFee1InLogRebalance);
       expect(positionInfoAfterRebalance.amount0Leftover).to.be.equal(amount0LeftoverMinted);
       expect(positionInfoAfterRebalance.amount1Leftover).to.be.equal(amount1LeftoverMinted);
       expect(positionInfoAfterRebalance.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfoAfterRebalance.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfoAfterRebalance.amount0Returned).to.be.equal(0);
-      expect(positionInfoAfterRebalance.amount1Returned).to.be.equal(0);
-      expect(positionInfoAfterRebalance.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfoAfterRebalance.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlementAfterRebalance = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlementAfterRebalance.amount0Returned).to.be.equal(0);
+      expect(positionSettlementAfterRebalance.amount1Returned).to.be.equal(0);
+      expect(positionSettlementAfterRebalance.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlementAfterRebalance.amount1ReturnedUsdValue).to.be.equal(0);
     });
 
     it("rebalance with leftover", async function () {
@@ -537,7 +545,7 @@ describe("IdleLiquidityModule.sol", function () {
       expect(strategyIdInLog).to.be.equal(strategyId);
 
       let amount0Deposited: BigNumber = BigNumber.from(0);
-      // let amount1Deposited: BigNumber = BigNumber.from(0);
+      let amount1Deposited: BigNumber = BigNumber.from(0);
       let amountInInLog: BigNumber = BigNumber.from(0);
       let tokenIdInLog: BigNumber = BigNumber.from(0);
       let amount0LeftoverInLog: BigNumber = BigNumber.from(0);
@@ -550,7 +558,7 @@ describe("IdleLiquidityModule.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amountInInLog = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[3])));
-          // amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
+          amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
           amount0LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[5])));
           amount1LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[6])));
           break;
@@ -563,17 +571,21 @@ describe("IdleLiquidityModule.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(user2.address);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited.add(amount0LeftoverInLog));
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited.add(amount1LeftoverInLog));
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(amount0LeftoverInLog);
       expect(positionInfo.amount1Leftover).to.be.equal(amount1LeftoverInLog);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
       // user
       expect(await token0.balanceOf(user.address)).to.lessThan(user0BalanceBefore.sub(amount0Deposited));
       expect(await token1.balanceOf(user.address)).to.equal(user1BalanceBefore);
@@ -696,17 +708,21 @@ describe("IdleLiquidityModule.sol", function () {
       expect(positionInfoAfterRebalance.tokenId).to.be.equal(mintedTokenIdInLogRebalance);
       expect(positionInfoAfterRebalance.strategyProvider).to.be.equal(user2.address);
       expect(positionInfoAfterRebalance.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfoAfterRebalance.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfoAfterRebalance.amount0Deposited).to.be.equal(amount0Deposited.add(amount0LeftoverInLog));
+      expect(positionInfoAfterRebalance.amount1Deposited).to.be.equal(amount1Deposited.add(amount1LeftoverInLog));
+      expect(positionInfoAfterRebalance.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfoAfterRebalance.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfoAfterRebalance.amount0CollectedFee).to.be.equal(collectedFee0InLogRebalance);
       expect(positionInfoAfterRebalance.amount1CollectedFee).to.be.equal(collectedFee1InLogRebalance);
       expect(positionInfoAfterRebalance.amount0Leftover).to.be.equal(amount0LeftoverMinted);
       expect(positionInfoAfterRebalance.amount1Leftover).to.be.equal(amount1LeftoverMinted);
       expect(positionInfoAfterRebalance.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfoAfterRebalance.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfoAfterRebalance.amount0Returned).to.be.equal(0);
-      expect(positionInfoAfterRebalance.amount1Returned).to.be.equal(0);
-      expect(positionInfoAfterRebalance.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfoAfterRebalance.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlementAfterRebalance = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlementAfterRebalance.amount0Returned).to.be.equal(0);
+      expect(positionSettlementAfterRebalance.amount1Returned).to.be.equal(0);
+      expect(positionSettlementAfterRebalance.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlementAfterRebalance.amount1ReturnedUsdValue).to.be.equal(0);
     });
 
     it("rebalance with tick", async function () {
@@ -755,7 +771,7 @@ describe("IdleLiquidityModule.sol", function () {
       expect(strategyIdInLog).to.be.equal(strategyId);
 
       let amount0Deposited: BigNumber = BigNumber.from(0);
-      // let amount1Deposited: BigNumber = BigNumber.from(0);
+      let amount1Deposited: BigNumber = BigNumber.from(0);
       let amountInInLog: BigNumber = BigNumber.from(0);
       let tokenIdInLog: BigNumber = BigNumber.from(0);
       let amount0LeftoverInLog: BigNumber = BigNumber.from(0);
@@ -768,7 +784,7 @@ describe("IdleLiquidityModule.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amountInInLog = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[3])));
-          // amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
+          amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
           amount0LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[5])));
           amount1LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[6])));
           break;
@@ -781,17 +797,21 @@ describe("IdleLiquidityModule.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(user2.address);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited.add(amount0LeftoverInLog));
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited.add(amount1LeftoverInLog));
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(amount0LeftoverInLog);
       expect(positionInfo.amount1Leftover).to.be.equal(amount1LeftoverInLog);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
       // user
       expect(await token0.balanceOf(user.address)).to.lessThan(user0BalanceBefore.sub(amount0Deposited));
       expect(await token1.balanceOf(user.address)).to.equal(user1BalanceBefore);
@@ -918,17 +938,21 @@ describe("IdleLiquidityModule.sol", function () {
       expect(positionInfoAfterRebalance.tokenId).to.be.equal(mintedTokenIdInLogRebalance);
       expect(positionInfoAfterRebalance.strategyProvider).to.be.equal(user2.address);
       expect(positionInfoAfterRebalance.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfoAfterRebalance.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfoAfterRebalance.amount0Deposited).to.be.equal(amount0Deposited.add(amount0LeftoverInLog));
+      expect(positionInfoAfterRebalance.amount1Deposited).to.be.equal(amount1Deposited.add(amount1LeftoverInLog));
+      expect(positionInfoAfterRebalance.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfoAfterRebalance.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfoAfterRebalance.amount0CollectedFee).to.be.equal(collectedFee0InLogRebalance);
       expect(positionInfoAfterRebalance.amount1CollectedFee).to.be.equal(collectedFee1InLogRebalance);
       expect(positionInfoAfterRebalance.amount0Leftover).to.be.equal(amount0LeftoverMinted);
       expect(positionInfoAfterRebalance.amount1Leftover).to.be.equal(amount1LeftoverMinted);
       expect(positionInfoAfterRebalance.tickLowerDiff).to.be.equal(BigNumber.from(newTickLowerDiff));
       expect(positionInfoAfterRebalance.tickUpperDiff).to.be.equal(BigNumber.from(newTickUpperDiff));
-      expect(positionInfoAfterRebalance.amount0Returned).to.be.equal(0);
-      expect(positionInfoAfterRebalance.amount1Returned).to.be.equal(0);
-      expect(positionInfoAfterRebalance.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfoAfterRebalance.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlementAfterRebalance = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlementAfterRebalance.amount0Returned).to.be.equal(0);
+      expect(positionSettlementAfterRebalance.amount1Returned).to.be.equal(0);
+      expect(positionSettlementAfterRebalance.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlementAfterRebalance.amount1ReturnedUsdValue).to.be.equal(0);
     });
 
     it("should fail rebalance with address which is not in keeper whitelist", async function () {
@@ -977,7 +1001,7 @@ describe("IdleLiquidityModule.sol", function () {
       expect(strategyIdInLog).to.be.equal(strategyId);
 
       let amount0Deposited: BigNumber = BigNumber.from(0);
-      // let amount1Deposited: BigNumber = BigNumber.from(0);
+      let amount1Deposited: BigNumber = BigNumber.from(0);
       let amountInInLog: BigNumber = BigNumber.from(0);
       let tokenIdInLog: BigNumber = BigNumber.from(0);
       let amount0LeftoverInLog: BigNumber = BigNumber.from(0);
@@ -990,7 +1014,7 @@ describe("IdleLiquidityModule.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amountInInLog = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[3])));
-          // amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
+          amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
           amount0LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[5])));
           amount1LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[6])));
           break;
@@ -1003,17 +1027,21 @@ describe("IdleLiquidityModule.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(user2.address);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited.add(amount0LeftoverInLog));
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited.add(amount1LeftoverInLog));
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(amount0LeftoverInLog);
       expect(positionInfo.amount1Leftover).to.be.equal(amount1LeftoverInLog);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
       // user
       expect(await token0.balanceOf(user.address)).to.lessThan(user0BalanceBefore.sub(amount0Deposited));
       expect(await token1.balanceOf(user.address)).to.equal(user1BalanceBefore);
@@ -1095,7 +1123,7 @@ describe("IdleLiquidityModule.sol", function () {
       expect(strategyIdInLog).to.be.equal(strategyId);
 
       let amount0Deposited: BigNumber = BigNumber.from(0);
-      // let amount1Deposited: BigNumber = BigNumber.from(0);
+      let amount1Deposited: BigNumber = BigNumber.from(0);
       let amountInInLog: BigNumber = BigNumber.from(0);
       let tokenIdInLog: BigNumber = BigNumber.from(0);
       let amount0LeftoverInLog: BigNumber = BigNumber.from(0);
@@ -1108,7 +1136,7 @@ describe("IdleLiquidityModule.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amountInInLog = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[3])));
-          // amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
+          amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
           amount0LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[5])));
           amount1LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[6])));
           break;
@@ -1121,17 +1149,21 @@ describe("IdleLiquidityModule.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(user2.address);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited.add(amount0LeftoverInLog));
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited.add(amount1LeftoverInLog));
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(amount0LeftoverInLog);
       expect(positionInfo.amount1Leftover).to.be.equal(amount1LeftoverInLog);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
       // user
       expect(await token0.balanceOf(user.address)).to.lessThan(user0BalanceBefore.sub(amount0Deposited));
       expect(await token1.balanceOf(user.address)).to.equal(user1BalanceBefore);
@@ -1213,7 +1245,7 @@ describe("IdleLiquidityModule.sol", function () {
       expect(strategyIdInLog).to.be.equal(strategyId);
 
       let amount0Deposited: BigNumber = BigNumber.from(0);
-      // let amount1Deposited: BigNumber = BigNumber.from(0);
+      let amount1Deposited: BigNumber = BigNumber.from(0);
       let amountInInLog: BigNumber = BigNumber.from(0);
       let tokenIdInLog: BigNumber = BigNumber.from(0);
       let amount0LeftoverInLog: BigNumber = BigNumber.from(0);
@@ -1226,7 +1258,7 @@ describe("IdleLiquidityModule.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amountInInLog = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[3])));
-          // amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
+          amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
           amount0LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[5])));
           amount1LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[6])));
           break;
@@ -1239,17 +1271,21 @@ describe("IdleLiquidityModule.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(user2.address);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited.add(amount0LeftoverInLog));
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited.add(amount1LeftoverInLog));
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(amount0LeftoverInLog);
       expect(positionInfo.amount1Leftover).to.be.equal(amount1LeftoverInLog);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
       // user
       expect(await token0.balanceOf(user.address)).to.lessThan(user0BalanceBefore.sub(amount0Deposited));
       expect(await token1.balanceOf(user.address)).to.equal(user1BalanceBefore);
@@ -1331,7 +1367,7 @@ describe("IdleLiquidityModule.sol", function () {
       expect(strategyIdInLog).to.be.equal(strategyId);
 
       let amount0Deposited: BigNumber = BigNumber.from(0);
-      // let amount1Deposited: BigNumber = BigNumber.from(0);
+      let amount1Deposited: BigNumber = BigNumber.from(0);
       let amountInInLog: BigNumber = BigNumber.from(0);
       let tokenIdInLog: BigNumber = BigNumber.from(0);
       let amount0LeftoverInLog: BigNumber = BigNumber.from(0);
@@ -1344,7 +1380,7 @@ describe("IdleLiquidityModule.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amountInInLog = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[3])));
-          // amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
+          amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
           amount0LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[5])));
           amount1LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[6])));
           break;
@@ -1357,17 +1393,21 @@ describe("IdleLiquidityModule.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(user2.address);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited.add(amount0LeftoverInLog));
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited.add(amount1LeftoverInLog));
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(amount0LeftoverInLog);
       expect(positionInfo.amount1Leftover).to.be.equal(amount1LeftoverInLog);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
       // user
       expect(await token0.balanceOf(user.address)).to.lessThan(user0BalanceBefore.sub(amount0Deposited));
       expect(await token1.balanceOf(user.address)).to.equal(user1BalanceBefore);
@@ -1507,17 +1547,21 @@ describe("IdleLiquidityModule.sol", function () {
       expect(positionInfoAfterRebalance.tokenId).to.be.equal(mintedTokenIdInLogRebalance);
       expect(positionInfoAfterRebalance.strategyProvider).to.be.equal(user2.address);
       expect(positionInfoAfterRebalance.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfoAfterRebalance.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfoAfterRebalance.amount0Deposited).to.be.equal(amount0Deposited.add(amount0LeftoverInLog));
+      expect(positionInfoAfterRebalance.amount1Deposited).to.be.equal(amount1Deposited.add(amount1LeftoverInLog));
+      expect(positionInfoAfterRebalance.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfoAfterRebalance.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfoAfterRebalance.amount0CollectedFee).to.be.equal(collectedFee0InLogRebalance);
       expect(positionInfoAfterRebalance.amount1CollectedFee).to.be.equal(collectedFee1InLogRebalance);
       expect(positionInfoAfterRebalance.amount0Leftover).to.be.equal(amount0LeftoverMinted);
       expect(positionInfoAfterRebalance.amount1Leftover).to.be.equal(amount1LeftoverMinted);
       expect(positionInfoAfterRebalance.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfoAfterRebalance.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfoAfterRebalance.amount0Returned).to.be.equal(0);
-      expect(positionInfoAfterRebalance.amount1Returned).to.be.equal(0);
-      expect(positionInfoAfterRebalance.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfoAfterRebalance.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlementAfterRebalance = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlementAfterRebalance.amount0Returned).to.be.equal(0);
+      expect(positionSettlementAfterRebalance.amount1Returned).to.be.equal(0);
+      expect(positionSettlementAfterRebalance.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlementAfterRebalance.amount1ReturnedUsdValue).to.be.equal(0);
     });
   });
 });

@@ -394,17 +394,21 @@ describe("PositionHelper.sol", function () {
       expect(positionInfoAfterDeposit.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfoAfterDeposit.strategyProvider).to.be.equal(zeroAddress);
       expect(positionInfoAfterDeposit.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfoAfterDeposit.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfoAfterDeposit.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfoAfterDeposit.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfoAfterDeposit.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfoAfterDeposit.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfoAfterDeposit.amount0CollectedFee).to.be.equal(0);
       expect(positionInfoAfterDeposit.amount1CollectedFee).to.be.equal(0);
       expect(positionInfoAfterDeposit.amount0Leftover).to.be.equal(0);
       expect(positionInfoAfterDeposit.amount1Leftover).to.be.equal(0);
       expect(positionInfoAfterDeposit.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfoAfterDeposit.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfoAfterDeposit.amount0Returned).to.be.equal(0);
-      expect(positionInfoAfterDeposit.amount1Returned).to.be.equal(0);
-      expect(positionInfoAfterDeposit.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfoAfterDeposit.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlementAfterDeposit = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlementAfterDeposit.amount0Returned).to.be.equal(0);
+      expect(positionSettlementAfterDeposit.amount1Returned).to.be.equal(0);
+      expect(positionSettlementAfterDeposit.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlementAfterDeposit.amount1ReturnedUsdValue).to.be.equal(0);
 
       {
         // get positionHelper
@@ -412,17 +416,26 @@ describe("PositionHelper.sol", function () {
         expect(positionInfo.tokenId).to.be.equal(positionInfoAfterDeposit.tokenId);
         expect(positionInfo.strategyProvider).to.be.equal(positionInfoAfterDeposit.strategyProvider);
         expect(positionInfo.strategyId).to.be.equal(positionInfoAfterDeposit.strategyId);
-        expect(positionInfo.totalDepositUSDValue).to.be.equal(positionInfoAfterDeposit.totalDepositUSDValue);
+        expect(positionInfo.amount0Deposited).to.be.equal(positionInfoAfterDeposit.amount0Deposited);
+        expect(positionInfo.amount1Deposited).to.be.equal(positionInfoAfterDeposit.amount1Deposited);
+        expect(positionInfo.amount0DepositedUsdValue).to.be.equal(positionInfoAfterDeposit.amount0DepositedUsdValue);
+        expect(positionInfo.amount1DepositedUsdValue).to.be.equal(positionInfoAfterDeposit.amount1DepositedUsdValue);
         expect(positionInfo.amount0CollectedFee).to.be.equal(positionInfoAfterDeposit.amount0CollectedFee);
         expect(positionInfo.amount1CollectedFee).to.be.equal(positionInfoAfterDeposit.amount1CollectedFee);
         expect(positionInfo.amount0Leftover).to.be.equal(positionInfoAfterDeposit.amount0Leftover);
         expect(positionInfo.amount1Leftover).to.be.equal(positionInfoAfterDeposit.amount1Leftover);
         expect(positionInfo.tickLowerDiff).to.be.equal(positionInfoAfterDeposit.tickLowerDiff);
         expect(positionInfo.tickUpperDiff).to.be.equal(positionInfoAfterDeposit.tickUpperDiff);
-        expect(positionInfo.amount0Returned).to.be.equal(positionInfoAfterDeposit.amount0Returned);
-        expect(positionInfo.amount1Returned).to.be.equal(positionInfoAfterDeposit.amount1Returned);
-        expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(positionInfoAfterDeposit.amount0ReturnedUsdValue);
-        expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(positionInfoAfterDeposit.amount1ReturnedUsdValue);
+
+        const positionSettlement = await positionHelper.getPositionSettlement(user.address, positionIdInLog);
+        expect(positionSettlement.amount0Returned).to.be.equal(positionSettlementAfterDeposit.amount0Returned);
+        expect(positionSettlement.amount1Returned).to.be.equal(positionSettlementAfterDeposit.amount1Returned);
+        expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(
+          positionSettlementAfterDeposit.amount0ReturnedUsdValue,
+        );
+        expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(
+          positionSettlementAfterDeposit.amount1ReturnedUsdValue,
+        );
 
         // get positionTokenInfo
         const positionTokenInfo = await positionHelper.getPositionTokenInfo(user.address, positionIdInLog);
@@ -437,7 +450,14 @@ describe("PositionHelper.sol", function () {
         expect(positionTokenInfo.tickUpper).to.be.equal(tickUpper);
         expect(positionTokenInfo.strategyProvider).to.be.equal(positionInfoAfterDeposit.strategyProvider);
         expect(positionTokenInfo.strategyId).to.be.equal(positionInfoAfterDeposit.strategyId);
-        expect(positionTokenInfo.totalDepositUSDValue).to.be.equal(positionInfoAfterDeposit.totalDepositUSDValue);
+        expect(positionTokenInfo.amount0Deposited).to.be.equal(positionInfoAfterDeposit.amount0Deposited);
+        expect(positionTokenInfo.amount1Deposited).to.be.equal(positionInfoAfterDeposit.amount1Deposited);
+        expect(positionTokenInfo.amount0DepositedUsdValue).to.be.equal(
+          positionInfoAfterDeposit.amount0DepositedUsdValue,
+        );
+        expect(positionTokenInfo.amount1DepositedUsdValue).to.be.equal(
+          positionInfoAfterDeposit.amount1DepositedUsdValue,
+        );
         expect(positionTokenInfo.tickLowerDiff).to.be.equal(positionInfoAfterDeposit.tickLowerDiff);
         expect(positionTokenInfo.tickLowerDiff).to.be.equal(positionInfoAfterDeposit.tickLowerDiff);
 
@@ -487,17 +507,25 @@ describe("PositionHelper.sol", function () {
         expect(positionInfo.tokenId).to.be.equal(positionInfoAfterDeposit.tokenId);
         expect(positionInfo.strategyProvider).to.be.equal(positionInfoAfterDeposit.strategyProvider);
         expect(positionInfo.strategyId).to.be.equal(positionInfoAfterDeposit.strategyId);
-        expect(positionInfo.totalDepositUSDValue).to.be.equal(positionInfoAfterDeposit.totalDepositUSDValue);
+        expect(positionInfo.amount0Deposited).to.be.equal(positionInfoAfterDeposit.amount0Deposited);
+        expect(positionInfo.amount1Deposited).to.be.equal(positionInfoAfterDeposit.amount1Deposited);
+        expect(positionInfo.amount0DepositedUsdValue).to.be.equal(positionInfoAfterDeposit.amount0DepositedUsdValue);
+        expect(positionInfo.amount1DepositedUsdValue).to.be.equal(positionInfoAfterDeposit.amount1DepositedUsdValue);
         expect(positionInfo.amount0CollectedFee).to.be.equal(positionInfoAfterDeposit.amount0CollectedFee);
         expect(positionInfo.amount1CollectedFee).to.be.equal(positionInfoAfterDeposit.amount1CollectedFee);
         expect(positionInfo.amount0Leftover).to.be.equal(positionInfoAfterDeposit.amount0Leftover);
         expect(positionInfo.amount1Leftover).to.be.equal(positionInfoAfterDeposit.amount1Leftover);
         expect(positionInfo.tickLowerDiff).to.be.equal(positionInfoAfterDeposit.tickLowerDiff);
         expect(positionInfo.tickUpperDiff).to.be.equal(positionInfoAfterDeposit.tickUpperDiff);
-        expect(positionInfo.amount0Returned).to.be.equal(positionInfoAfterDeposit.amount0Returned);
-        expect(positionInfo.amount1Returned).to.be.equal(positionInfoAfterDeposit.amount1Returned);
-        expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(positionInfoAfterDeposit.amount0ReturnedUsdValue);
-        expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(positionInfoAfterDeposit.amount1ReturnedUsdValue);
+        const positionSettlement = await positionHelper.getPositionSettlement(user.address, positionIdInLog);
+        expect(positionSettlement.amount0Returned).to.be.equal(positionSettlementAfterDeposit.amount0Returned);
+        expect(positionSettlement.amount1Returned).to.be.equal(positionSettlementAfterDeposit.amount1Returned);
+        expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(
+          positionSettlementAfterDeposit.amount0ReturnedUsdValue,
+        );
+        expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(
+          positionSettlementAfterDeposit.amount1ReturnedUsdValue,
+        );
 
         // get positionTokenInfo
         const positionTokenInfo = await positionHelper.getPositionTokenInfo(user.address, positionIdInLog);
@@ -512,7 +540,14 @@ describe("PositionHelper.sol", function () {
         expect(positionTokenInfo.tickUpper).to.be.equal(tickUpper);
         expect(positionTokenInfo.strategyProvider).to.be.equal(positionInfoAfterDeposit.strategyProvider);
         expect(positionTokenInfo.strategyId).to.be.equal(positionInfoAfterDeposit.strategyId);
-        expect(positionTokenInfo.totalDepositUSDValue).to.be.equal(positionInfoAfterDeposit.totalDepositUSDValue);
+        expect(positionTokenInfo.amount0Deposited).to.be.equal(positionInfoAfterDeposit.amount0Deposited);
+        expect(positionTokenInfo.amount1Deposited).to.be.equal(positionInfoAfterDeposit.amount1Deposited);
+        expect(positionTokenInfo.amount0DepositedUsdValue).to.be.equal(
+          positionInfoAfterDeposit.amount0DepositedUsdValue,
+        );
+        expect(positionTokenInfo.amount1DepositedUsdValue).to.be.equal(
+          positionInfoAfterDeposit.amount1DepositedUsdValue,
+        );
         expect(positionTokenInfo.tickLowerDiff).to.be.equal(positionInfoAfterDeposit.tickLowerDiff);
         expect(positionTokenInfo.tickLowerDiff).to.be.equal(positionInfoAfterDeposit.tickLowerDiff);
 
@@ -637,17 +672,21 @@ describe("PositionHelper.sol", function () {
       expect(positionInfoAfterRebalance.tokenId).to.be.equal(mintedTokenIdInLogRebalance);
       expect(positionInfoAfterRebalance.strategyProvider).to.be.equal(zeroAddress);
       expect(positionInfoAfterRebalance.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfoAfterRebalance.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfoAfterRebalance.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfoAfterRebalance.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfoAfterRebalance.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfoAfterRebalance.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfoAfterRebalance.amount0CollectedFee).to.be.equal(collectedFee0InLogRebalance);
       expect(positionInfoAfterRebalance.amount1CollectedFee).to.be.equal(collectedFee1InLogRebalance);
       expect(positionInfoAfterRebalance.amount0Leftover).to.be.equal(amount0LeftoverMinted);
       expect(positionInfoAfterRebalance.amount1Leftover).to.be.equal(amount1LeftoverMinted);
       expect(positionInfoAfterRebalance.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfoAfterRebalance.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfoAfterRebalance.amount0Returned).to.be.equal(0);
-      expect(positionInfoAfterRebalance.amount1Returned).to.be.equal(0);
-      expect(positionInfoAfterRebalance.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfoAfterRebalance.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlementAfterRebalance = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlementAfterRebalance.amount0Returned).to.be.equal(0);
+      expect(positionSettlementAfterRebalance.amount1Returned).to.be.equal(0);
+      expect(positionSettlementAfterRebalance.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlementAfterRebalance.amount1ReturnedUsdValue).to.be.equal(0);
 
       {
         // withdraw
@@ -696,7 +735,10 @@ describe("PositionHelper.sol", function () {
         expect(positionInfoClosed.tokenId).to.be.equal(mintedTokenIdInLogRebalance);
         expect(positionInfoClosed.strategyProvider).to.be.equal(zeroAddress);
         expect(positionInfoClosed.strategyId).to.be.equal(strategyIdInLog);
-        expect(positionInfoClosed.totalDepositUSDValue).to.be.greaterThan(0);
+        expect(positionInfoClosed.amount0Deposited).to.be.equal(amount0Deposited);
+        expect(positionInfoClosed.amount1Deposited).to.be.equal(amount1Deposited);
+        expect(positionInfoClosed.amount0DepositedUsdValue).to.be.greaterThan(0);
+        expect(positionInfoClosed.amount1DepositedUsdValue).to.be.greaterThan(0);
         expect(positionInfoClosed.amount0CollectedFee).to.be.equal(
           amount0CollectedFee.add(collectedFee0InLogRebalance),
         );
@@ -707,31 +749,40 @@ describe("PositionHelper.sol", function () {
         expect(positionInfoClosed.amount1Leftover).to.be.equal(0);
         expect(positionInfoClosed.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
         expect(positionInfoClosed.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-        expect(positionInfoClosed.amount0Returned).to.be.equal(
+        const positionSettlementClosed = await positionManager.getPositionSettlement(positionIdInLog);
+        expect(positionSettlementClosed.amount0Returned).to.be.equal(
           amount0Removed.add(amount0CollectedFee).add(amount0LeftoverMinted),
         );
-        expect(positionInfoClosed.amount1Returned).to.be.equal(
+        expect(positionSettlementClosed.amount1Returned).to.be.equal(
           amount1Removed.add(amount1CollectedFee).add(amount1LeftoverMinted),
         );
-        expect(positionInfoClosed.amount0ReturnedUsdValue).to.be.greaterThan(0);
-        expect(positionInfoClosed.amount1ReturnedUsdValue).to.be.greaterThan(0);
+        expect(positionSettlementClosed.amount0ReturnedUsdValue).to.be.greaterThan(0);
+        expect(positionSettlementClosed.amount1ReturnedUsdValue).to.be.greaterThan(0);
 
         // get positionHelper
         const positionInfo = await positionHelper.getPositionInfo(user.address, positionIdInLog);
         expect(positionInfo.tokenId).to.be.equal(positionInfoClosed.tokenId);
         expect(positionInfo.strategyProvider).to.be.equal(positionInfoClosed.strategyProvider);
         expect(positionInfo.strategyId).to.be.equal(positionInfoClosed.strategyId);
-        expect(positionInfo.totalDepositUSDValue).to.be.equal(positionInfoClosed.totalDepositUSDValue);
+        expect(positionInfo.amount0Deposited).to.be.equal(positionInfoClosed.amount0Deposited);
+        expect(positionInfo.amount1Deposited).to.be.equal(positionInfoClosed.amount1Deposited);
+        expect(positionInfo.amount0DepositedUsdValue).to.be.equal(positionInfoClosed.amount0DepositedUsdValue);
+        expect(positionInfo.amount1DepositedUsdValue).to.be.equal(positionInfoClosed.amount1DepositedUsdValue);
         expect(positionInfo.amount0CollectedFee).to.be.equal(positionInfoClosed.amount0CollectedFee);
         expect(positionInfo.amount1CollectedFee).to.be.equal(positionInfoClosed.amount1CollectedFee);
         expect(positionInfo.amount0Leftover).to.be.equal(positionInfoClosed.amount0Leftover);
         expect(positionInfo.amount1Leftover).to.be.equal(positionInfoClosed.amount1Leftover);
         expect(positionInfo.tickLowerDiff).to.be.equal(positionInfoClosed.tickLowerDiff);
         expect(positionInfo.tickUpperDiff).to.be.equal(positionInfoClosed.tickUpperDiff);
-        expect(positionInfo.amount0Returned).to.be.equal(positionInfoClosed.amount0Returned);
-        expect(positionInfo.amount1Returned).to.be.equal(positionInfoClosed.amount1Returned);
-        expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(positionInfoClosed.amount0ReturnedUsdValue);
-        expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(positionInfoClosed.amount1ReturnedUsdValue);
+        const positionSettlement = await positionHelper.getPositionSettlement(user.address, positionIdInLog);
+        expect(positionSettlement.amount0Returned).to.be.equal(positionSettlementClosed.amount0Returned);
+        expect(positionSettlement.amount1Returned).to.be.equal(positionSettlementClosed.amount1Returned);
+        expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(
+          positionSettlementClosed.amount0ReturnedUsdValue,
+        );
+        expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(
+          positionSettlementClosed.amount1ReturnedUsdValue,
+        );
       }
     });
 
@@ -811,17 +862,21 @@ describe("PositionHelper.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(user2.address);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(0);
       expect(positionInfo.amount1Leftover).to.be.equal(0);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
 
       // swap
       await swapRouter.connect(user2).exactInputSingle({
@@ -918,20 +973,36 @@ describe("PositionHelper.sol", function () {
       expect(positionInfoClosed.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfoClosed.strategyProvider).to.be.equal(user2.address);
       expect(positionInfoClosed.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfoClosed.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfoClosed.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfoClosed.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfoClosed.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfoClosed.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfoClosed.amount0CollectedFee).to.be.equal(amount0CollectedFee);
       expect(positionInfoClosed.amount1CollectedFee).to.be.equal(amount1CollectedFee);
       expect(positionInfoClosed.amount0Leftover).to.be.equal(0);
       expect(positionInfoClosed.amount1Leftover).to.be.equal(0);
       expect(positionInfoClosed.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfoClosed.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfoClosed.amount0Returned).to.be.equal(returnedAmount0);
-      expect(positionInfoClosed.amount1Returned).to.be.equal(returnedAmount1);
-      expect(positionInfoClosed.amount0ReturnedUsdValue).to.be.greaterThan(0);
-      expect(positionInfoClosed.amount1ReturnedUsdValue).to.be.greaterThan(0);
+      const positionSettlementClosed = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlementClosed.amount0Returned).to.be.equal(returnedAmount0);
+      expect(positionSettlementClosed.amount1Returned).to.be.equal(returnedAmount1);
+      expect(positionSettlementClosed.amount0ReturnedUsdValue).to.be.greaterThan(0);
+      expect(positionSettlementClosed.amount1ReturnedUsdValue).to.be.greaterThan(0);
 
-      expect(estimateWithdrawPositionInfo.amount0Returned.sub(positionInfoClosed.amount0Returned)).to.be.equal(1n);
-      expect(estimateWithdrawPositionInfo.amount1Returned.sub(positionInfoClosed.amount1Returned)).to.be.equal(1n);
+      expect(estimateWithdrawPositionInfo.amount0Returned.sub(positionSettlementClosed.amount0Returned)).to.be.equal(
+        1n,
+      );
+      expect(estimateWithdrawPositionInfo.amount1Returned.sub(positionSettlementClosed.amount1Returned)).to.be.equal(
+        1n,
+      );
+      expect(estimateWithdrawPositionInfo.amount0PerformanceFee).to.be.equal(
+        performanceFeeAmount0.add(serviceFeeAmount0),
+      );
+      expect(estimateWithdrawPositionInfo.amount1PerformanceFee).to.be.equal(
+        performanceFeeAmount1.add(serviceFeeAmount1),
+      );
+      expect(estimateWithdrawPositionInfo.amount0PerformanceFeeUsdValue).to.be.greaterThan(0);
+      expect(estimateWithdrawPositionInfo.amount1PerformanceFeeUsdValue).to.be.greaterThan(0);
       expect(estimateWithdrawPositionInfo.amount0ReturnedUsdValue).to.be.greaterThan(0);
       expect(estimateWithdrawPositionInfo.amount1ReturnedUsdValue).to.be.greaterThan(0);
       expect(estimateWithdrawPositionInfo.amount0ReturnedToken1Value).to.be.greaterThan(0);

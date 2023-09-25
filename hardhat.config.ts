@@ -67,8 +67,8 @@ const config: HardhatUserConfig = {
     optimismGoerli: {
       url: process.env.ALCHEMY_OPTIMISM_GOERLI || "",
       accounts: [process.env.TEST_PRIVATE_KEY || ""],
-      // gas: 10000000,
-      // gasPrice: 1000000000,
+      gas: 10000000,
+      gasPrice: 1000000000,
     },
     optimism: {
       url: process.env.ALCHEMY_OPTIMISM_MAINNET || "",
@@ -125,7 +125,7 @@ const config: HardhatUserConfig = {
   },
   namedAccounts: {
     deployer: {
-      default: "0x565d490806A6D8eF532f4d29eC00EF6aAC71A17A",
+      default: "0xDedAd387474099d24F9489bCDD05C21F8A3245FC",
     },
     governance: {
       default: "0x565d490806A6D8eF532f4d29eC00EF6aAC71A17A",

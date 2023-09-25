@@ -30,25 +30,42 @@ library UniswapHelper {
         return pool;
     }
 
+    ///@notice struct for output of the getTokens function
+    ///@param token0 address of the token0
+    ///@param token1 address of the token1
+    ///@param fee fee tier of the pool
+    ///@param tickLower of position
+    ///@param tickUpper of position
+    struct getTokensOutput {
+        address token0;
+        address token1;
+        uint24 fee;
+        int24 tickLower;
+        int24 tickUpper;
+    }
+
     ///@notice get the address of the tpkens from the tokenId
     ///@param tokenId id of the position (NFT)
     ///@param nonfungiblePositionManager instance of the nonfungiblePositionManager given by the caller (address)
-    ///@return token0address address of the token0
-    ///@return token1address address of the token1
-    ///@return fee fee tier of the pool
-    ///@return tickLower of position
-    ///@return tickUpper of position
+    ///@return output getTokensOutput struct
     function getTokens(
         uint256 tokenId,
         INonfungiblePositionManager nonfungiblePositionManager
-    )
-        internal
-        view
-        returns (address token0address, address token1address, uint24 fee, int24 tickLower, int24 tickUpper)
-    {
-        (, , token0address, token1address, fee, tickLower, tickUpper, , , , , ) = nonfungiblePositionManager.positions(
-            tokenId
-        );
+    ) internal view returns (getTokensOutput memory output) {
+        (
+            ,
+            ,
+            output.token0,
+            output.token1,
+            output.fee,
+            output.tickLower,
+            output.tickUpper,
+            ,
+            ,
+            ,
+            ,
+
+        ) = nonfungiblePositionManager.positions(tokenId);
     }
 
     ///@notice get the amount of tokens from liquidity and tick ranges
@@ -312,5 +329,34 @@ library UniswapHelper {
                 }
             }
         }
+    }
+
+    function isPoolValid(
+        address factoryAddress,
+        address pool,
+        address weth9,
+        address usdValue,
+        uint24[] memory feeTiers
+    ) internal view returns (bool) {
+        (, , , , , , bool unlocked) = IUniswapV3Pool(pool).slot0();
+        if (!unlocked) {
+            return false;
+        }
+        return
+            checkTokenCanBeSwapToWETH9(factoryAddress, IUniswapV3Pool(pool).token0(), weth9, usdValue, feeTiers) &&
+            checkTokenCanBeSwapToWETH9(factoryAddress, IUniswapV3Pool(pool).token1(), weth9, usdValue, feeTiers);
+    }
+
+    function checkTokenCanBeSwapToWETH9(
+        address factoryAddress,
+        address token,
+        address weth9,
+        address usdValue,
+        uint24[] memory feeTiers
+    ) internal view returns (bool) {
+        if (token == weth9 || token == usdValue) {
+            return true;
+        }
+        return UniswapHelper.isPoolExist(factoryAddress, token, usdValue, feeTiers);
     }
 }

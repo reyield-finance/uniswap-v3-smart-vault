@@ -5,29 +5,25 @@ import { Config } from "./000_Config";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts, getChainId } = hre;
+  const chainId = await getChainId();
   const { deploy } = deployments;
 
-  const chainId = await getChainId();
-
   const { deployer } = await getNamedAccounts();
+  const Registry = await deployments.get("Registry");
 
-  const registryAddressHolder = await deployments.get("RegistryAddressHolder");
-  const uniswapAddressHolder = await deployments.get("UniswapAddressHolder");
-
-  await deploy("IdleLiquidityModule", {
+  await deploy("RegistryAddressHolder", {
     from: deployer,
-    args: [registryAddressHolder.address, uniswapAddressHolder.address],
+    args: [Registry.address],
     log: true,
     autoMine: true,
     gasLimit: Config[chainId].gasLimit,
     gasPrice: Config[chainId].gasPrice,
-    nonce: 15,
+    nonce: 2,
   });
 
   await new Promise((resolve) => setTimeout(resolve, Config[chainId].sleep));
-  console.log(":: Deployed IdleLiquidityModule: ", (await deployments.get("IdleLiquidityModule")).address);
+  console.log(":: Deployed RegistryAddressHolder: ", (await deployments.get("RegistryAddressHolder")).address);
 };
 
 export default func;
-func.tags = ["SmartVault", "Module", "IdleLiquidityModule"];
-func.dependencies = ["UniswapAddressHolder", "Registry"];
+func.tags = ["SmartVault", "RegistryAddressHolder"];

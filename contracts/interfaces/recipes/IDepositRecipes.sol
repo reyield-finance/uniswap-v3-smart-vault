@@ -25,12 +25,6 @@ interface IDepositRecipes {
         address strategyProvider
     );
 
-    ///@notice emitted when a position is increased liquidity
-    ///@param positionManager address of the position manager
-    ///@param from address of the user
-    ///@param positionId ID of the position
-    event PositionIncreasedLiquidity(address indexed positionManager, address from, uint256 positionId);
-
     ///@notice struct for input of the Deposit
     ///@param token0 the first token to be deposited
     ///@param token1 the second token to be deposited

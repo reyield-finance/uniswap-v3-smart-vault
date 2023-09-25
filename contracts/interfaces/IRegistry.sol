@@ -94,6 +94,7 @@ interface IRegistry {
     event ModuleDataUpdated(bytes32 id, address contractAddress, bytes32 defaultData);
 
     struct Entry {
+        bytes32 id;
         address contractAddress;
         bytes32 defaultData;
     }
@@ -164,6 +165,11 @@ interface IRegistry {
     ///@param _id id of the module
     ///@return Entry module info
     function getModuleInfo(bytes32 _id) external view returns (Entry memory);
+
+    ///@notice check if the module is active
+    ///@param _contractAddress address of the module
+    ///@return bool true if the module is active, false otherwise
+    function activeModule(address _contractAddress) external view returns (bool);
 
     ///@notice get service fee ratio for a given license amount
     ///@param _licenseAmount license amount to get service fee ratio
