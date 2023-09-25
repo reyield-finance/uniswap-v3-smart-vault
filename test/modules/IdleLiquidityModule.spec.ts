@@ -404,8 +404,12 @@ describe("IdleLiquidityModule.sol", function () {
       const positionIdInLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.positionId;
       const closedTokenIdInLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.closedTokenId;
       const mintedTokenIdInLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.mintedTokenId;
+      const removed0InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.removed0;
+      const removed1InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.removed1;
       const collectedFee0InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.collectedFee0;
       const collectedFee1InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.collectedFee1;
+      const repaid0InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.repaid0;
+      const repaid1InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.repaid1;
 
       expect(positionIdInLogRebalance).to.be.equal(positionIdInLog);
       expect(closedTokenIdInLogRebalance).to.be.equal(tokenIdInLog);
@@ -414,8 +418,8 @@ describe("IdleLiquidityModule.sol", function () {
       let tokenIdClosed: BigNumber = BigNumber.from(0);
       let amount0CollectedFee: BigNumber = BigNumber.from(0);
       let amount1CollectedFee: BigNumber = BigNumber.from(0);
-      // let amount0Removed: BigNumber = BigNumber.from(0);
-      // let amount1Removed: BigNumber = BigNumber.from(0);
+      let amount0Removed: BigNumber = BigNumber.from(0);
+      let amount1Removed: BigNumber = BigNumber.from(0);
 
       let token0Repaid: BigNumber = BigNumber.from(0);
       let token1Repaid: BigNumber = BigNumber.from(0);
@@ -439,8 +443,8 @@ describe("IdleLiquidityModule.sol", function () {
             tokenIdClosed = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
             amount0CollectedFee = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
             amount1CollectedFee = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
-            // amount0Removed = BigNumber.from(hexToInt256(hexToBn(eventData[3])));
-            // amount1Removed = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
+            amount0Removed = BigNumber.from(hexToInt256(hexToBn(eventData[3])));
+            amount1Removed = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
           }
 
           if (countAfterRebalance == 2) {
@@ -469,14 +473,21 @@ describe("IdleLiquidityModule.sol", function () {
 
       expect(countAfterRebalance).to.be.equal(5);
       expect(tokenIdClosed).to.be.equal(tokenIdInLog);
-      expect(amount0CollectedFee.sub(token0Repaid)).to.be.equal(collectedFee0InLogRebalance);
-      expect(amount1CollectedFee.sub(token1Repaid)).to.be.equal(collectedFee1InLogRebalance);
+      expect(amount0Removed.add(positionInfo.amount0Leftover)).to.be.equal(removed0InLogRebalance);
+      expect(amount1Removed.add(positionInfo.amount1Leftover)).to.be.equal(removed1InLogRebalance);
+      expect(amount0CollectedFee).to.be.equal(collectedFee0InLogRebalance);
+      expect(amount1CollectedFee).to.be.equal(collectedFee1InLogRebalance);
+      expect(token0Repaid).to.be.equal(repaid0InLogRebalance);
+      expect(token1Repaid).to.be.equal(repaid1InLogRebalance);
       expect(ethBalanceRebalanceFeeRecipient.add(totalWETH9Repaid)).to.be.equal(
         await ethers.provider.getBalance(rebalanceFeeRecipient.address),
       );
       expect(amount0DepositedMinted).to.be.lessThanOrEqual(amount0OutSwapped);
       expect(amount1DepositedMinted).to.be.lessThanOrEqual(amount1OutSwapped);
       expect(tokenIdMinted).to.be.equal(mintedTokenIdInLogRebalance);
+
+      expect(await token0.balanceOf(positionManager.address)).to.be.equal(amount0LeftoverMinted);
+      expect(await token1.balanceOf(positionManager.address)).to.be.equal(amount1LeftoverMinted);
 
       const positionInfoAfterRebalance = await positionManager.getPositionInfo(positionIdInLog);
       expect(positionInfoAfterRebalance.tokenId).to.be.equal(mintedTokenIdInLogRebalance);
@@ -611,16 +622,20 @@ describe("IdleLiquidityModule.sol", function () {
         userAddress: user.address,
         feeReceiver: rebalanceFeeRecipient.address,
         positionId: positionIdInLog,
-        estimatedGasFee: 10000n,
-        isForced: false,
+        estimatedGasFee: 1n * 10n ** 18n,
+        isForced: true,
       });
       const receiptRebalance = await txRebalance.wait();
       const eventsRebalance: any = receiptRebalance.events;
       const positionIdInLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.positionId;
       const closedTokenIdInLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.closedTokenId;
       const mintedTokenIdInLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.mintedTokenId;
+      const removed0InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.removed0;
+      const removed1InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.removed1;
       const collectedFee0InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.collectedFee0;
       const collectedFee1InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.collectedFee1;
+      const repaid0InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.repaid0;
+      const repaid1InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.repaid1;
 
       expect(positionIdInLogRebalance).to.be.equal(positionIdInLog);
       expect(closedTokenIdInLogRebalance).to.be.equal(tokenIdInLog);
@@ -688,8 +703,12 @@ describe("IdleLiquidityModule.sol", function () {
 
       expect(countAfterRebalance).to.be.equal(5);
       expect(tokenIdClosed).to.be.equal(tokenIdInLog);
-      expect(amount0CollectedFee.sub(token0Repaid)).to.be.equal(collectedFee0InLogRebalance);
-      expect(amount1CollectedFee.sub(token1Repaid)).to.be.equal(collectedFee1InLogRebalance);
+      expect(amount0Removed.add(positionInfo.amount0Leftover)).to.be.equal(removed0InLogRebalance);
+      expect(amount1Removed.add(positionInfo.amount1Leftover)).to.be.equal(removed1InLogRebalance);
+      expect(amount0CollectedFee).to.be.equal(collectedFee0InLogRebalance);
+      expect(amount1CollectedFee).to.be.equal(collectedFee1InLogRebalance);
+      expect(token0Repaid).to.be.equal(repaid0InLogRebalance);
+      expect(token1Repaid).to.be.equal(repaid1InLogRebalance);
       expect(ethBalanceRebalanceFeeRecipient.add(totalWETH9Repaid)).to.be.equal(
         await ethers.provider.getBalance(rebalanceFeeRecipient.address),
       );
@@ -703,6 +722,9 @@ describe("IdleLiquidityModule.sol", function () {
       expect(amount0DepositedMinted).to.be.lessThanOrEqual(amount0OutSwapped);
       expect(amount1DepositedMinted).to.be.lessThanOrEqual(amount1OutSwapped);
       expect(tokenIdMinted).to.be.equal(mintedTokenIdInLogRebalance);
+
+      expect(await token0.balanceOf(positionManager.address)).to.be.equal(amount0LeftoverMinted);
+      expect(await token1.balanceOf(positionManager.address)).to.be.equal(amount1LeftoverMinted);
 
       const positionInfoAfterRebalance = await positionManager.getPositionInfo(positionIdInLog);
       expect(positionInfoAfterRebalance.tokenId).to.be.equal(mintedTokenIdInLogRebalance);
@@ -849,8 +871,12 @@ describe("IdleLiquidityModule.sol", function () {
       const positionIdInLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.positionId;
       const closedTokenIdInLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.closedTokenId;
       const mintedTokenIdInLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.mintedTokenId;
+      const removed0InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.removed0;
+      const removed1InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.removed1;
       const collectedFee0InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.collectedFee0;
       const collectedFee1InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.collectedFee1;
+      const repaid0InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.repaid0;
+      const repaid1InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.repaid1;
 
       expect(positionIdInLogRebalance).to.be.equal(positionIdInLog);
       expect(closedTokenIdInLogRebalance).to.be.equal(tokenIdInLog);
@@ -918,8 +944,12 @@ describe("IdleLiquidityModule.sol", function () {
 
       expect(countAfterRebalance).to.be.equal(5);
       expect(tokenIdClosed).to.be.equal(tokenIdInLog);
-      expect(amount0CollectedFee.sub(token0Repaid)).to.be.equal(collectedFee0InLogRebalance);
-      expect(amount1CollectedFee.sub(token1Repaid)).to.be.equal(collectedFee1InLogRebalance);
+      expect(amount0Removed.add(positionInfo.amount0Leftover)).to.be.equal(removed0InLogRebalance);
+      expect(amount1Removed.add(positionInfo.amount1Leftover)).to.be.equal(removed1InLogRebalance);
+      expect(amount0CollectedFee).to.be.equal(collectedFee0InLogRebalance);
+      expect(amount1CollectedFee).to.be.equal(collectedFee1InLogRebalance);
+      expect(token0Repaid).to.be.equal(repaid0InLogRebalance);
+      expect(token1Repaid).to.be.equal(repaid1InLogRebalance);
       expect(ethBalanceRebalanceFeeRecipient.add(totalWETH9Repaid)).to.be.equal(
         await ethers.provider.getBalance(rebalanceFeeRecipient.address),
       );
@@ -933,7 +963,8 @@ describe("IdleLiquidityModule.sol", function () {
       expect(amount0DepositedMinted).to.be.lessThanOrEqual(amount0OutSwapped);
       expect(amount1DepositedMinted).to.be.lessThanOrEqual(amount1OutSwapped);
       expect(tokenIdMinted).to.be.equal(mintedTokenIdInLogRebalance);
-
+      expect(await token0.balanceOf(positionManager.address)).to.be.equal(amount0LeftoverMinted);
+      expect(await token1.balanceOf(positionManager.address)).to.be.equal(amount1LeftoverMinted);
       const positionInfoAfterRebalance = await positionManager.getPositionInfo(positionIdInLog);
       expect(positionInfoAfterRebalance.tokenId).to.be.equal(mintedTokenIdInLogRebalance);
       expect(positionInfoAfterRebalance.strategyProvider).to.be.equal(user2.address);
@@ -1458,8 +1489,12 @@ describe("IdleLiquidityModule.sol", function () {
       const positionIdInLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.positionId;
       const closedTokenIdInLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.closedTokenId;
       const mintedTokenIdInLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.mintedTokenId;
+      const removed0InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.removed0;
+      const removed1InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.removed1;
       const collectedFee0InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.collectedFee0;
       const collectedFee1InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.collectedFee1;
+      const repaid0InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.repaid0;
+      const repaid1InLogRebalance = eventsRebalance[eventsRebalance.length - 1].args.repaid1;
 
       expect(positionIdInLogRebalance).to.be.equal(positionIdInLog);
       expect(closedTokenIdInLogRebalance).to.be.equal(tokenIdInLog);
@@ -1527,8 +1562,12 @@ describe("IdleLiquidityModule.sol", function () {
 
       expect(countAfterRebalance).to.be.equal(5);
       expect(tokenIdClosed).to.be.equal(tokenIdInLog);
-      expect(amount0CollectedFee.sub(token0Repaid)).to.be.equal(collectedFee0InLogRebalance);
-      expect(amount1CollectedFee.sub(token1Repaid)).to.be.equal(collectedFee1InLogRebalance);
+      expect(amount0Removed.add(positionInfo.amount0Leftover)).to.be.equal(removed0InLogRebalance);
+      expect(amount1Removed.add(positionInfo.amount1Leftover)).to.be.equal(removed1InLogRebalance);
+      expect(amount0CollectedFee).to.be.equal(collectedFee0InLogRebalance);
+      expect(amount1CollectedFee).to.be.equal(collectedFee1InLogRebalance);
+      expect(token0Repaid).to.be.equal(repaid0InLogRebalance);
+      expect(token1Repaid).to.be.equal(repaid1InLogRebalance);
       expect(ethBalanceRebalanceFeeRecipient.add(totalWETH9Repaid)).to.be.equal(
         await ethers.provider.getBalance(rebalanceFeeRecipient.address),
       );
@@ -1542,7 +1581,8 @@ describe("IdleLiquidityModule.sol", function () {
       expect(amount0DepositedMinted).to.be.lessThanOrEqual(amount0OutSwapped);
       expect(amount1DepositedMinted).to.be.lessThanOrEqual(amount1OutSwapped);
       expect(tokenIdMinted).to.be.equal(mintedTokenIdInLogRebalance);
-
+      expect(await token0.balanceOf(positionManager.address)).to.be.equal(amount0LeftoverMinted);
+      expect(await token1.balanceOf(positionManager.address)).to.be.equal(amount1LeftoverMinted);
       const positionInfoAfterRebalance = await positionManager.getPositionInfo(positionIdInLog);
       expect(positionInfoAfterRebalance.tokenId).to.be.equal(mintedTokenIdInLogRebalance);
       expect(positionInfoAfterRebalance.strategyProvider).to.be.equal(user2.address);

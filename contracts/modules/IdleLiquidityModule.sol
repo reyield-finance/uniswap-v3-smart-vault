@@ -61,14 +61,17 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
             })
         );
 
-        require(carRes.amount0Removed > 0 || carRes.amount1Removed > 0, "ILAR");
+        uint256 amount0Desired = carRes.amount0Removed.add(carRes.amount0CollectedFee).sub(carRes.amount0Repaid);
+        uint256 amount1Desired = carRes.amount1Removed.add(carRes.amount1CollectedFee).sub(carRes.amount1Repaid);
+
+        require(amount0Desired > 0 || amount1Desired > 0, "ILAR");
 
         _SwapAndMintResult memory samRes = _swapAndMint(
             _SwapAndMintParams({
                 positionManager: positionManager,
                 tokenId: pInfo.tokenId,
-                amount0: carRes.amount0Removed.add(carRes.amount0CollectedFee),
-                amount1: carRes.amount1Removed.add(carRes.amount1CollectedFee),
+                amount0: amount0Desired,
+                amount1: amount1Desired,
                 tickLowerDiff: pInfo.tickLowerDiff,
                 tickUpperDiff: pInfo.tickUpperDiff
             })
@@ -90,8 +93,12 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
             input.positionId,
             pInfo.tokenId,
             samRes.newTokenId,
+            carRes.amount0Removed,
+            carRes.amount1Removed,
             carRes.amount0CollectedFee,
-            carRes.amount1CollectedFee
+            carRes.amount1CollectedFee,
+            carRes.amount0Repaid,
+            carRes.amount1Repaid
         );
     }
 
@@ -123,14 +130,17 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
             })
         );
 
-        require(carRes.amount0Removed > 0 || carRes.amount1Removed > 0, "ILAR");
+        uint256 amount0Desired = carRes.amount0Removed.add(carRes.amount0CollectedFee).sub(carRes.amount0Repaid);
+        uint256 amount1Desired = carRes.amount1Removed.add(carRes.amount1CollectedFee).sub(carRes.amount1Repaid);
+
+        require(amount0Desired > 0 || amount1Desired > 0, "ILAR");
 
         _SwapAndMintResult memory samRes = _swapAndMint(
             _SwapAndMintParams({
                 positionManager: positionManager,
                 tokenId: pInfo.tokenId,
-                amount0: carRes.amount0Removed.add(carRes.amount0CollectedFee),
-                amount1: carRes.amount1Removed.add(carRes.amount1CollectedFee),
+                amount0: amount0Desired,
+                amount1: amount1Desired,
                 tickLowerDiff: input.tickLowerDiff,
                 tickUpperDiff: input.tickUpperDiff
             })
@@ -152,8 +162,12 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
             input.positionId,
             pInfo.tokenId,
             samRes.newTokenId,
+            carRes.amount0Removed,
+            carRes.amount1Removed,
             carRes.amount0CollectedFee,
-            carRes.amount1CollectedFee
+            carRes.amount1CollectedFee,
+            carRes.amount0Repaid,
+            carRes.amount1Repaid
         );
     }
 
@@ -192,19 +206,8 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
                     })
                 );
 
-            if (rrfOutput.token0Repaid > res.amount0CollectedFee) {
-                res.amount0CollectedFee = 0;
-                res.amount0Removed = res.amount0Removed.sub(rrfOutput.token0Repaid.sub(res.amount0CollectedFee));
-            } else {
-                res.amount0CollectedFee = res.amount0CollectedFee.sub(rrfOutput.token0Repaid);
-            }
-
-            if (rrfOutput.token1Repaid > res.amount1CollectedFee) {
-                res.amount1CollectedFee = 0;
-                res.amount1Removed = res.amount1Removed.sub(rrfOutput.token1Repaid.sub(res.amount1CollectedFee));
-            } else {
-                res.amount1CollectedFee = res.amount1CollectedFee.sub(rrfOutput.token1Repaid);
-            }
+            res.amount0Repaid = rrfOutput.token0Repaid;
+            res.amount1Repaid = rrfOutput.token1Repaid;
         }
     }
 
