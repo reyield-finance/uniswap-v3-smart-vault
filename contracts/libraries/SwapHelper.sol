@@ -13,9 +13,13 @@ import "../interfaces/IERC20Extended.sol";
 import "./SafeInt24Math.sol";
 import "./SafeInt56Math.sol";
 import "./MathHelper.sol";
+import "./UniswapHelper.sol";
 
 ///@title library to help with swap amounts calculations
 library SwapHelper {
+    uint8 internal constant RESOLUTION48 = 48;
+    uint256 internal constant Q48 = 0x1000000000000;
+
     using SafeInt24Math for int24;
     using SafeInt56Math for int56;
     using SafeMath for uint256;
@@ -31,7 +35,7 @@ library SwapHelper {
         uint160 sqrtRatioBX96
     ) internal pure returns (uint256 ratioX96) {
         require(sqrtRatioAX96 < sqrtRatioX96 && sqrtRatioBX96 > sqrtRatioX96, "SHR");
-        uint128 liquidity = LiquidityAmounts.getLiquidityForAmount0(sqrtRatioX96, sqrtRatioBX96, FixedPoint96.Q96);
+        uint128 liquidity = LiquidityAmounts.getLiquidityForAmount0(sqrtRatioX96, sqrtRatioBX96, Q48);
         (, ratioX96) = LiquidityAmounts.getAmountsForLiquidity(sqrtRatioX96, sqrtRatioAX96, sqrtRatioBX96, liquidity);
     }
 
@@ -72,13 +76,15 @@ library SwapHelper {
                 amount1In << FixedPoint96.RESOLUTION
             );
 
-            uint256 amount0Post = valueX96.div(((uint256(sqrtPriceX96) ** 2) >> FixedPoint96.RESOLUTION).add(ratioX96));
+            uint256 amount0Post = valueX96.div(
+                ((uint256(sqrtPriceX96) ** 2) >> FixedPoint96.RESOLUTION).add(ratioX96 << RESOLUTION48)
+            );
             token0In = amount0Post < amount0In;
 
             if (token0In) {
                 amountToSwap = amount0In.sub(amount0Post);
             } else {
-                amountToSwap = amount1In.sub((amount0Post).mul(ratioX96) >> FixedPoint96.RESOLUTION);
+                amountToSwap = amount1In.sub((amount0Post).mul(ratioX96) >> RESOLUTION48);
             }
         }
     }
@@ -88,13 +94,16 @@ library SwapHelper {
     ///@param maxTwapDeviation max deviation threshold from the twap tick price
     ///@param twapDuration duration of the twap oracle observations
     function checkDeviation(IUniswapV3Pool pool, int24 maxTwapDeviation, uint32 twapDuration) internal view {
-        //MAX_TWAP_DEVIATION = 100  # 1%
-        //TWAP_DURATION = 60  # 60 seconds
-
+        ///NOTE: MAX_TWAP_DEVIATION = 100  # 1% , TWAP_DURATION = 60  # 60 seconds
         if (twapDuration == 0) {
+            //bypass check
             return;
         }
-        (, int24 currentTick, , , , , ) = pool.slot0();
+        (, int24 currentTick, , uint16 observationCardinality, , , ) = pool.slot0();
+        if (observationCardinality == 0) {
+            //bypass check
+            return;
+        }
         int24 twap = getTwap(pool, twapDuration);
         int24 deviation = currentTick > twap ? currentTick.sub(twap) : twap.sub(currentTick);
         require(deviation <= maxTwapDeviation, "SHD");
@@ -104,6 +113,7 @@ library SwapHelper {
     ///@param pool v3 pool
     ///@param twapDuration duration of the twap oracle observations
     function getTwap(IUniswapV3Pool pool, uint32 twapDuration) internal view returns (int24) {
+        require(twapDuration > 0, "SHGT");
         uint32[] memory secondsAgo = new uint32[](2);
         secondsAgo[0] = twapDuration;
         secondsAgo[1] = 0; // 0 is the most recent observation
@@ -162,5 +172,23 @@ library SwapHelper {
                 ? FullMath.mulDiv(ratioX128, baseAmount, 1 << 128)
                 : FullMath.mulDiv(1 << 128, baseAmount, ratioX128);
         }
+    }
+
+    function getQuoteFromDeepestPool(
+        address factoryAddress,
+        address baseToken,
+        address quoteToken,
+        uint256 baseAmount,
+        uint24[] memory feeTiers
+    ) internal view returns (uint256 quoteAmount) {
+        if (baseToken == quoteToken) {
+            return baseAmount;
+        }
+        address deepestPool = UniswapHelper.findV3DeepestPool(factoryAddress, baseToken, quoteToken, feeTiers);
+
+        (uint160 sqrtPriceX96, , , , , , ) = IUniswapV3Pool(deepestPool).slot0();
+
+        return
+            getQuoteFromSqrtRatioX96(sqrtPriceX96, MathHelper.fromUint256ToUint128(baseAmount), baseToken, quoteToken);
     }
 }

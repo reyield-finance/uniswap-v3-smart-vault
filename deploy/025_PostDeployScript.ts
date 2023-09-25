@@ -10,6 +10,7 @@ import {
   GovernanceRecipes,
   IdleLiquidityModule,
   IncreaseLiquidity,
+  IncreaseLiquidityRecipes,
   Mint,
   PositionManagerFactory,
   Registry,
@@ -32,14 +33,18 @@ const PostDeployScript: DeployFunction = async function (hre: HardhatRuntimeEnvi
   const chainId = await getChainId();
   const { deployer } = await getNamedAccounts();
 
+  const { governance, serviceFeeRecipient, official, keeper } = await getNamedAccounts();
+
   // const TimelockD = await deployments.get("Timelock");
   const RegistryD = await deployments.get("Registry");
+  const RegistryAddressHolderD = await deployments.get("RegistryAddressHolder");
   const DiamondCutFacetD = await deployments.get("DiamondCutFacet");
   const UniswapAddressHolderD = await deployments.get("UniswapAddressHolder");
   const PositionManagerFactoryD = await deployments.get("PositionManagerFactory");
   const StrategyProviderWalletFactoryD = await deployments.get("StrategyProviderWalletFactory");
   const IdleLiquidityModuleD = await deployments.get("IdleLiquidityModule");
   const DepositRecipesD = await deployments.get("DepositRecipes");
+  const IncreaseLiquidityRecipesD = await deployments.get("IncreaseLiquidityRecipes");
   const WithdrawRecipesD = await deployments.get("WithdrawRecipes");
   const GovernanceRecipesD = await deployments.get("GovernanceRecipes");
   const ClosePositionD = await deployments.get("ClosePosition");
@@ -54,7 +59,7 @@ const PostDeployScript: DeployFunction = async function (hre: HardhatRuntimeEnvi
 
   const Registry = (await ethers.getContractAt("Registry", RegistryD.address)) as Registry;
 
-  // ******************** Set positionManagerFactory & strategyProviderWalletFactory to registry ********************
+  // ******************** Set positionManagerFactory & strategyProviderWalletFactory & officialAccount  to registry ********************
   await Registry.setPositionManagerFactory(PositionManagerFactoryD.address, {
     gasPrice: Config[chainId].gasPrice,
     gasLimit: Config[chainId].gasLimit,
@@ -69,6 +74,13 @@ const PostDeployScript: DeployFunction = async function (hre: HardhatRuntimeEnvi
   await new Promise((resolve) => setTimeout(resolve, Config[chainId].sleep));
   console.log(":: Set StrategyProviderWalletFactory to Registry");
 
+  await Registry.setOfficialAccount(official, {
+    gasPrice: Config[chainId].gasPrice,
+    gasLimit: Config[chainId].gasLimit,
+  });
+  await new Promise((resolve) => setTimeout(resolve, Config[chainId].sleep));
+  console.log(":: Set setOfficialAccount to Registry");
+
   // ******************** Add modules and recipes and factory to registry ********************
   const positionManagerFactory = (await ethers.getContractAt(
     "PositionManagerFactory",
@@ -81,6 +93,11 @@ const PostDeployScript: DeployFunction = async function (hre: HardhatRuntimeEnvi
   )) as IdleLiquidityModule;
 
   const depositRecipes = (await ethers.getContractAt("DepositRecipes", DepositRecipesD.address)) as DepositRecipes;
+
+  const increaseLiquidityRecipes = (await ethers.getContractAt(
+    "IncreaseLiquidityRecipes",
+    IncreaseLiquidityRecipesD.address,
+  )) as IncreaseLiquidityRecipes;
 
   const withdrawRecipes = (await ethers.getContractAt("WithdrawRecipes", WithdrawRecipesD.address)) as WithdrawRecipes;
 
@@ -126,6 +143,18 @@ const PostDeployScript: DeployFunction = async function (hre: HardhatRuntimeEnvi
   console.log(":: Added DepositRecipes to Registry");
 
   await Registry.addNewContract(
+    hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("IncreaseLiquidityRecipes")),
+    increaseLiquidityRecipes.address,
+    ethers.utils.hexZeroPad(ethers.utils.hexlify(0), 32),
+    {
+      gasPrice: Config[chainId].gasPrice,
+      gasLimit: Config[chainId].gasLimit,
+    },
+  );
+  await new Promise((resolve) => setTimeout(resolve, Config[chainId].sleep));
+  console.log(":: Added IncreaseLiquidityRecipes to Registry");
+
+  await Registry.addNewContract(
     hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("WithdrawRecipes")),
     withdrawRecipes.address,
     ethers.utils.hexZeroPad(ethers.utils.hexlify(0), 32),
@@ -150,7 +179,6 @@ const PostDeployScript: DeployFunction = async function (hre: HardhatRuntimeEnvi
   console.log(":: Added GovernanceRecipes to Registry");
 
   // ****************** Add keeper(s) to the whitelist ******************
-  const { keeper } = await getNamedAccounts();
   await Registry.addKeeperToWhitelist(keeper, {
     gasPrice: Config[chainId].gasPrice,
     gasLimit: Config[chainId].gasLimit,
@@ -371,7 +399,7 @@ const PostDeployScript: DeployFunction = async function (hre: HardhatRuntimeEnvi
   const wethAddress = Config[chainId].wethAddress;
   await run("verify:verify", {
     address: (await deployments.get("Registry")).address,
-    constructorArguments: [deployer, deployer, maxTwapDeviation, twapDuration, usdcAddress, wethAddress],
+    constructorArguments: [governance, serviceFeeRecipient, maxTwapDeviation, twapDuration, usdcAddress, wethAddress],
   });
 
   await run("verify:verify", {
@@ -380,28 +408,28 @@ const PostDeployScript: DeployFunction = async function (hre: HardhatRuntimeEnvi
   });
 
   await run("verify:verify", {
-    address: (await deployments.get("Timelock")).address,
-    constructorArguments: [deployer, 21600],
+    address: (await deployments.get("RegistryAddressHolder")).address,
+    constructorArguments: [RegistryD.address],
   });
 
   await run("verify:verify", {
     address: (await deployments.get("UniswapAddressHolder")).address,
     constructorArguments: [
+      RegistryAddressHolderD.address,
       Config[chainId].nonfungiblePositionManager, //nonfungiblePositionManager address
       Config[chainId].uniswapV3Factory, //uniswapv3Factory address
       Config[chainId].swapRouter, //swapRouter address
-      Registry.address,
     ],
   });
 
   await run("verify:verify", {
     address: (await deployments.get("PositionManagerFactory")).address,
-    constructorArguments: [RegistryD.address, DiamondCutFacetD.address, UniswapAddressHolderD.address],
+    constructorArguments: [RegistryAddressHolderD.address, UniswapAddressHolderD.address, DiamondCutFacetD.address],
   });
 
   await run("verify:verify", {
     address: (await deployments.get("StrategyProviderWalletFactory")).address,
-    constructorArguments: [RegistryD.address, UniswapAddressHolderD.address],
+    constructorArguments: [RegistryAddressHolderD.address, UniswapAddressHolderD.address],
   });
 
   await run("verify:verify", {
@@ -445,45 +473,55 @@ const PostDeployScript: DeployFunction = async function (hre: HardhatRuntimeEnvi
   });
   await run("verify:verify", {
     address: (await deployments.get("IdleLiquidityModule")).address,
-    constructorArguments: [RegistryD.address, UniswapAddressHolderD.address],
+    constructorArguments: [RegistryAddressHolderD.address, UniswapAddressHolderD.address],
   });
   await run("verify:verify", {
     address: (await deployments.get("DepositRecipes")).address,
-    constructorArguments: [RegistryD.address, UniswapAddressHolderD.address],
+    constructorArguments: [RegistryAddressHolderD.address, UniswapAddressHolderD.address],
+  });
+  await run("verify:verify", {
+    address: (await deployments.get("IncreaseLiquidityRecipes")).address,
+    constructorArguments: [RegistryAddressHolderD.address, UniswapAddressHolderD.address],
   });
   await run("verify:verify", {
     address: (await deployments.get("WithdrawRecipes")).address,
-    constructorArguments: [RegistryD.address, UniswapAddressHolderD.address],
+    constructorArguments: [RegistryAddressHolderD.address, UniswapAddressHolderD.address],
   });
   await run("verify:verify", {
     address: (await deployments.get("GovernanceRecipes")).address,
-    constructorArguments: [RegistryD.address, UniswapAddressHolderD.address],
+    constructorArguments: [RegistryAddressHolderD.address, UniswapAddressHolderD.address],
   });
   await run("verify:verify", {
     address: (await deployments.get("PositionHelper")).address,
-    constructorArguments: [RegistryD.address, UniswapAddressHolderD.address],
+    constructorArguments: [RegistryAddressHolderD.address, UniswapAddressHolderD.address],
   });
   await run("verify:verify", {
     address: (await deployments.get("UniswapCalculator")).address,
-    constructorArguments: [RegistryD.address, UniswapAddressHolderD.address],
+    constructorArguments: [RegistryAddressHolderD.address, UniswapAddressHolderD.address],
   });
   await run("verify:verify", {
     address: (await deployments.get("ERC20Extended")).address,
     constructorArguments: [],
   });
+  await run("verify:verify", {
+    address: (await deployments.get("Timelock")).address,
+    constructorArguments: [governance, 21600],
+  });
 };
 
 export default PostDeployScript;
-PostDeployScript.tags = ["SmartVault", "PostDeploy"];
+PostDeployScript.tags = ["SmartVault", "PostDeployScript"];
 PostDeployScript.dependencies = [
   "Timelock",
   "Registry",
+  "RegistryAddressHolder",
   "DiamondCutFacet",
   "UniswapAddressHolder",
   "PositionManagerFactory",
   "StrategyProviderWalletFactory",
   "IdleLiquidityModule",
   "DepositRecipes",
+  "IncreaseLiquidityRecipes",
   "WithdrawRecipes",
   "GovernanceRecipes",
   "ClosePosition",

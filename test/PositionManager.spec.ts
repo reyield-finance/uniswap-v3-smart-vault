@@ -17,22 +17,26 @@ import {
   PositionManager,
   PositionManagerFactory,
   Registry,
+  RegistryAddressHolder,
   StrategyProviderWalletFactory,
   SwapToPositionRatio,
   UniswapAddressHolder,
   WithdrawRecipes,
 } from "../types";
 import {
+  RegistryAddressHolderFixture,
   RegistryFixture,
   deployContract,
   deployUniswapContracts,
   doAllApprovals,
   getSelectors,
+  mintSTDAmount,
   poolFixture,
   tokensFixture,
+  zeroAddress,
 } from "./shared/fixtures";
 
-describe("PositionManagerFactory.sol", function () {
+describe("PositionManager.sol", function () {
   let deployer: SignerWithAddress;
   let user: SignerWithAddress;
   let serviceFeeRecipient: SignerWithAddress;
@@ -40,6 +44,7 @@ describe("PositionManagerFactory.sol", function () {
   let usdValueTokenAddress: MockToken;
   let weth: MockToken;
   let Registry: Registry;
+  let registryAddressHolder: RegistryAddressHolder;
   let WETH: MockToken;
   let USDC: MockToken;
   let DAI: MockToken;
@@ -90,19 +95,19 @@ describe("PositionManagerFactory.sol", function () {
     //Deploy modules
     const IdleLiquidityModuleFactory = await ethers.getContractFactory("IdleLiquidityModule");
     ILM = (await IdleLiquidityModuleFactory.deploy(
-      Registry.address,
+      registryAddressHolder.address,
       UAH.address, //we don't need this contract for this test
     )) as IdleLiquidityModule;
 
     const DepositRecipesFactory = await ethers.getContractFactory("DepositRecipes");
     DR = (await DepositRecipesFactory.deploy(
-      Registry.address,
+      registryAddressHolder.address,
       UAH.address, //we don't need this contract for this test
     )) as DepositRecipes;
 
     const WithdrawRecipesFactory = await ethers.getContractFactory("WithdrawRecipes");
     WR = (await WithdrawRecipesFactory.deploy(
-      Registry.address,
+      registryAddressHolder.address,
       UAH.address, //we don't need this contract for this test
     )) as WithdrawRecipes;
   }
@@ -173,6 +178,7 @@ describe("PositionManagerFactory.sol", function () {
     serviceFeeRecipient = signers[2];
 
     await deployRegistry();
+    registryAddressHolder = (await RegistryAddressHolderFixture(Registry.address)).registryAddressHolderFixture;
 
     WETH = (await tokensFixture("WETH", 18)).tokenFixture;
     USDC = (await tokensFixture("USDC", 6)).tokenFixture;
@@ -181,10 +187,10 @@ describe("PositionManagerFactory.sol", function () {
     //deploy factory, used for pools
     const [uniswapFactory, nonFungible, swapRouter] = await deployUniswapContracts(WETH);
     UAH = (await deployContract("UniswapAddressHolder", [
+      registryAddressHolder.address,
       nonFungible.address,
       uniswapFactory.address,
       swapRouter.address,
-      Registry.address,
     ])) as UniswapAddressHolder;
     uniswapV3Factory = uniswapFactory as IUniswapV3Factory;
     nonFungiblePositionManager = nonFungible as INonfungiblePositionManager;
@@ -193,7 +199,9 @@ describe("PositionManagerFactory.sol", function () {
     await WETH.mint(await user.getAddress(), 100000n * 10n ** 18n);
     await USDC.mint(await user.getAddress(), 100000n * 10n ** 6n);
     await DAI.mint(await user.getAddress(), 100000n * 10n ** 6n);
-
+    await mintSTDAmount(USDC);
+    await mintSTDAmount(DAI);
+    await mintSTDAmount(WETH);
     DCF = (await deployContract("DiamondCutFacet")) as DiamondCutFacet;
 
     const mint = await ethers.getContractFactory("Mint");
@@ -205,10 +213,17 @@ describe("PositionManagerFactory.sol", function () {
     await swapToPositionRatioAction.deployed();
 
     const positionManagerFactory = await ethers.getContractFactory("PositionManagerFactory");
-    PMF = (await positionManagerFactory.deploy(Registry.address, DCF.address, UAH.address)) as PositionManagerFactory;
+    PMF = (await positionManagerFactory.deploy(
+      registryAddressHolder.address,
+      UAH.address,
+      DCF.address,
+    )) as PositionManagerFactory;
     await PMF.deployed();
     const strategyProviderWalletFactory = await ethers.getContractFactory("StrategyProviderWalletFactory");
-    SPWF = (await strategyProviderWalletFactory.deploy(Registry.address, UAH.address)) as StrategyProviderWalletFactory;
+    SPWF = (await strategyProviderWalletFactory.deploy(
+      registryAddressHolder.address,
+      UAH.address,
+    )) as StrategyProviderWalletFactory;
     await SPWF.deployed();
 
     await SPWF.connect(deployer).addCreatorWhitelist(PMF.address);
@@ -220,36 +235,46 @@ describe("PositionManagerFactory.sol", function () {
     await doAllApprovals([user], [nonFungiblePositionManager.address], [DAI, WETH, USDC]);
 
     // give pools some liquidity
-    const mintTx = await nonFungiblePositionManager.connect(user).mint({
-      token0: USDC.address,
-      token1: WETH.address,
-      fee: 500,
-      tickLower: 0 - 60 * 1000,
-      tickUpper: 0 + 60 * 1000,
-      amount0Desired: 1000n * 10n ** 6n,
-      amount1Desired: 1000n * 10n ** 18n,
-      amount0Min: 0,
-      amount1Min: 0,
-      recipient: PM.address,
-      deadline: Date.now() + 1000,
-    });
+    const mintTx = await nonFungiblePositionManager.connect(user).mint(
+      {
+        token0: USDC.address < WETH.address ? USDC.address : WETH.address,
+        token1: USDC.address < WETH.address ? WETH.address : USDC.address,
+        fee: 500,
+        tickLower: 0 - 600,
+        tickUpper: 0 + 600,
+        amount0Desired: 1000n * 10n ** 6n,
+        amount1Desired: 1000n * 10n ** 18n,
+        amount0Min: 0,
+        amount1Min: 0,
+        recipient: PM.address,
+        deadline: Date.now() + 1000,
+      },
+      {
+        gasLimit: 10000000,
+      },
+    );
 
     const events: any = (await mintTx.wait()).events;
     tokenId = await events[events.length - 1].args.tokenId.toNumber();
 
-    const mintTx2 = await nonFungiblePositionManager.connect(user).mint({
-      token0: USDC.address,
-      token1: WETH.address,
-      fee: 500,
-      tickLower: 0 - 60 * 1000,
-      tickUpper: 0 + 60 * 1000,
-      amount0Desired: 1000n * 10n ** 6n,
-      amount1Desired: 1000n * 10n ** 18n,
-      amount0Min: 0,
-      amount1Min: 0,
-      recipient: PM.address,
-      deadline: Date.now() + 1000,
-    });
+    const mintTx2 = await nonFungiblePositionManager.connect(user).mint(
+      {
+        token0: USDC.address < WETH.address ? USDC.address : WETH.address,
+        token1: USDC.address < WETH.address ? WETH.address : USDC.address,
+        fee: 500,
+        tickLower: 0 - 600,
+        tickUpper: 0 + 600,
+        amount0Desired: 1000n * 10n ** 6n,
+        amount1Desired: 1000n * 10n ** 18n,
+        amount0Min: 0,
+        amount1Min: 0,
+        recipient: PM.address,
+        deadline: Date.now() + 1000,
+      },
+      {
+        gasLimit: 10000000,
+      },
+    );
 
     const events2: any = (await mintTx2.wait()).events;
     tokenId2 = await events2[events2.length - 1].args.tokenId.toNumber();
@@ -261,7 +286,10 @@ describe("PositionManagerFactory.sol", function () {
         tokenId: tokenId,
         strategyProvider: await deployer.getAddress(),
         strategyId: ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16),
-        totalDepositUSDValue: 3000n * 10n ** 6n,
+        amount0Deposited: 1000n * 10n ** 6n,
+        amount1Deposited: 500n * 10n ** 18n,
+        amount0DepositedUsdValue: 300n * 10n ** 6n,
+        amount1DepositedUsdValue: 700n * 10n ** 18n,
         tickLowerDiff: -1n,
         tickUpperDiff: 1n,
         amount0Leftover: 12n,
@@ -287,24 +315,25 @@ describe("PositionManagerFactory.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenId);
       expect(positionInfo.strategyProvider).to.be.equal(await deployer.getAddress());
       expect(positionInfo.strategyId).to.be.equal(ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16));
-      expect(positionInfo.totalDepositUSDValue).to.be.equal(3000n * 10n ** 6n);
+      expect(positionInfo.amount0Deposited).to.be.equal(1000n * 10n ** 6n);
+      expect(positionInfo.amount1Deposited).to.be.equal(500n * 10n ** 18n);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.equal(300n * 10n ** 6n);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.equal(700n * 10n ** 18n);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(12n);
       expect(positionInfo.amount1Leftover).to.be.equal(10n);
       expect(positionInfo.tickLowerDiff).to.be.equal(-1n);
       expect(positionInfo.tickUpperDiff).to.be.equal(1n);
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await PM.getPositionSettlement(1);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
 
-      const { runningPositions } = await PM.getRunningPositions(0, 3);
-      expect(runningPositions.length).to.be.equal(1);
-      expect(runningPositions[0]).to.be.equal(1);
-
-      const { closedPositions } = await PM.getClosedPositions(0, 3);
-      expect(closedPositions.length).to.be.equal(0);
+      const counter = await PM.positionIdCounter();
+      expect(counter).to.be.equal(1);
+      expect(await PM.positionStatus(1)).to.be.equal(1); // running
 
       const { nfts } = await PM.getUniswapNFTs(0, 3);
       expect(nfts.length).to.be.equal(1);
@@ -314,7 +343,10 @@ describe("PositionManagerFactory.sol", function () {
         tokenId: tokenId2,
         strategyProvider: await deployer.getAddress(),
         strategyId: ethers.utils.hexZeroPad(ethers.utils.hexlify(2), 16),
-        totalDepositUSDValue: 3000n * 10n ** 6n,
+        amount0Deposited: 200n * 10n ** 6n,
+        amount1Deposited: 100n * 10n ** 18n,
+        amount0DepositedUsdValue: 30n * 10n ** 6n,
+        amount1DepositedUsdValue: 70n * 10n ** 18n,
         tickLowerDiff: -5n,
         tickUpperDiff: 5n,
         amount0Leftover: 11n,
@@ -326,26 +358,28 @@ describe("PositionManagerFactory.sol", function () {
         expect(positionInfo.tokenId).to.be.equal(tokenId2);
         expect(positionInfo.strategyProvider).to.be.equal(await deployer.getAddress());
         expect(positionInfo.strategyId).to.be.equal(ethers.utils.hexZeroPad(ethers.utils.hexlify(2), 16));
-        expect(positionInfo.totalDepositUSDValue).to.be.equal(3000n * 10n ** 6n);
+        expect(positionInfo.amount0Deposited).to.be.equal(200n * 10n ** 6n);
+        expect(positionInfo.amount1Deposited).to.be.equal(100n * 10n ** 18n);
+        expect(positionInfo.amount0DepositedUsdValue).to.be.equal(30n * 10n ** 6n);
+        expect(positionInfo.amount1DepositedUsdValue).to.be.equal(70n * 10n ** 18n);
         expect(positionInfo.amount0CollectedFee).to.be.equal(0);
         expect(positionInfo.amount1CollectedFee).to.be.equal(0);
         expect(positionInfo.amount0Leftover).to.be.equal(11n);
         expect(positionInfo.amount1Leftover).to.be.equal(100n);
         expect(positionInfo.tickLowerDiff).to.be.equal(-5n);
         expect(positionInfo.tickUpperDiff).to.be.equal(5n);
-        expect(positionInfo.amount0Returned).to.be.equal(0);
-        expect(positionInfo.amount1Returned).to.be.equal(0);
-        expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-        expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+        const positionSettlement = await PM.getPositionSettlement(2);
+        expect(positionSettlement.amount0Returned).to.be.equal(0);
+        expect(positionSettlement.amount1Returned).to.be.equal(0);
+        expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+        expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
+        expect(await PM.getPositionIdFromTokenId(tokenId2)).to.be.equal(2);
       }
       {
-        const { runningPositions } = await PM.getRunningPositions(0, 3);
-        expect(runningPositions.length).to.be.equal(2);
-        expect(runningPositions[0]).to.be.equal(1);
-        expect(runningPositions[1]).to.be.equal(2);
-
-        const { closedPositions } = await PM.getClosedPositions(0, 3);
-        expect(closedPositions.length).to.be.equal(0);
+        const counter = await PM.positionIdCounter();
+        expect(counter).to.be.equal(2);
+        expect(await PM.positionStatus(1)).to.be.equal(1); // running
+        expect(await PM.positionStatus(2)).to.be.equal(1); // running
 
         const { nfts } = await PM.getUniswapNFTs(0, 3);
         expect(nfts.length).to.be.equal(2);
@@ -353,28 +387,40 @@ describe("PositionManagerFactory.sol", function () {
         expect(nfts[1]).to.be.equal(tokenId2);
       }
 
-      await expect(await PM.connect(dummyWhitelist).isPositionRunning(1)).to.be.true;
-      await expect(await PM.connect(dummyWhitelist).isPositionRunning(2)).to.be.true;
-      await expect(await PM.connect(dummyWhitelist).isPositionRunning(3)).to.be.false;
+      expect(await PM.connect(dummyWhitelist).isPositionRunning(1)).to.be.true;
+      expect(await PM.connect(dummyWhitelist).isPositionRunning(2)).to.be.true;
+      expect(await PM.connect(dummyWhitelist).isPositionRunning(3)).to.be.false;
 
       // increase liquidity
-      await PM.connect(dummyWhitelist).middlewareIncreaseLiquidity(1, 2000000n * 10n ** 6n, 100n, 50n);
+      await PM.connect(dummyWhitelist).middlewareIncreaseLiquidity(
+        1,
+        2000000n * 10n ** 6n,
+        2000000n * 10n ** 6n,
+        2000000n * 10n ** 6n,
+        2000000n * 10n ** 6n,
+        100n,
+        50n,
+      );
       {
         const positionInfo = await PM.getPositionInfo(1);
         expect(positionInfo.tokenId).to.be.equal(tokenId);
         expect(positionInfo.strategyProvider).to.be.equal(await deployer.getAddress());
         expect(positionInfo.strategyId).to.be.equal(ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16));
-        expect(positionInfo.totalDepositUSDValue).to.be.equal(2000000n * 10n ** 6n);
+        expect(positionInfo.amount0Deposited).to.be.equal(2000000n * 10n ** 6n);
+        expect(positionInfo.amount1Deposited).to.be.equal(2000000n * 10n ** 6n);
+        expect(positionInfo.amount0DepositedUsdValue).to.be.equal(2000000n * 10n ** 6n);
+        expect(positionInfo.amount1DepositedUsdValue).to.be.equal(2000000n * 10n ** 6n);
         expect(positionInfo.amount0CollectedFee).to.be.equal(0);
         expect(positionInfo.amount1CollectedFee).to.be.equal(0);
         expect(positionInfo.amount0Leftover).to.be.equal(100n);
         expect(positionInfo.amount1Leftover).to.be.equal(50n);
         expect(positionInfo.tickLowerDiff).to.be.equal(-1n);
         expect(positionInfo.tickUpperDiff).to.be.equal(1n);
-        expect(positionInfo.amount0Returned).to.be.equal(0);
-        expect(positionInfo.amount1Returned).to.be.equal(0);
-        expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-        expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+        const positionSettlement = await PM.getPositionSettlement(1);
+        expect(positionSettlement.amount0Returned).to.be.equal(0);
+        expect(positionSettlement.amount1Returned).to.be.equal(0);
+        expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+        expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
       }
 
       // rebalance
@@ -384,17 +430,21 @@ describe("PositionManagerFactory.sol", function () {
         expect(positionInfo.tokenId).to.be.equal(tokenId2);
         expect(positionInfo.strategyProvider).to.be.equal(await deployer.getAddress());
         expect(positionInfo.strategyId).to.be.equal(ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16));
-        expect(positionInfo.totalDepositUSDValue).to.be.equal(2000000n * 10n ** 6n);
+        expect(positionInfo.amount0Deposited).to.be.equal(2000000n * 10n ** 6n);
+        expect(positionInfo.amount1Deposited).to.be.equal(2000000n * 10n ** 6n);
+        expect(positionInfo.amount0DepositedUsdValue).to.be.equal(2000000n * 10n ** 6n);
+        expect(positionInfo.amount1DepositedUsdValue).to.be.equal(2000000n * 10n ** 6n);
         expect(positionInfo.amount0CollectedFee).to.be.equal(2000n);
         expect(positionInfo.amount1CollectedFee).to.be.equal(4000n);
         expect(positionInfo.amount0Leftover).to.be.equal(0n);
         expect(positionInfo.amount1Leftover).to.be.equal(20n);
         expect(positionInfo.tickLowerDiff).to.be.equal(-2n);
         expect(positionInfo.tickUpperDiff).to.be.equal(2n);
-        expect(positionInfo.amount0Returned).to.be.equal(0);
-        expect(positionInfo.amount1Returned).to.be.equal(0);
-        expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-        expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+        const positionSettlement = await PM.getPositionSettlement(1);
+        expect(positionSettlement.amount0Returned).to.be.equal(0);
+        expect(positionSettlement.amount1Returned).to.be.equal(0);
+        expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+        expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
       }
 
       // close position
@@ -412,17 +462,21 @@ describe("PositionManagerFactory.sol", function () {
         expect(positionInfo.tokenId).to.be.equal(tokenId2);
         expect(positionInfo.strategyProvider).to.be.equal(await deployer.getAddress());
         expect(positionInfo.strategyId).to.be.equal(ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16));
-        expect(positionInfo.totalDepositUSDValue).to.be.equal(2000000n * 10n ** 6n);
+        expect(positionInfo.amount0Deposited).to.be.equal(2000000n * 10n ** 6n);
+        expect(positionInfo.amount1Deposited).to.be.equal(2000000n * 10n ** 6n);
+        expect(positionInfo.amount0DepositedUsdValue).to.be.equal(2000000n * 10n ** 6n);
+        expect(positionInfo.amount1DepositedUsdValue).to.be.equal(2000000n * 10n ** 6n);
         expect(positionInfo.amount0CollectedFee).to.be.equal(2000n * 10n ** 6n);
         expect(positionInfo.amount1CollectedFee).to.be.equal(2n * 10n ** 18n);
         expect(positionInfo.amount0Leftover).to.be.equal(0n);
         expect(positionInfo.amount1Leftover).to.be.equal(0n);
         expect(positionInfo.tickLowerDiff).to.be.equal(-2n);
         expect(positionInfo.tickUpperDiff).to.be.equal(2n);
-        expect(positionInfo.amount0Returned).to.be.equal(100n);
-        expect(positionInfo.amount1Returned).to.be.equal(200n);
-        expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(50n);
-        expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(100n);
+        const positionSettlement = await PM.getPositionSettlement(1);
+        expect(positionSettlement.amount0Returned).to.be.equal(100n);
+        expect(positionSettlement.amount1Returned).to.be.equal(200n);
+        expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(50n);
+        expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(100n);
       }
 
       expect(await PM.connect(dummyWhitelist).isPositionRunning(1)).to.be.false;
@@ -430,13 +484,10 @@ describe("PositionManagerFactory.sol", function () {
       expect(await PM.connect(dummyWhitelist).isPositionRunning(3)).to.be.false;
 
       {
-        const { runningPositions } = await PM.getRunningPositions(0, 3);
-        expect(runningPositions.length).to.be.equal(1);
-        expect(runningPositions[0]).to.be.equal(2);
-
-        const { closedPositions } = await PM.getClosedPositions(0, 3);
-        expect(closedPositions.length).to.be.equal(1);
-        expect(closedPositions[0]).to.be.equal(1);
+        const count = await PM.positionIdCounter();
+        expect(count).to.be.equal(2);
+        expect(await PM.positionStatus(1)).to.be.equal(2); // closed
+        expect(await PM.positionStatus(2)).to.be.equal(1); // running
 
         const { nfts } = await PM.getUniswapNFTs(0, 3);
         expect(nfts.length).to.be.equal(3);
@@ -452,7 +503,10 @@ describe("PositionManagerFactory.sol", function () {
           tokenId: tokenId,
           strategyProvider: await deployer.getAddress(),
           strategyId: ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16),
-          totalDepositUSDValue: 3000n * 10n ** 6n,
+          amount0Deposited: 1000n * 10n ** 6n,
+          amount1Deposited: 500n * 10n ** 18n,
+          amount0DepositedUsdValue: 300n * 10n ** 6n,
+          amount1DepositedUsdValue: 700n * 10n ** 18n,
           tickLowerDiff: -1n,
           tickUpperDiff: 1n,
           amount0Leftover: 12n,
@@ -460,9 +514,17 @@ describe("PositionManagerFactory.sol", function () {
         }),
       ).to.be.revertedWith("PMOW");
 
-      await expect(PM.connect(user).middlewareIncreaseLiquidity(1, 2000000n * 10n ** 6n, 100n, 50n)).to.be.revertedWith(
-        "PMOW",
-      );
+      await expect(
+        PM.connect(user).middlewareIncreaseLiquidity(
+          1,
+          2000000n * 10n ** 6n,
+          2000000n * 10n ** 6n,
+          2000000n * 10n ** 6n,
+          2000000n * 10n ** 6n,
+          100n,
+          50n,
+        ),
+      ).to.be.revertedWith("PMOW");
 
       await expect(
         PM.connect(user).middlewareRebalance(1, tokenId2, -2n, 2n, 2000n, 4000n, 0n, 20n),
@@ -482,22 +544,6 @@ describe("PositionManagerFactory.sol", function () {
     });
     it("Should success get owner", async () => {
       expect(await PM.getOwner()).to.be.equal(user.address);
-    });
-
-    it("Should success get tick diff", async () => {
-      await PM.connect(dummyWhitelist).createPosition({
-        tokenId: tokenId,
-        strategyProvider: await deployer.getAddress(),
-        strategyId: ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 16),
-        totalDepositUSDValue: 3000n * 10n ** 6n,
-        tickLowerDiff: -1n,
-        tickUpperDiff: 1n,
-        amount0Leftover: 12n,
-        amount1Leftover: 10n,
-      });
-      const ticks = await PM.getPositionTickDiffs(1);
-      expect(ticks[0]).to.be.equal(-1);
-      expect(ticks[1]).to.be.equal(1);
     });
 
     it("Should success withdraw erc20 by governance", async () => {

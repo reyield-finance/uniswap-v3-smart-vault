@@ -29,18 +29,20 @@ contract ShareProfit is IShareProfit {
         ShareProfitInput calldata inputs
     ) external override returns (ShareProfitOutput memory outputs) {
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
-        uint24[] memory allowableFeeTiers = Storage.registry.getAllowableFeeTiers();
+        IRegistry registry = IRegistry(Storage.registryAddressHolder.registry());
+
+        uint24[] memory allowableFeeTiers = registry.getAllowableFeeTiers();
 
         uint256 amount0PerformanceFee;
         uint256 amount1PerformanceFee;
         {
             uint256 token0UsdValue;
             uint256 token0UsdPrice;
-            if (inputs.token0 != Storage.registry.usdValueTokenAddress()) {
-                address token0UsdValueTokenDeepestPool = UniswapHelper._findV3DeepestPool(
+            if (inputs.token0 != registry.usdValueTokenAddress()) {
+                address token0UsdValueTokenDeepestPool = UniswapHelper.findV3DeepestPool(
                     Storage.uniswapAddressHolder.uniswapV3FactoryAddress(),
                     inputs.token0,
-                    Storage.registry.usdValueTokenAddress(),
+                    registry.usdValueTokenAddress(),
                     allowableFeeTiers
                 );
 
@@ -49,14 +51,10 @@ contract ShareProfit is IShareProfit {
                     sqrtPriceX96,
                     MathHelper.fromUint256ToUint128(inputs.amount0),
                     inputs.token0,
-                    Storage.registry.usdValueTokenAddress()
+                    registry.usdValueTokenAddress()
                 );
 
-                token0UsdPrice = SwapHelper.getPrice(
-                    sqrtPriceX96,
-                    inputs.token0,
-                    Storage.registry.usdValueTokenAddress()
-                );
+                token0UsdPrice = SwapHelper.getPrice(sqrtPriceX96, inputs.token0, registry.usdValueTokenAddress());
             } else {
                 token0UsdValue = inputs.amount0;
                 token0UsdPrice = SwapHelper.getPriceWithSameToken(inputs.token0);
@@ -64,11 +62,11 @@ contract ShareProfit is IShareProfit {
 
             uint256 token1UsdValue;
             uint256 token1UsdPrice;
-            if (inputs.token1 != Storage.registry.usdValueTokenAddress()) {
-                address token1UsdValueTokenDeepestPool = UniswapHelper._findV3DeepestPool(
+            if (inputs.token1 != registry.usdValueTokenAddress()) {
+                address token1UsdValueTokenDeepestPool = UniswapHelper.findV3DeepestPool(
                     Storage.uniswapAddressHolder.uniswapV3FactoryAddress(),
                     inputs.token1,
-                    Storage.registry.usdValueTokenAddress(),
+                    registry.usdValueTokenAddress(),
                     allowableFeeTiers
                 );
 
@@ -77,14 +75,10 @@ contract ShareProfit is IShareProfit {
                     sqrtPriceX96,
                     MathHelper.fromUint256ToUint128(inputs.amount1),
                     inputs.token1,
-                    Storage.registry.usdValueTokenAddress()
+                    registry.usdValueTokenAddress()
                 );
 
-                token1UsdPrice = SwapHelper.getPrice(
-                    sqrtPriceX96,
-                    inputs.token1,
-                    Storage.registry.usdValueTokenAddress()
-                );
+                token1UsdPrice = SwapHelper.getPrice(sqrtPriceX96, inputs.token1, registry.usdValueTokenAddress());
             } else {
                 token1UsdValue = inputs.amount1;
                 token1UsdPrice = SwapHelper.getPriceWithSameToken(inputs.token1);
@@ -171,7 +165,7 @@ contract ShareProfit is IShareProfit {
     ) internal returns (uint256 amount0Received, uint256 amount1Received) {
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
 
-        address deepestPool = UniswapHelper._findV3DeepestPool(
+        address deepestPool = UniswapHelper.findV3DeepestPool(
             Storage.uniswapAddressHolder.uniswapV3FactoryAddress(),
             token0,
             token1,
@@ -208,18 +202,19 @@ contract ShareProfit is IShareProfit {
 
     function _share(_ShareParams memory params) internal returns (_ShareResult memory result) {
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
+        IRegistry registry = IRegistry(Storage.registryAddressHolder.registry());
 
         uint256 amount0ServiceFee;
         uint256 amount1ServiceFee;
         if (params.amount0PerformanceFee > 0) {
             amount0ServiceFee = _calServiceFee(
                 params.amount0PerformanceFee,
-                Storage.registry.serviceFeeDenominator(),
+                registry.serviceFeeDenominator(),
                 params.serviceFeeRatio
             );
             if (amount0ServiceFee > 0) {
                 result.serviceFeeAmount0 = amount0ServiceFee;
-                IERC20(params.token0).safeTransfer(Storage.registry.serviceFeeRecipient(), amount0ServiceFee);
+                IERC20(params.token0).safeTransfer(registry.serviceFeeRecipient(), amount0ServiceFee);
             }
 
             if (params.amount0PerformanceFee > amount0ServiceFee) {
@@ -230,12 +225,12 @@ contract ShareProfit is IShareProfit {
         if (params.amount1PerformanceFee > 0) {
             amount1ServiceFee = _calServiceFee(
                 params.amount1PerformanceFee,
-                Storage.registry.serviceFeeDenominator(),
+                registry.serviceFeeDenominator(),
                 params.serviceFeeRatio
             );
             if (amount1ServiceFee > 0) {
                 result.serviceFeeAmount1 = amount1ServiceFee;
-                IERC20(params.token1).safeTransfer(Storage.registry.serviceFeeRecipient(), amount1ServiceFee);
+                IERC20(params.token1).safeTransfer(registry.serviceFeeRecipient(), amount1ServiceFee);
             }
             if (params.amount1PerformanceFee > amount1ServiceFee) {
                 result.performanceFeeAmount1 = params.amount1PerformanceFee.sub(amount1ServiceFee);
@@ -261,14 +256,11 @@ contract ShareProfit is IShareProfit {
         uint256 amountIn
     ) internal returns (uint256 amountOut) {
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
+        IRegistry registry = IRegistry(Storage.registryAddressHolder.registry());
 
-        SwapHelper.checkDeviation(
-            IUniswapV3Pool(deepestPool),
-            Storage.registry.maxTwapDeviation(),
-            Storage.registry.twapDuration()
-        );
+        SwapHelper.checkDeviation(IUniswapV3Pool(deepestPool), registry.maxTwapDeviation(), registry.twapDuration());
 
-        ERC20Helper._approveToken(tokenIn, Storage.uniswapAddressHolder.swapRouterAddress(), amountIn);
+        ERC20Helper.approveToken(tokenIn, Storage.uniswapAddressHolder.swapRouterAddress(), amountIn);
 
         //snapshot balance before swap
         uint256 tokenInBalanceBeforeSwap = IERC20(tokenIn).balanceOf(address(this));

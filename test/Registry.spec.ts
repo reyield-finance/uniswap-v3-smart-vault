@@ -4,8 +4,15 @@ import { Signer } from "ethers";
 import { AbiCoder } from "ethers/lib/utils";
 import hre, { ethers } from "hardhat";
 
-import { DepositRecipes, IdleLiquidityModule, MockToken, Registry, WithdrawRecipes } from "../types";
-import { RegistryFixture, tokensFixture } from "./shared/fixtures";
+import {
+  DepositRecipes,
+  IdleLiquidityModule,
+  MockToken,
+  Registry,
+  RegistryAddressHolder,
+  WithdrawRecipes,
+} from "../types";
+import { RegistryAddressHolderFixture, RegistryFixture, deployContract, tokensFixture } from "./shared/fixtures";
 
 describe("Registry.sol", function () {
   let deployer: Signer;
@@ -14,6 +21,7 @@ describe("Registry.sol", function () {
   let usdValueTokenAddress: MockToken;
   let weth: MockToken;
   let Registry: Registry;
+  let registryAddressHolder: RegistryAddressHolder;
   let ILM: IdleLiquidityModule;
   let DR: DepositRecipes;
   let WR: WithdrawRecipes;
@@ -53,19 +61,19 @@ describe("Registry.sol", function () {
     //Deploy modules
     const IdleLiquidityModuleFactory = await ethers.getContractFactory("IdleLiquidityModule");
     ILM = (await IdleLiquidityModuleFactory.deploy(
-      Registry.address,
+      registryAddressHolder.address,
       "0x0000000000000000000000000000000000000001", //we don't need this contract for this test
     )) as IdleLiquidityModule;
 
     const DepositRecipesFactory = await ethers.getContractFactory("DepositRecipes");
     DR = (await DepositRecipesFactory.deploy(
-      Registry.address,
+      registryAddressHolder.address,
       "0x0000000000000000000000000000000000000001", //we don't need this contract for this test
     )) as DepositRecipes;
 
     const WithdrawRecipesFactory = await ethers.getContractFactory("WithdrawRecipes");
     WR = (await WithdrawRecipesFactory.deploy(
-      Registry.address,
+      registryAddressHolder.address,
       "0x0000000000000000000000000000000000000001", //we don't need this contract for this test
     )) as WithdrawRecipes;
   }
@@ -77,6 +85,9 @@ describe("Registry.sol", function () {
     serviceFeeRecipient = signers[2];
 
     await deployRegistry();
+
+    registryAddressHolder = (await RegistryAddressHolderFixture(Registry.address)).registryAddressHolderFixture;
+
     await deployModules();
 
     abiCoder = ethers.utils.defaultAbiCoder;
@@ -115,6 +126,9 @@ describe("Registry.sol", function () {
 
       await Registry.deactivateFeeTier(100);
       expect(await Registry.allowableFeeTiers(100)).to.be.false;
+      (await Registry.getAllowableFeeTiers()).forEach((value) => {
+        expect(value).to.not.be.equal(100);
+      });
 
       const newFeeTiers: number[] = await Registry.getFeeTiers();
       expect(newFeeTiers[0]).to.be.equal(200);
@@ -138,10 +152,10 @@ describe("Registry.sol", function () {
   describe("ServiceFee", function () {
     // Service fee
     it("Should init success", async function () {
-      expect(await Registry.licnesesToServiceFeeRatio(1)).to.be.equal(15_000_000);
-      expect(await Registry.licnesesToServiceFeeRatio(3)).to.be.equal(12_662_384);
-      expect(await Registry.licnesesToServiceFeeRatio(19)).to.be.equal(3_265_195);
-      expect(await Registry.licnesesToServiceFeeRatio(20)).to.be.equal(3_000_000);
+      expect(await Registry.licensesToServiceFeeRatio(1)).to.be.equal(15_000_000);
+      expect(await Registry.licensesToServiceFeeRatio(3)).to.be.equal(12_662_384);
+      expect(await Registry.licensesToServiceFeeRatio(19)).to.be.equal(3_265_195);
+      expect(await Registry.licensesToServiceFeeRatio(20)).to.be.equal(3_000_000);
       expect(await Registry.getServiceFeeRatioFromLicenseAmount(1)).to.be.equal(15_000_000);
       expect(await Registry.getServiceFeeRatioFromLicenseAmount(21)).to.be.equal(3_000_000);
       expect(await Registry.getServiceFeeRatioFromLicenseAmount(30)).to.be.equal(3_000_000);
@@ -160,6 +174,7 @@ describe("Registry.sol", function () {
       const limID = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("IdleLiquidityModule"));
       await Registry.connect(deployer).addNewContract(limID, ILM.address, hre.ethers.utils.formatBytes32String("1"));
       const moduleInfo = await Registry.getModuleInfo(limID);
+      expect(await Registry.activeModule(ILM.address)).to.true;
 
       expect(moduleInfo.contractAddress).to.be.equal(ILM.address);
       expect(moduleInfo.defaultData).to.be.equal(hre.ethers.utils.formatBytes32String("1"));
@@ -167,14 +182,14 @@ describe("Registry.sol", function () {
       const drID = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("DepositRecipes"));
       await Registry.connect(deployer).addNewContract(drID, DR.address, hre.ethers.utils.formatBytes32String("2"));
       const moduleInfo2 = await Registry.getModuleInfo(drID);
-
+      expect(await Registry.activeModule(DR.address)).to.true;
       expect(moduleInfo2.contractAddress).to.be.equal(DR.address);
       expect(moduleInfo2.defaultData).to.be.equal(hre.ethers.utils.formatBytes32String("2"));
 
       const wrID = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("WithdrawRecipes"));
       await Registry.connect(deployer).addNewContract(wrID, WR.address, hre.ethers.utils.formatBytes32String("3"));
       const moduleInfo3 = await Registry.getModuleInfo(wrID);
-
+      expect(await Registry.activeModule(WR.address)).to.true;
       expect(moduleInfo3.contractAddress).to.be.equal(WR.address);
       expect(moduleInfo3.defaultData).to.be.equal(hre.ethers.utils.formatBytes32String("3"));
     });
@@ -183,35 +198,66 @@ describe("Registry.sol", function () {
       const limID = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("IdleLiquidityModule"));
       await Registry.connect(deployer).addNewContract(limID, ILM.address, hre.ethers.utils.formatBytes32String("1"));
       const moduleInfo = await Registry.getModuleInfo(limID);
-
+      expect(await Registry.activeModule(ILM.address)).to.true;
       expect(moduleInfo.contractAddress).to.be.equal(ILM.address);
       expect(moduleInfo.defaultData).to.be.equal(hre.ethers.utils.formatBytes32String("1"));
 
       await Registry.connect(deployer).removeContract(limID);
       const module2Info = await Registry.getModuleInfo(limID);
-
+      expect(await Registry.activeModule(ILM.address)).to.false;
       expect(module2Info.contractAddress).to.be.equal(hre.ethers.constants.AddressZero);
       expect(module2Info.defaultData).to.be.equal(hre.ethers.constants.HashZero);
+
+      const keys = await Registry.getModuleKeys();
+      keys.forEach((value) => {
+        expect(value).to.not.be.equal(limID);
+      });
     });
 
     it("Should success if governance change module", async function () {
       const limID = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("IdleLiquidityModule"));
       await Registry.connect(deployer).addNewContract(limID, ILM.address, hre.ethers.utils.formatBytes32String("1"));
       const moduleInfo = await Registry.getModuleInfo(limID);
+      expect(await Registry.activeModule(ILM.address)).to.true;
+      expect(await Registry.activeModule(DR.address)).to.false;
       expect(moduleInfo.contractAddress).to.be.equal(ILM.address);
       expect(moduleInfo.defaultData).to.be.equal(hre.ethers.utils.formatBytes32String("1"));
 
       await Registry.connect(deployer).changeContract(limID, DR.address);
       const module2Info = await Registry.getModuleInfo(limID);
-
+      expect(await Registry.activeModule(ILM.address)).to.false;
+      expect(await Registry.activeModule(DR.address)).to.true;
       expect(module2Info.contractAddress).to.be.equal(DR.address);
       expect(module2Info.defaultData).to.be.equal(hre.ethers.utils.formatBytes32String("1"));
+    });
+
+    it("Should fail if add the exist module", async function () {
+      const limID = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("IdleLiquidityModule"));
+      await Registry.connect(deployer).addNewContract(limID, ILM.address, hre.ethers.utils.formatBytes32String("1"));
+      const moduleInfo = await Registry.getModuleInfo(limID);
+      expect(await Registry.activeModule(ILM.address)).to.true;
+      expect(moduleInfo.contractAddress).to.be.equal(ILM.address);
+      expect(moduleInfo.defaultData).to.be.equal(hre.ethers.utils.formatBytes32String("1"));
+
+      await expect(
+        Registry.connect(deployer).addNewContract(limID, ILM.address, hre.ethers.utils.formatBytes32String("2")),
+      ).to.be.revertedWith("RAC");
+
+      await expect(
+        Registry.connect(deployer).addNewContract(limID, DR.address, hre.ethers.utils.formatBytes32String("2")),
+      ).to.be.revertedWith("RAC");
+
+      const drID = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("DepositRecipes"));
+      await expect(
+        Registry.connect(deployer).addNewContract(drID, ILM.address, hre.ethers.utils.formatBytes32String("2")),
+      ).to.be.revertedWith("RAC");
     });
 
     it("Should success if governance set module default data", async function () {
       const limID = hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("IdleLiquidityModule"));
       await Registry.connect(deployer).addNewContract(limID, ILM.address, abiCoder.encode(["uint256"], ["69"]));
       const moduleInfo = await Registry.getModuleInfo(limID);
+      expect(await Registry.activeModule(ILM.address)).to.true;
       expect(moduleInfo.contractAddress).to.be.equal(ILM.address);
       expect(moduleInfo.defaultData).to.be.equal(abiCoder.encode(["uint256"], ["69"]));
 
@@ -313,6 +359,9 @@ describe("Registry.sol", function () {
       await Registry.connect(deployer).setStrategyProviderWalletFactory(dummyAddress);
       expect(await Registry.strategyProviderWalletFactoryAddress()).to.be.equal(dummyAddress);
 
+      await Registry.connect(deployer).setOfficialAccount(dummyAddress);
+      expect(await Registry.officialAccount()).to.be.equal(dummyAddress);
+
       await Registry.connect(deployer).changeGovernance(dummyAddress);
       expect(await Registry.governance()).to.be.equal(dummyAddress);
     });
@@ -324,6 +373,7 @@ describe("Registry.sol", function () {
       await expect(Registry.connect(user).setWETH9(dummyAddress)).to.be.revertedWith("ROG");
       await expect(Registry.connect(user).setPositionManagerFactory(dummyAddress)).to.be.revertedWith("ROG");
       await expect(Registry.connect(user).setStrategyProviderWalletFactory(dummyAddress)).to.be.revertedWith("ROG");
+      await expect(Registry.connect(user).setOfficialAccount(dummyAddress)).to.be.revertedWith("ROG");
       await expect(Registry.connect(user).changeGovernance(dummyAddress)).to.be.revertedWith("ROG");
     });
   });

@@ -11,12 +11,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { deployer } = await getNamedAccounts();
 
-  const UniswapAddressHolder = await deployments.get("UniswapAddressHolder");
-  const registry = await deployments.get("Registry");
+  const registryAddressHolder = await deployments.get("RegistryAddressHolder");
+  const uniswapAddressHolder = await deployments.get("UniswapAddressHolder");
 
   await deploy("DepositRecipes", {
     from: deployer,
-    args: [registry.address, UniswapAddressHolder.address],
+    args: [registryAddressHolder.address, uniswapAddressHolder.address],
     log: true,
     autoMine: true,
     gasLimit: Config[chainId].gasLimit,

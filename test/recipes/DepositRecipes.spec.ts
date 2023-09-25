@@ -13,15 +13,18 @@ import {
   ISwapRouter,
   IUniswapV3Pool,
   IZapIn,
+  IncreaseLiquidityRecipes,
   MockToken,
   MockWETH9,
   PositionManager,
   PositionManagerFactory,
   Registry,
+  RegistryAddressHolder,
   StrategyProviderWallet,
   StrategyProviderWalletFactory,
 } from "../../types";
 import {
+  RegistryAddressHolderFixture,
   RegistryFixture,
   deployContract,
   deployPositionManagerFactoryAndActions,
@@ -48,6 +51,7 @@ describe("DepositRecipes.sol", function () {
   let serviceFeeRecipient: SignerWithAddress;
   let strategyProvider: SignerWithAddress;
   let registry: Registry;
+  let registryAddressHolder: RegistryAddressHolder;
 
   //all the token used globally
   let tokenWETH9: MockWETH9;
@@ -66,6 +70,7 @@ describe("DepositRecipes.sol", function () {
   let positionManager2: PositionManager; // Position manager contract
   let strategyProviderWalletFactory: StrategyProviderWalletFactory;
   let depositRecipes: DepositRecipes;
+  let increaseLiquidityRecipes: IncreaseLiquidityRecipes;
 
   function getToken0Token1(token0: MockToken, token1: MockToken): [MockToken, MockToken, boolean] {
     return token0.address < token1.address ? [token0, token1, false] : [token1, token0, true];
@@ -123,46 +128,57 @@ describe("DepositRecipes.sol", function () {
         tokenWETH.address,
       )
     ).registryFixture;
+    registryAddressHolder = (await RegistryAddressHolderFixture(registry.address)).registryAddressHolderFixture;
     const uniswapAddressHolder = await deployContract("UniswapAddressHolder", [
+      registryAddressHolder.address,
       nonFungiblePositionManager.address,
       uniswapV3Factory.address,
       swapRouter.address,
-      registry.address,
     ]);
     const diamondCutFacet = await deployContract("DiamondCutFacet");
 
     //deploy the PositionManagerFactory => deploy PositionManager
     const positionManagerFactory = (await deployPositionManagerFactoryAndActions(
-      registry.address,
-      diamondCutFacet.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
+      diamondCutFacet.address,
       ["IncreaseLiquidity", "SingleTokenIncreaseLiquidity", "Mint", "ZapIn"],
     )) as PositionManagerFactory;
 
     const strategyProviderWalletFactoryFactory = await ethers.getContractFactory("StrategyProviderWalletFactory");
     strategyProviderWalletFactory = (await strategyProviderWalletFactoryFactory.deploy(
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     )) as StrategyProviderWalletFactory;
     await strategyProviderWalletFactory.deployed();
 
     await strategyProviderWalletFactory.addCreatorWhitelist(positionManagerFactory.address);
-
+    
     //registry setup
     await registry.setPositionManagerFactory(positionManagerFactory.address);
     await registry.setStrategyProviderWalletFactory(strategyProviderWalletFactory.address);
 
     //deploy DepositRecipes contract
     depositRecipes = (await deployContract("DepositRecipes", [
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     ])) as DepositRecipes;
-
+    increaseLiquidityRecipes = (await deployContract("IncreaseLiquidityRecipes", [
+      registryAddressHolder.address,
+      uniswapAddressHolder.address,
+    ])) as IncreaseLiquidityRecipes;
     await registry.addNewContract(
       hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("DepositRecipes")),
       depositRecipes.address,
       hre.ethers.utils.formatBytes32String("1"),
     );
+
+    await registry.addNewContract(
+      hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("IncreaseLiquidityRecipes")),
+      increaseLiquidityRecipes.address,
+      hre.ethers.utils.formatBytes32String("1"),
+    );
+
     await registry.addNewContract(
       hre.ethers.utils.keccak256(hre.ethers.utils.toUtf8Bytes("PositionManagerFactory")),
       positionManagerFactory.address,
@@ -187,7 +203,12 @@ describe("DepositRecipes.sol", function () {
     //APPROVE
     await doAllApprovals(
       [user, liquidityProvider],
-      [nonFungiblePositionManager.address, positionManager.address, depositRecipes.address],
+      [
+        nonFungiblePositionManager.address,
+        positionManager.address,
+        depositRecipes.address,
+        increaseLiquidityRecipes.address,
+      ],
       [tokenWETH, tokenUSDC, tokenUSDT, tokenOP],
     );
     //approval nfts
@@ -198,8 +219,8 @@ describe("DepositRecipes.sol", function () {
     // give pool some liquidity
     const r = await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenOP.address,
-        token1: tokenUSDT.address,
+        token0: tokenOP.address < tokenUSDT.address ? tokenOP.address : tokenUSDT.address,
+        token1: tokenUSDT.address > tokenOP.address ? tokenUSDT.address : tokenOP.address,
         fee: 3000,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -217,8 +238,8 @@ describe("DepositRecipes.sol", function () {
     // give pool some liquidity
     await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenUSDC.address,
-        token1: tokenOP.address,
+        token0: tokenUSDC.address < tokenOP.address ? tokenUSDC.address : tokenOP.address,
+        token1: tokenOP.address > tokenUSDC.address ? tokenOP.address : tokenUSDC.address,
         fee: 3000,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -235,8 +256,8 @@ describe("DepositRecipes.sol", function () {
     // give pool some liquidity
     await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenUSDC.address,
-        token1: tokenUSDT.address,
+        token0: tokenUSDC.address < tokenUSDT.address ? tokenUSDC.address : tokenUSDT.address,
+        token1: tokenUSDT.address > tokenUSDC.address ? tokenUSDT.address : tokenUSDC.address,
         fee: 3000,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -298,6 +319,7 @@ describe("DepositRecipes.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
           amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -313,17 +335,21 @@ describe("DepositRecipes.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(zeroAddress);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(0);
       expect(positionInfo.amount1Leftover).to.be.equal(0);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
     });
 
     it("depositListedStrategy", async function () {
@@ -347,17 +373,7 @@ describe("DepositRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", 2, "3");
 
       const txDeposit = await depositRecipes.connect(user).depositListedStrategy({
         token0: token0.address,
@@ -395,6 +411,7 @@ describe("DepositRecipes.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
           amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -411,17 +428,22 @@ describe("DepositRecipes.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(user2.address);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(0);
       expect(positionInfo.amount1Leftover).to.be.equal(0);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
     });
 
     it("increaseLiquidity", async function () {
@@ -445,17 +467,7 @@ describe("DepositRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", 2, "3");
 
       const txDeposit = await depositRecipes.connect(user).depositListedStrategy({
         token0: token0.address,
@@ -493,6 +505,7 @@ describe("DepositRecipes.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
           amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -509,26 +522,32 @@ describe("DepositRecipes.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(user2.address);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(0);
       expect(positionInfo.amount1Leftover).to.be.equal(0);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
 
       // increase liquidity
       const user0BalanceBeforeIncrease = await token0.balanceOf(user.address);
       const user1BalanceBeforeIncrease = await token1.balanceOf(user.address);
       const amount0Increase: BigNumber = BigNumber.from(3n * 10n ** 18n);
       const amount1Increase: BigNumber = BigNumber.from(4n * 10n ** 18n);
-      const txIncreased = await depositRecipes
-        .connect(user)
-        .increaseLiquidity(positionIdInLog, amount0Increase, amount1Increase);
+      const txIncreased = await increaseLiquidityRecipes.connect(user).increaseLiquidity({
+        positionId: positionIdInLog,
+        amount0Desired: amount0Increase,
+        amount1Desired: amount1Increase,
+      });
       const receiptIncreased = await txIncreased.wait();
       const eventsIncreased: any = receiptIncreased.events;
       const fromInLogIncreased = eventsIncreased[eventsIncreased.length - 1].args.from;
@@ -549,6 +568,7 @@ describe("DepositRecipes.sol", function () {
           tokenIdIncreasedInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amount0Increased = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
           amount1Increased = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          break;
         }
       }
       expect(countIncreased).to.be.equal(1);
@@ -563,17 +583,22 @@ describe("DepositRecipes.sol", function () {
       expect(positionInfoIncreased.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfoIncreased.strategyProvider).to.be.equal(user2.address);
       expect(positionInfoIncreased.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfoIncreased.totalDepositUSDValue).to.be.greaterThan(positionInfo.totalDepositUSDValue);
+      expect(positionInfoIncreased.amount0Deposited).to.be.equal(amount0Deposited.add(amount0Increased));
+      expect(positionInfoIncreased.amount1Deposited).to.be.equal(amount1Deposited.add(amount1Increased));
+      expect(positionInfoIncreased.amount0DepositedUsdValue).to.be.greaterThan(positionInfo.amount0DepositedUsdValue);
+      expect(positionInfoIncreased.amount1DepositedUsdValue).to.be.greaterThan(positionInfo.amount1DepositedUsdValue);
       expect(positionInfoIncreased.amount0CollectedFee).to.be.equal(0);
       expect(positionInfoIncreased.amount1CollectedFee).to.be.equal(0);
       expect(positionInfoIncreased.amount0Leftover).to.be.equal(0);
       expect(positionInfoIncreased.amount1Leftover).to.be.equal(0);
       expect(positionInfoIncreased.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfoIncreased.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfoIncreased.amount0Returned).to.be.equal(0);
-      expect(positionInfoIncreased.amount1Returned).to.be.equal(0);
-      expect(positionInfoIncreased.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfoIncreased.amount1ReturnedUsdValue).to.be.equal(0);
+
+      const positionSettlementIncreased = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlementIncreased.amount0Returned).to.be.equal(0);
+      expect(positionSettlementIncreased.amount1Returned).to.be.equal(0);
+      expect(positionSettlementIncreased.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlementIncreased.amount1ReturnedUsdValue).to.be.equal(0);
     });
 
     it("singleTokenDeposit", async function () {
@@ -611,7 +636,7 @@ describe("DepositRecipes.sol", function () {
       expect(strategyIdInLog).to.be.equal(strategyId);
 
       let amount0Deposited: BigNumber = BigNumber.from(0);
-      // let amount1Deposited: BigNumber = BigNumber.from(0);
+      let amount1Deposited: BigNumber = BigNumber.from(0);
       let amountInInLog: BigNumber = BigNumber.from(0);
       let tokenIdInLog: BigNumber = BigNumber.from(0);
       let amount0LeftoverInLog: BigNumber = BigNumber.from(0);
@@ -624,9 +649,10 @@ describe("DepositRecipes.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amountInInLog = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[3])));
-          // amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
+          amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
           amount0LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[5])));
           amount1LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[6])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -636,17 +662,21 @@ describe("DepositRecipes.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(zeroAddress);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited.add(amount0LeftoverInLog));
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited.add(amount1LeftoverInLog));
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(amount0LeftoverInLog);
       expect(positionInfo.amount1Leftover).to.be.equal(amount1LeftoverInLog);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
       // user
       expect(await token0.balanceOf(user.address)).to.lessThan(user0BalanceBefore.sub(amount0Deposited));
       expect(await token1.balanceOf(user.address)).to.equal(user1BalanceBefore);
@@ -676,17 +706,7 @@ describe("DepositRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", 2, "3");
 
       const txDeposit = await depositRecipes.connect(user).singleTokenDepositListedStrategy({
         token0: token0.address,
@@ -711,7 +731,7 @@ describe("DepositRecipes.sol", function () {
       expect(strategyIdInLog).to.be.equal(strategyId);
 
       let amount0Deposited: BigNumber = BigNumber.from(0);
-      // let amount1Deposited: BigNumber = BigNumber.from(0);
+      let amount1Deposited: BigNumber = BigNumber.from(0);
       let amountInInLog: BigNumber = BigNumber.from(0);
       let tokenIdInLog: BigNumber = BigNumber.from(0);
       let amount0LeftoverInLog: BigNumber = BigNumber.from(0);
@@ -724,9 +744,10 @@ describe("DepositRecipes.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amountInInLog = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[3])));
-          // amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
+          amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
           amount0LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[5])));
           amount1LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[6])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -736,17 +757,21 @@ describe("DepositRecipes.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(user2.address);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited.add(amount0LeftoverInLog));
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited.add(amount1LeftoverInLog));
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(amount0LeftoverInLog);
       expect(positionInfo.amount1Leftover).to.be.equal(amount1LeftoverInLog);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
       // user
       expect(await token0.balanceOf(user.address)).to.lessThan(user0BalanceBefore.sub(amount0Deposited));
       expect(await token1.balanceOf(user.address)).to.equal(user1BalanceBefore);
@@ -776,17 +801,7 @@ describe("DepositRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", 2, "3");
 
       const txDeposit = await depositRecipes.connect(user).depositListedStrategy({
         token0: token0.address,
@@ -824,6 +839,7 @@ describe("DepositRecipes.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
           amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -840,17 +856,21 @@ describe("DepositRecipes.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(user2.address);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(0);
       expect(positionInfo.amount1Leftover).to.be.equal(0);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
 
       // single token increase liquidity
       const user0BalanceBeforeIncrease = await token0.balanceOf(user.address);
@@ -858,9 +878,11 @@ describe("DepositRecipes.sol", function () {
       const amount0Increase: BigNumber = BigNumber.from(3n * 10n ** 18n);
       // const amount1Increase: BigNumber = BigNumber.from(4n * 10n ** 18n);
       const isToken0In = true;
-      const txIncreased = await depositRecipes
-        .connect(user)
-        .singleTokenIncreaseLiquidity(positionIdInLog, isToken0In, amount0Increase);
+      const txIncreased = await increaseLiquidityRecipes.connect(user).singleTokenIncreaseLiquidity({
+        positionId: positionIdInLog,
+        amount: amount0Increase,
+        isToken0In: isToken0In,
+      });
       const receiptIncreased = await txIncreased.wait();
       const eventsIncreased: any = receiptIncreased.events;
       const fromInLogIncreased = eventsIncreased[eventsIncreased.length - 1].args.from;
@@ -870,7 +892,7 @@ describe("DepositRecipes.sol", function () {
       expect(positionIdInLogIncreased).to.be.equal(positionIdInLog);
       let amountInInLog: BigNumber = BigNumber.from(0);
       let amount0Increased: BigNumber = BigNumber.from(0);
-      // let amount1Increased: BigNumber = BigNumber.from(0);
+      let amount1Increased: BigNumber = BigNumber.from(0);
       let tokenIdIncreasedInLog: BigNumber = BigNumber.from(0);
       let amount0LeftoverInLog: BigNumber = BigNumber.from(0);
       let amount1LeftoverInLog: BigNumber = BigNumber.from(0);
@@ -883,9 +905,10 @@ describe("DepositRecipes.sol", function () {
           tokenIdIncreasedInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amountInInLog = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
           amount0Increased = BigNumber.from(hexToInt256(hexToBn(eventData[3])));
-          // amount1Increased = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
+          amount1Increased = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
           amount0LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[5])));
           amount1LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[6])));
+          break;
         }
       }
       expect(countIncreased).to.be.equal(1);
@@ -901,17 +924,21 @@ describe("DepositRecipes.sol", function () {
       expect(positionInfoIncreased.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfoIncreased.strategyProvider).to.be.equal(user2.address);
       expect(positionInfoIncreased.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfoIncreased.totalDepositUSDValue).to.be.greaterThan(positionInfo.totalDepositUSDValue);
+      expect(positionInfoIncreased.amount0Deposited).to.be.equal(amount0Deposited.add(amount0Increased));
+      expect(positionInfoIncreased.amount1Deposited).to.be.equal(amount1Deposited.add(amount1Increased));
+      expect(positionInfoIncreased.amount0DepositedUsdValue).to.be.greaterThan(positionInfo.amount0DepositedUsdValue);
+      expect(positionInfoIncreased.amount1DepositedUsdValue).to.be.greaterThan(positionInfo.amount1DepositedUsdValue);
       expect(positionInfoIncreased.amount0CollectedFee).to.be.equal(0);
       expect(positionInfoIncreased.amount1CollectedFee).to.be.equal(0);
       expect(positionInfoIncreased.amount0Leftover).to.be.equal(amount0LeftoverInLog);
       expect(positionInfoIncreased.amount1Leftover).to.be.equal(amount1LeftoverInLog);
       expect(positionInfoIncreased.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfoIncreased.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfoIncreased.amount0Returned).to.be.equal(0);
-      expect(positionInfoIncreased.amount1Returned).to.be.equal(0);
-      expect(positionInfoIncreased.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfoIncreased.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlementIncreased = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlementIncreased.amount0Returned).to.be.equal(0);
+      expect(positionSettlementIncreased.amount1Returned).to.be.equal(0);
+      expect(positionSettlementIncreased.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlementIncreased.amount1ReturnedUsdValue).to.be.equal(0);
     });
 
     it("should fail to deposit when the recipes is paused", async function () {
@@ -935,17 +962,7 @@ describe("DepositRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", "2", "3");
 
       const txDeposit = await depositRecipes.connect(user).depositListedStrategy({
         token0: token0.address,
@@ -983,6 +1000,7 @@ describe("DepositRecipes.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
           amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -999,17 +1017,21 @@ describe("DepositRecipes.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(user2.address);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(0);
       expect(positionInfo.amount1Leftover).to.be.equal(0);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
 
       // single token increase liquidity
       const user0BalanceBeforeIncrease = await token0.balanceOf(user.address);
@@ -1019,18 +1041,24 @@ describe("DepositRecipes.sol", function () {
 
       const isToken0In = true;
       // pause deposit recipes
-      await depositRecipes.connect(deployer).pause();
+      await increaseLiquidityRecipes.connect(deployer).pause();
 
       await expect(
-        depositRecipes.connect(user).singleTokenIncreaseLiquidity(positionIdInLog, isToken0In, amount0Increase),
+        increaseLiquidityRecipes.connect(user).singleTokenIncreaseLiquidity({
+          positionId: positionIdInLog,
+          amount: amount0Increase,
+          isToken0In: isToken0In,
+        }),
       ).to.be.revertedWith("Pausable: paused");
 
       // unpause deposit recipes
-      await depositRecipes.connect(deployer).unpause();
+      await increaseLiquidityRecipes.connect(deployer).unpause();
 
-      const txIncreased = await depositRecipes
-        .connect(user)
-        .singleTokenIncreaseLiquidity(positionIdInLog, isToken0In, amount0Increase);
+      const txIncreased = await increaseLiquidityRecipes.connect(user).singleTokenIncreaseLiquidity({
+        positionId: positionIdInLog,
+        amount: amount0Increase,
+        isToken0In: isToken0In,
+      });
       const receiptIncreased = await txIncreased.wait();
       const eventsIncreased: any = receiptIncreased.events;
       const fromInLogIncreased = eventsIncreased[eventsIncreased.length - 1].args.from;
@@ -1040,7 +1068,7 @@ describe("DepositRecipes.sol", function () {
       expect(positionIdInLogIncreased).to.be.equal(positionIdInLog);
       let amountInInLog: BigNumber = BigNumber.from(0);
       let amount0Increased: BigNumber = BigNumber.from(0);
-      // let amount1Increased: BigNumber = BigNumber.from(0);
+      let amount1Increased: BigNumber = BigNumber.from(0);
       let tokenIdIncreasedInLog: BigNumber = BigNumber.from(0);
       let amount0LeftoverInLog: BigNumber = BigNumber.from(0);
       let amount1LeftoverInLog: BigNumber = BigNumber.from(0);
@@ -1053,9 +1081,10 @@ describe("DepositRecipes.sol", function () {
           tokenIdIncreasedInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amountInInLog = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
           amount0Increased = BigNumber.from(hexToInt256(hexToBn(eventData[3])));
-          // amount1Increased = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
+          amount1Increased = BigNumber.from(hexToInt256(hexToBn(eventData[4])));
           amount0LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[5])));
           amount1LeftoverInLog = BigNumber.from(hexToInt256(hexToBn(eventData[6])));
+          break;
         }
       }
       expect(countIncreased).to.be.equal(1);
@@ -1071,17 +1100,21 @@ describe("DepositRecipes.sol", function () {
       expect(positionInfoIncreased.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfoIncreased.strategyProvider).to.be.equal(user2.address);
       expect(positionInfoIncreased.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfoIncreased.totalDepositUSDValue).to.be.greaterThan(positionInfo.totalDepositUSDValue);
+      expect(positionInfoIncreased.amount0Deposited).to.be.equal(amount0Deposited.add(amount0Increased));
+      expect(positionInfoIncreased.amount1Deposited).to.be.equal(amount1Deposited.add(amount1Increased));
+      expect(positionInfoIncreased.amount0DepositedUsdValue).to.be.greaterThan(positionInfo.amount0DepositedUsdValue);
+      expect(positionInfoIncreased.amount1DepositedUsdValue).to.be.greaterThan(positionInfo.amount1DepositedUsdValue);
       expect(positionInfoIncreased.amount0CollectedFee).to.be.equal(0);
       expect(positionInfoIncreased.amount1CollectedFee).to.be.equal(0);
       expect(positionInfoIncreased.amount0Leftover).to.be.equal(amount0LeftoverInLog);
       expect(positionInfoIncreased.amount1Leftover).to.be.equal(amount1LeftoverInLog);
       expect(positionInfoIncreased.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfoIncreased.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfoIncreased.amount0Returned).to.be.equal(0);
-      expect(positionInfoIncreased.amount1Returned).to.be.equal(0);
-      expect(positionInfoIncreased.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfoIncreased.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlementIncreased = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlementIncreased.amount0Returned).to.be.equal(0);
+      expect(positionSettlementIncreased.amount1Returned).to.be.equal(0);
+      expect(positionSettlementIncreased.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlementIncreased.amount1ReturnedUsdValue).to.be.equal(0);
     });
 
     it("should fail to depositListedStrategy when strategy is not exist", async function () {
@@ -1095,8 +1128,8 @@ describe("DepositRecipes.sol", function () {
       const amount1Desired: BigNumber = BigNumber.from(2n * 10n ** 18n);
       const tickLowerDiff = 0n - 120n;
       const tickUpperDiff = 0n + 120n;
-      const user0BalanceBefore = await token0.balanceOf(user.address);
-      const user1BalanceBefore = await token1.balanceOf(user.address);
+      // const user0BalanceBefore = await token0.balanceOf(user.address);
+      // const user1BalanceBefore = await token1.balanceOf(user.address);
 
       // user2 add strategy
       const user2WalltAddress = await strategyProviderWalletFactory.providerToWallet(user2.address);
@@ -1105,17 +1138,7 @@ describe("DepositRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", "2", "3");
 
       // provider do not create wallet
       await expect(
@@ -1150,17 +1173,7 @@ describe("DepositRecipes.sol", function () {
       // pool not match
       await poolFixture(tokenOP, tokenUSDT, 500, uniswapV3Factory, -1);
       const strategyId2 = ethers.utils.hexZeroPad(ethers.utils.hexlify(2), 16);
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId2,
-          token0.address,
-          token1.address,
-          500,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId2, token0.address, token1.address, 500, "2000", "2", "3");
 
       await expect(
         depositRecipes.connect(user).depositListedStrategy({
@@ -1177,7 +1190,7 @@ describe("DepositRecipes.sol", function () {
       ).to.be.revertedWith("DRSPWSE");
     });
 
-    it("should fail to depositListedStrategy when tokens are not valid", async function () {
+    it("should fail to deposit when tokens are not valid", async function () {
       // give pool some liquidity
       await providePoolLiquidity();
       const tokenREYLD = (await tokensFixture("REYLD", 18)).tokenFixture;
@@ -1188,31 +1201,13 @@ describe("DepositRecipes.sol", function () {
       const amount1Desired: BigNumber = BigNumber.from(2n * 10n ** 18n);
       const tickLowerDiff = 0n - 120n;
       const tickUpperDiff = 0n + 120n;
-      const user0BalanceBefore = await token0.balanceOf(user.address);
-      const user1BalanceBefore = await token1.balanceOf(user.address);
-
-      // user2 add strategy
-      const user2WalltAddress = await strategyProviderWalletFactory.providerToWallet(user2.address);
-      const user2Wallet = (await ethers.getContractAt(
-        "StrategyProviderWallet",
-        user2WalltAddress,
-      )) as StrategyProviderWallet;
+      // const user0BalanceBefore = await token0.balanceOf(user.address);
+      // const user1BalanceBefore = await token1.balanceOf(user.address);
 
       await poolFixture(tokenREYLD, tokenUSDT, 3000, uniswapV3Factory, -1);
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
 
       await expect(
-        depositRecipes.connect(user).depositListedStrategy({
+        depositRecipes.connect(user).deposit({
           token0: token0.address,
           token1: token1.address,
           fee: 3000,
@@ -1221,9 +1216,8 @@ describe("DepositRecipes.sol", function () {
           amount0Desired: amount0Desired,
           amount1Desired: amount1Desired,
           strategyId: strategyId,
-          strategyProvider: user2.address,
         }),
-      ).to.be.revertedWith("DRCSTW");
+      ).to.be.revertedWith("DRCPV");
     });
 
     it("should fail to depositListedStrategy when tick spacing for feeTier is not valid", async function () {
@@ -1237,8 +1231,8 @@ describe("DepositRecipes.sol", function () {
       const amount1Desired: BigNumber = BigNumber.from(2n * 10n ** 18n);
       const tickLowerDiff = 0n - 125n;
       const tickUpperDiff = 0n + 120n;
-      const user0BalanceBefore = await token0.balanceOf(user.address);
-      const user1BalanceBefore = await token1.balanceOf(user.address);
+      // const user0BalanceBefore = await token0.balanceOf(user.address);
+      // const user1BalanceBefore = await token1.balanceOf(user.address);
 
       // user2 add strategy
       const user2WalltAddress = await strategyProviderWalletFactory.providerToWallet(user2.address);
@@ -1247,17 +1241,7 @@ describe("DepositRecipes.sol", function () {
         user2WalltAddress,
       )) as StrategyProviderWallet;
 
-      await user2Wallet
-        .connect(user2)
-        .addStrategy(
-          strategyId,
-          token0.address,
-          token1.address,
-          3000,
-          "2000",
-          "0x0000000000000000000000000000000000000000",
-          "3",
-        );
+      await user2Wallet.connect(user2).addStrategy(strategyId, token0.address, token1.address, 3000, "2000", "2", "3");
 
       // provider do not create wallet
       await expect(

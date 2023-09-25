@@ -8,11 +8,13 @@ import "./interfaces/IPositionManagerFactory.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./interfaces/IStrategyProviderWalletFactory.sol";
+import "./interfaces/IRegistry.sol";
+import "./libraries/ArrayHelper.sol";
 
 contract PositionManagerFactory is Pausable, IPositionManagerFactory {
     using SafeMath for uint256;
 
-    address public immutable registry;
+    address public immutable registryAddressHolder;
     address public immutable diamondCutFacet;
     address public immutable uniswapAddressHolder;
     address[] public positionManagers;
@@ -25,14 +27,17 @@ contract PositionManagerFactory is Pausable, IPositionManagerFactory {
     event PositionManagerCreated(address indexed positionManager, address user);
 
     modifier onlyGovernance() {
-        require(msg.sender == IRegistry(registry).governance(), "PFG");
+        require(msg.sender == registry().governance(), "PFOG");
         _;
     }
 
-    constructor(address _registry, address _diamondCutFacet, address _uniswapAddressHolder) Pausable() {
-        registry = _registry;
-        diamondCutFacet = _diamondCutFacet;
+    constructor(address _registryAddressHolder, address _uniswapAddressHolder, address _diamondCutFacet) Pausable() {
+        require(_registryAddressHolder != address(0), "PFRAH0");
+        require(_uniswapAddressHolder != address(0), "PFUAH0");
+        require(_diamondCutFacet != address(0), "PFDC0");
+        registryAddressHolder = _registryAddressHolder;
         uniswapAddressHolder = _uniswapAddressHolder;
+        diamondCutFacet = _diamondCutFacet;
     }
 
     ///@notice pause the factory
@@ -43,6 +48,12 @@ contract PositionManagerFactory is Pausable, IPositionManagerFactory {
     ///@notice unpause the factory
     function unpause() external onlyGovernance {
         _unpause();
+    }
+
+    ///@notice get IRegistry from registryAddressHolder
+    ///@return IRegistry interface of registry
+    function registry() private view returns (IRegistry) {
+        return IRegistry(IRegistryAddressHolder(registryAddressHolder).registry());
     }
 
     ///@notice update actions already existing on positionManager
@@ -99,10 +110,15 @@ contract PositionManagerFactory is Pausable, IPositionManagerFactory {
     function create() external override whenNotPaused returns (address) {
         require(userToPositionManager[msg.sender] == address(0), "PFP");
 
-        PositionManager manager = new PositionManager(msg.sender, diamondCutFacet, registry);
+        PositionManager manager = new PositionManager(
+            msg.sender,
+            registryAddressHolder,
+            uniswapAddressHolder,
+            diamondCutFacet
+        );
         positionManagers.push(address(manager));
         userToPositionManager[msg.sender] = address(manager);
-        manager.init(msg.sender, uniswapAddressHolder);
+
         IDiamondCut(address(manager)).diamondCut(actions, address(0), "");
 
         ///@dev create strategy provider wallet
@@ -115,7 +131,9 @@ contract PositionManagerFactory is Pausable, IPositionManagerFactory {
 
     ///@notice create strategy provider wallet
     function _createStrategyProviderWallet(address provider) internal {
-        IStrategyProviderWalletFactory(IRegistry(registry).strategyProviderWalletFactoryAddress()).create(provider);
+        IStrategyProviderWalletFactory(
+            IRegistry(IRegistryAddressHolder(registryAddressHolder).registry()).strategyProviderWalletFactoryAddress()
+        ).create(provider);
     }
 
     ///@notice get the array of position manager addresses
@@ -127,17 +145,7 @@ contract PositionManagerFactory is Pausable, IPositionManagerFactory {
         uint256 cursor,
         uint256 howMany
     ) public view returns (address[] memory managers, uint256 newCursor) {
-        uint256 length = howMany;
-        if (length > positionManagers.length - cursor) {
-            length = positionManagers.length - cursor;
-        }
-
-        managers = new address[](length);
-        for (uint256 i = 0; i < length; i++) {
-            managers[i] = positionManagers[cursor + i];
-        }
-
-        return (managers, cursor + length);
+        return ArrayHelper.sliceAddress(positionManagers, cursor, howMany);
     }
 
     ///@notice get the length of position manager array

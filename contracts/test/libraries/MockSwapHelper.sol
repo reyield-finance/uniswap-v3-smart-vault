@@ -84,4 +84,14 @@ contract MockSwapHelper {
     ) public pure returns (uint256 quoteAmount) {
         return SwapHelper.getQuoteFromSqrtRatioX96(sqrtRatioX96, baseAmount, baseToken, quoteToken);
     }
+
+    function getQuoteFromDeepestPool(
+        address factoryAddress,
+        address baseToken,
+        address quoteToken,
+        uint128 baseAmount,
+        uint24[] memory feeTiers
+    ) external view returns (uint256 quoteAmount) {
+        return SwapHelper.getQuoteFromDeepestPool(factoryAddress, baseToken, quoteToken, baseAmount, feeTiers);
+    }
 }

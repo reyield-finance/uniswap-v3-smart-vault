@@ -66,17 +66,13 @@ describe("Timelock.sol", function () {
     it("Should revert if the delay is too small", async function () {
       const delayTooSmall = 100;
       const timelockFactory = await ethers.getContractFactory("Timelock");
-      await expect(timelockFactory.deploy(deployer2.address, delayTooSmall)).to.be.revertedWith(
-        "Timelock::constructor: Delay must exceed minimum delay.",
-      );
+      await expect(timelockFactory.deploy(deployer2.address, delayTooSmall)).to.be.revertedWith("TVDMIN");
     });
 
     it("Should revert if the delay is too big", async function () {
       const delayTooSmall = 3e7;
       const timelockFactory = await ethers.getContractFactory("Timelock");
-      await expect(timelockFactory.deploy(deployer3.address, delayTooSmall)).to.be.revertedWith(
-        "Timelock::constructor: Delay must not exceed maximum delay.",
-      );
+      await expect(timelockFactory.deploy(deployer3.address, delayTooSmall)).to.be.revertedWith("TVDMAX");
     });
   });
 
@@ -226,7 +222,7 @@ describe("Timelock.sol", function () {
 
       await expect(
         Timelock.connect(deployer).executeTransaction(target, value, signature, data, eta),
-      ).to.be.revertedWith("Timelock::executeTransaction: Transaction hasn't surpassed time lock.");
+      ).to.be.revertedWith("TETNSTL");
     });
   });
 });

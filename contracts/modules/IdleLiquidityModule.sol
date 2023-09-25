@@ -28,11 +28,10 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
     using SafeInt24Math for int24;
 
     ///@notice assing the uniswap address holder to the contract
-    ///@param _registry address of the registry
+    ///@param _registryAddressHolder address of the registry address holder
     ///@param _uniswapAddressHolder address of the uniswap address holder
-    constructor(address _registry, address _uniswapAddressHolder) BaseModule(_registry) {
+    constructor(address _registryAddressHolder, address _uniswapAddressHolder) BaseModule(_registryAddressHolder) {
         require(_uniswapAddressHolder != address(0), "ILCA0");
-        require(_registry != address(0), "ILCA0");
 
         uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
     }
@@ -40,7 +39,7 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
     ///@notice check if the position is out of range and rebalance it by swapping the tokens as necessary
     ///@param input RebalanceInput struct
     function rebalance(RebalanceInput calldata input) external whenNotPaused onlyWhitelistedKeeper {
-        address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
+        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
             .userToPositionManager(input.userAddress);
         require(positionManager != address(0), "ILPM0");
 
@@ -56,7 +55,9 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
                 feeReceiver: input.feeReceiver,
                 tokenId: pInfo.tokenId,
                 rebalanceFee: input.estimatedGasFee,
-                isForced: input.isForced
+                isForced: input.isForced,
+                amount0Leftover: pInfo.amount0Leftover,
+                amount1Leftover: pInfo.amount1Leftover
             })
         );
 
@@ -66,8 +67,8 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
             _SwapAndMintParams({
                 positionManager: positionManager,
                 tokenId: pInfo.tokenId,
-                amount0: carRes.amount0Removed.add(carRes.amount0CollectedFee).add(pInfo.amount0Leftover),
-                amount1: carRes.amount1Removed.add(carRes.amount1CollectedFee).add(pInfo.amount1Leftover),
+                amount0: carRes.amount0Removed.add(carRes.amount0CollectedFee),
+                amount1: carRes.amount1Removed.add(carRes.amount1CollectedFee),
                 tickLowerDiff: pInfo.tickLowerDiff,
                 tickUpperDiff: pInfo.tickUpperDiff
             })
@@ -84,7 +85,7 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
             samRes.amount1Leftover
         );
 
-        emit positionRebalanced(
+        emit PositionRebalanced(
             positionManager,
             input.positionId,
             pInfo.tokenId,
@@ -99,7 +100,7 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
     function rebalanceWithTickDiffs(
         RebalanceWithTickDiffsInput calldata input
     ) external whenNotPaused onlyWhitelistedKeeper {
-        address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
+        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
             .userToPositionManager(input.userAddress);
         require(positionManager != address(0), "ILPM0");
 
@@ -116,7 +117,9 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
                 feeReceiver: input.feeReceiver,
                 tokenId: pInfo.tokenId,
                 rebalanceFee: input.estimatedGasFee,
-                isForced: input.isForced
+                isForced: input.isForced,
+                amount0Leftover: pInfo.amount0Leftover,
+                amount1Leftover: pInfo.amount1Leftover
             })
         );
 
@@ -126,8 +129,8 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
             _SwapAndMintParams({
                 positionManager: positionManager,
                 tokenId: pInfo.tokenId,
-                amount0: carRes.amount0Removed.add(carRes.amount0CollectedFee).add(pInfo.amount0Leftover),
-                amount1: carRes.amount1Removed.add(carRes.amount1CollectedFee).add(pInfo.amount1Leftover),
+                amount0: carRes.amount0Removed.add(carRes.amount0CollectedFee),
+                amount1: carRes.amount1Removed.add(carRes.amount1CollectedFee),
                 tickLowerDiff: input.tickLowerDiff,
                 tickUpperDiff: input.tickUpperDiff
             })
@@ -144,7 +147,7 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
             samRes.amount1Leftover
         );
 
-        emit positionRebalanced(
+        emit PositionRebalanced(
             positionManager,
             input.positionId,
             pInfo.tokenId,
@@ -157,7 +160,7 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
     function _closedAndRepayRebalance(
         _CloseAndRepayRebalanceParams memory params
     ) internal returns (_CloseAndRepayRebalanceResult memory res) {
-        (address token0, address token1, , , ) = UniswapHelper._getTokens(
+        UniswapHelper.getTokensOutput memory tokensOutput = UniswapHelper.getTokens(
             params.tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
@@ -167,13 +170,17 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
             params.positionManager
         ).closePosition(params.tokenId, false);
 
+        ///NOTE: introduce leftover into removed amount
+        res.amount0Removed = res.amount0Removed.add(params.amount0Leftover);
+        res.amount1Removed = res.amount1Removed.add(params.amount1Leftover);
+
         if (params.rebalanceFee != 0) {
             ///@dev call repayRebalanceFeeAction
             IRepayRebalanceFee.RepayRebalanceFeeOutput memory rrfOutput = IRepayRebalanceFee(params.positionManager)
                 .repayRebalanceFee(
                     IRepayRebalanceFee.RepayRebalanceFeeInput({
-                        token0: token0,
-                        token1: token1,
+                        token0: tokensOutput.token0,
+                        token1: tokensOutput.token1,
                         amount0Quota: params.isForced
                             ? res.amount0CollectedFee.add(res.amount0Removed)
                             : res.amount0CollectedFee,
@@ -202,16 +209,16 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
     }
 
     function _swapAndMint(_SwapAndMintParams memory params) internal returns (_SwapAndMintResult memory res) {
-        (address token0, address token1, uint24 fee, , ) = UniswapHelper._getTokens(
+        UniswapHelper.getTokensOutput memory tokensOutput = UniswapHelper.getTokens(
             params.tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
 
-        int24 currentTick = UniswapHelper._getDepositCurrentTick(
+        int24 currentTick = UniswapHelper.getDepositCurrentTick(
             uniswapAddressHolder.uniswapV3FactoryAddress(),
-            token0,
-            token1,
-            fee
+            tokensOutput.token0,
+            tokensOutput.token1,
+            tokensOutput.fee
         );
 
         uint256 amount0Deposit;
@@ -220,9 +227,9 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
         (uint256 amount0AfterSwapped, uint256 amount1AfterSwapped) = ISwapToPositionRatio(params.positionManager)
             .swapToPositionRatio(
                 ISwapToPositionRatio.SwapToPositionInput({
-                    token0Address: token0,
-                    token1Address: token1,
-                    fee: fee,
+                    token0Address: tokensOutput.token0,
+                    token1Address: tokensOutput.token1,
+                    fee: tokensOutput.fee,
                     amount0In: params.amount0,
                     amount1In: params.amount1,
                     tickLower: currentTick.add(params.tickLowerDiff),
@@ -233,9 +240,9 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
         ///@dev call mintAction
         (res.newTokenId, amount0Deposit, amount1Deposit) = IMint(params.positionManager).mint(
             IMint.MintInput({
-                token0Address: token0,
-                token1Address: token1,
-                fee: fee,
+                token0Address: tokensOutput.token0,
+                token1Address: tokensOutput.token1,
+                fee: tokensOutput.fee,
                 tickLower: currentTick.add(params.tickLowerDiff),
                 tickUpper: currentTick.add(params.tickUpperDiff),
                 amount0Desired: amount0AfterSwapped,
@@ -250,29 +257,31 @@ contract IdleLiquidityModule is BaseModule, IIdleLiquidityModule, Multicall {
     }
 
     function checkCurrentTickOutOfRange(uint256 tokenId) internal view {
-        (address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper) = UniswapHelper._getTokens(
+        UniswapHelper.getTokensOutput memory tokensOutput = UniswapHelper.getTokens(
             tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
 
-        int24 currentTick = UniswapHelper._getCurrentTick(
+        int24 currentTick = UniswapHelper.getCurrentTick(
             uniswapAddressHolder.uniswapV3FactoryAddress(),
-            token0,
-            token1,
-            fee
+            tokensOutput.token0,
+            tokensOutput.token1,
+            tokensOutput.fee
         );
 
         ///@dev check if the current tick is out of range
         ///note current tick == tickUpper is out of range
-        require(currentTick < tickLower || currentTick >= tickUpper, "ILOOR");
+        require(currentTick < tokensOutput.tickLower || currentTick >= tokensOutput.tickUpper, "ILOOR");
     }
 
     function checkDiffOfTicksRange(int24 tickLowerDiff, int24 tickUpperDiff, uint256 tokenId) internal view {
-        (, , uint24 fee, , ) = UniswapHelper._getTokens(
+        UniswapHelper.getTokensOutput memory tokensOutput = UniswapHelper.getTokens(
             tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
-        int24 tickSpacing = IUniswapV3Factory(uniswapAddressHolder.uniswapV3FactoryAddress()).feeAmountTickSpacing(fee);
+        int24 tickSpacing = IUniswapV3Factory(uniswapAddressHolder.uniswapV3FactoryAddress()).feeAmountTickSpacing(
+            tokensOutput.fee
+        );
         require(
             tickLowerDiff <= 0 &&
                 tickUpperDiff >= 0 &&

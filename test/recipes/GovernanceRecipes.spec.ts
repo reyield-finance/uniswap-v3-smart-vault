@@ -19,10 +19,12 @@ import {
   PositionManager,
   PositionManagerFactory,
   Registry,
+  RegistryAddressHolder,
   StrategyProviderWallet,
   StrategyProviderWalletFactory,
 } from "../../types";
 import {
+  RegistryAddressHolderFixture,
   RegistryFixture,
   deployContract,
   deployPositionManagerFactoryAndActions,
@@ -68,6 +70,7 @@ describe("GovernanceRecipes.sol", function () {
   let strategyProviderWalletFactory: StrategyProviderWalletFactory;
   let depositRecipes: DepositRecipes;
   let governanceRecipes: GovernanceRecipes;
+  let registryAddressHolder: RegistryAddressHolder;
 
   function getToken0Token1(token0: MockToken, token1: MockToken): [MockToken, MockToken, boolean] {
     return token0.address < token1.address ? [token0, token1, false] : [token1, token0, true];
@@ -125,19 +128,20 @@ describe("GovernanceRecipes.sol", function () {
         tokenWETH.address,
       )
     ).registryFixture;
+    registryAddressHolder = (await RegistryAddressHolderFixture(registry.address)).registryAddressHolderFixture;
     const uniswapAddressHolder = await deployContract("UniswapAddressHolder", [
+      registryAddressHolder.address,
       nonFungiblePositionManager.address,
       uniswapV3Factory.address,
       swapRouter.address,
-      registry.address,
     ]);
     const diamondCutFacet = await deployContract("DiamondCutFacet");
 
     //deploy the PositionManagerFactory => deploy PositionManager
     const positionManagerFactory = (await deployPositionManagerFactoryAndActions(
-      registry.address,
-      diamondCutFacet.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
+      diamondCutFacet.address,
       [
         "IncreaseLiquidity",
         "SingleTokenIncreaseLiquidity",
@@ -151,7 +155,7 @@ describe("GovernanceRecipes.sol", function () {
 
     const strategyProviderWalletFactoryFactory = await ethers.getContractFactory("StrategyProviderWalletFactory");
     strategyProviderWalletFactory = (await strategyProviderWalletFactoryFactory.deploy(
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     )) as StrategyProviderWalletFactory;
     await strategyProviderWalletFactory.deployed();
@@ -164,13 +168,13 @@ describe("GovernanceRecipes.sol", function () {
 
     //deploy DepositRecipes contract
     depositRecipes = (await deployContract("DepositRecipes", [
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     ])) as DepositRecipes;
 
     //deploy GovernanceRecipes contract
     governanceRecipes = (await deployContract("GovernanceRecipes", [
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     ])) as GovernanceRecipes;
 
@@ -225,8 +229,8 @@ describe("GovernanceRecipes.sol", function () {
     // give pool some liquidity
     const r = await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenOP.address,
-        token1: tokenUSDT.address,
+        token0: tokenOP.address < tokenUSDT.address ? tokenOP.address : tokenUSDT.address,
+        token1: tokenUSDT.address > tokenOP.address ? tokenUSDT.address : tokenOP.address,
         fee: 3000,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -244,8 +248,8 @@ describe("GovernanceRecipes.sol", function () {
     // give pool some liquidity
     await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenUSDC.address,
-        token1: tokenOP.address,
+        token0: tokenUSDC.address < tokenOP.address ? tokenUSDC.address : tokenOP.address,
+        token1: tokenOP.address > tokenUSDC.address ? tokenOP.address : tokenUSDC.address,
         fee: 3000,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -262,8 +266,8 @@ describe("GovernanceRecipes.sol", function () {
     // give pool some liquidity
     await nonFungiblePositionManager.connect(liquidityProvider).mint(
       {
-        token0: tokenUSDC.address,
-        token1: tokenUSDT.address,
+        token0: tokenUSDC.address < tokenUSDT.address ? tokenUSDC.address : tokenUSDT.address,
+        token1: tokenUSDT.address > tokenUSDC.address ? tokenUSDT.address : tokenUSDC.address,
         fee: 3000,
         tickLower: 0 - 60,
         tickUpper: 0 + 60,
@@ -322,6 +326,7 @@ describe("GovernanceRecipes.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
           amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          break;
         }
       }
       // user
@@ -336,17 +341,21 @@ describe("GovernanceRecipes.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(zeroAddress);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(0);
       expect(positionInfo.amount1Leftover).to.be.equal(0);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
 
       // swap
       await swapRouter.connect(user2).exactInputSingle({
@@ -407,17 +416,21 @@ describe("GovernanceRecipes.sol", function () {
       expect(positionInfoClosed.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfoClosed.strategyProvider).to.be.equal(zeroAddress);
       expect(positionInfoClosed.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfoClosed.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfoClosed.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfoClosed.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfoClosed.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfoClosed.amount0CollectedFee).to.be.equal(amount0CollectedFee);
       expect(positionInfoClosed.amount1CollectedFee).to.be.equal(amount1CollectedFee);
       expect(positionInfoClosed.amount0Leftover).to.be.equal(0);
       expect(positionInfoClosed.amount1Leftover).to.be.equal(0);
       expect(positionInfoClosed.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfoClosed.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfoClosed.amount0Returned).to.be.equal(amount0Removed.add(amount0CollectedFee));
-      expect(positionInfoClosed.amount1Returned).to.be.equal(amount1Removed.add(amount1CollectedFee));
-      expect(positionInfoClosed.amount0ReturnedUsdValue).to.be.greaterThan(0);
-      expect(positionInfoClosed.amount1ReturnedUsdValue).to.be.greaterThan(0);
+      const positionSettlementClosed = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlementClosed.amount0Returned).to.be.equal(amount0Removed.add(amount0CollectedFee));
+      expect(positionSettlementClosed.amount1Returned).to.be.equal(amount1Removed.add(amount1CollectedFee));
+      expect(positionSettlementClosed.amount0ReturnedUsdValue).to.be.greaterThan(0);
+      expect(positionSettlementClosed.amount1ReturnedUsdValue).to.be.greaterThan(0);
     });
 
     it("should fail to closedPositionForced by not governance", async function () {
@@ -463,6 +476,7 @@ describe("GovernanceRecipes.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
           amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          break;
         }
       }
       // user
@@ -477,17 +491,21 @@ describe("GovernanceRecipes.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(zeroAddress);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(0);
       expect(positionInfo.amount1Leftover).to.be.equal(0);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
 
       // swap
       await swapRouter.connect(user2).exactInputSingle({

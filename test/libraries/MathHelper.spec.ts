@@ -6,7 +6,7 @@ import hre from "hardhat";
 
 import { MockMathHelper } from "../../types";
 
-describe("Test MathHelper", () => {
+describe("MathHelper.sol", () => {
   //GLOBAL VARIABLE - USE THIS
   let owner: SignerWithAddress;
 

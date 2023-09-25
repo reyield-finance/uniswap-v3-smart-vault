@@ -24,8 +24,8 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
 
     IUniswapAddressHolder public immutable uniswapAddressHolder;
 
-    constructor(address _registry, address _uniswapAddressHolder) BaseRecipes(_registry) {
-        require(_uniswapAddressHolder != address(0), "WRCA0");
+    constructor(address _registryAddressHolder, address _uniswapAddressHolder) BaseRecipes(_registryAddressHolder) {
+        require(_uniswapAddressHolder != address(0), "GRUAH0");
 
         uniswapAddressHolder = IUniswapAddressHolder(_uniswapAddressHolder);
     }
@@ -34,16 +34,16 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
     ///@param user address of the user
     ///@param positionId ID of closed position
     function closedPositionForced(address user, uint256 positionId) external onlyGovernance {
-        address positionManager = IPositionManagerFactory(registry.positionManagerFactoryAddress())
+        address positionManager = IPositionManagerFactory(registry().positionManagerFactoryAddress())
             .userToPositionManager(user);
         require(positionManager != address(0), "WRPM0");
 
         IPositionManager.PositionInfo memory pInfo = IPositionManager(positionManager).getPositionInfo(positionId);
-        (address token0, address token1, , , ) = UniswapHelper._getTokens(
+
+        UniswapHelper.getTokensOutput memory tokensOutput = UniswapHelper.getTokens(
             pInfo.tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
-
         ///@dev close position
         (
             uint256 amount0CollectedFee,
@@ -55,8 +55,8 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
         IPositionManager.MiddlewareWithdrawInput memory mwInput;
         mwInput.positionId = positionId;
         IReturnProfit.ReturnProfitInput memory rpInput = IReturnProfit.ReturnProfitInput({
-            token0: token0,
-            token1: token1,
+            token0: tokensOutput.token0,
+            token1: tokensOutput.token1,
             amount0: amount0Removed.add(amount0CollectedFee).add(pInfo.amount0Leftover),
             amount1: amount1Removed.add(amount1CollectedFee).add(pInfo.amount1Leftover),
             returnedToken: address(0)
@@ -67,8 +67,8 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
         mwInput.amount0Returned = rpOutput.amount0Returned;
         mwInput.amount1Returned = rpOutput.amount1Returned;
         (mwInput.amount0ReturnedUsdValue, mwInput.amount1ReturnedUsdValue) = _calTokensUsdValue(
-            token0,
-            token1,
+            tokensOutput.token0,
+            tokensOutput.token1,
             rpOutput.amount0Returned,
             rpOutput.amount1Returned
         );
@@ -86,7 +86,7 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
         uint256 amount0,
         uint256 amount1
     ) internal view returns (uint256 token0UsdValue, uint256 token1UsdValue) {
-        uint24[] memory allowableFeeTiers = registry.getAllowableFeeTiers();
+        uint24[] memory allowableFeeTiers = registry().getAllowableFeeTiers();
         token0UsdValue = _toUsdValue(token0, amount0, allowableFeeTiers);
         token1UsdValue = _toUsdValue(token1, amount1, allowableFeeTiers);
     }
@@ -96,11 +96,11 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
         uint256 amount,
         uint24[] memory allowableFeeTiers
     ) internal view returns (uint256) {
-        address usdTokenAddress = registry.usdValueTokenAddress();
+        address usdTokenAddress = registry().usdValueTokenAddress();
 
         if (tokenAddress == usdTokenAddress) return amount;
 
-        address deepestPool = UniswapHelper._findV3DeepestPool(
+        address deepestPool = UniswapHelper.findV3DeepestPool(
             uniswapAddressHolder.uniswapV3FactoryAddress(),
             tokenAddress,
             usdTokenAddress,

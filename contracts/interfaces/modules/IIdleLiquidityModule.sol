@@ -10,7 +10,7 @@ interface IIdleLiquidityModule {
     ///@param mintedTokenId minted tokenId
     ///@param collectedFee0 amount of token0 collected
     ///@param collectedFee1 amount of token1 collected
-    event positionRebalanced(
+    event PositionRebalanced(
         address indexed positionManager,
         uint256 positionId,
         uint256 closedTokenId,
@@ -55,12 +55,15 @@ interface IIdleLiquidityModule {
     ///@param tokenId tokenId of the position
     ///@param tickLower new tickLower of the position
     ///@param tickUpper new tickUpper of the position
+
     struct _CloseAndRepayRebalanceParams {
         address positionManager;
         address payable feeReceiver;
         uint256 tokenId;
         uint256 rebalanceFee;
         bool isForced;
+        uint256 amount0Leftover;
+        uint256 amount1Leftover;
     }
 
     ///@notice struct of the close and repay result

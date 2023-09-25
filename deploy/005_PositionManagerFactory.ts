@@ -9,13 +9,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const chainId = await getChainId();
   const { deployer } = await getNamedAccounts();
 
-  const registry = await deployments.get("Registry");
+  const registryAddressHolder = await deployments.get("RegistryAddressHolder");
   const diamondCutFacet = await deployments.get("DiamondCutFacet");
   const uniAddressHolder = await deployments.get("UniswapAddressHolder");
 
   await deploy("PositionManagerFactory", {
     from: deployer,
-    args: [registry.address, diamondCutFacet.address, uniAddressHolder.address],
+    args: [registryAddressHolder.address, uniAddressHolder.address, diamondCutFacet.address],
     log: true,
     autoMine: true,
     gasLimit: Config[chainId].gasLimit,

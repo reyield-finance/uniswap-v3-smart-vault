@@ -1,10 +1,11 @@
+import { reset } from "@nomicfoundation/hardhat-network-helpers";
 import "@nomiclabs/hardhat-ethers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
 import { MockUniswapHelper } from "../../types";
 
-describe("SwapHelper.sol", function () {
+describe("UniswapHelper.sol", function () {
   //GLOBAL VARIABLE - USE THIS
 
   let UniswapHelper: MockUniswapHelper;
@@ -12,6 +13,7 @@ describe("SwapHelper.sol", function () {
   const NFTManager: string = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88";
 
   before(async function () {
+    await reset(process.env.ALCHEMY_OPTIMISM_MAINNET, 109860327);
     const MockUniswapHelperFactory = await ethers.getContractFactory("MockUniswapHelper");
     UniswapHelper = (await MockUniswapHelperFactory.deploy()) as MockUniswapHelper;
     await UniswapHelper.deployed();
@@ -56,7 +58,7 @@ describe("SwapHelper.sol", function () {
     it("should change the order reorder tokens", async function () {
       const _token0 = "0xb0b195aefa3650a6908f15cdac7d92f8a5791b0b";
       const _token1 = "0x7f5c764cbc14f9669b88837ca1490cca17c31607";
-      const { token0, token1, isOrderChanged } = await UniswapHelper._reorderTokens(_token0, _token1);
+      const { token0, token1, isOrderChanged } = await UniswapHelper.reorderTokens(_token0, _token1);
       expect(token0.toLowerCase()).to.equal(_token1.toLowerCase());
       expect(token1.toLowerCase()).to.equal(_token0.toLowerCase());
       expect(isOrderChanged).to.equal(true);
@@ -65,7 +67,7 @@ describe("SwapHelper.sol", function () {
     it("should not change the order reorder tokens", async function () {
       const _token0 = "0x7f5c764cbc14f9669b88837ca1490cca17c31607";
       const _token1 = "0xb0b195aefa3650a6908f15cdac7d92f8a5791b0b";
-      const { token0, token1, isOrderChanged } = await UniswapHelper._reorderTokens(_token0, _token1);
+      const { token0, token1, isOrderChanged } = await UniswapHelper.reorderTokens(_token0, _token1);
       expect(token0.toLowerCase()).to.equal(_token0.toLowerCase());
       expect(token1.toLowerCase()).to.equal(_token1.toLowerCase());
       expect(isOrderChanged).to.equal(false);
@@ -150,6 +152,15 @@ describe("SwapHelper.sol", function () {
       expect(result).to.equal(true);
     });
 
+    it("should return true when check with opposite tokens ordering but existent pool", async function () {
+      // USDC/BOB
+      const token0 = "0xb0b195aefa3650a6908f15cdac7d92f8a5791b0b";
+      const token1 = "0x7f5c764cbc14f9669b88837ca1490cca17c31607";
+      const feeTiers = [100n, 500n, 3000n, 10000n];
+      const result = await UniswapHelper.isPoolExist(FactoryAddress, token0, token1, feeTiers);
+      expect(result).to.equal(true);
+    });
+
     it("should return false when check non-existent pool", async function () {
       // PERP/BOB
       const token0 = "0x9e1028f5f1d5ede59748ffcee5532509976840e0";
@@ -168,13 +179,33 @@ describe("SwapHelper.sol", function () {
         const token1 = "0xb0b195aefa3650a6908f15cdac7d92f8a5791b0b";
         const feeTiers = [100n, 500n, 3000n, 10000n];
         const result = await UniswapHelper.findV3DeepestPool(FactoryAddress, token0, token1, feeTiers);
-        expect(result.toLowerCase()).to.equal("0x6432037739ccd0201987472604826097b55813e9".toLowerCase());
+        expect(result.toLowerCase()).to.equal("0x7b17Fc02d85Cb5589EC1d1C3dB507dC557590c79".toLowerCase());
       }
 
       // WETH/PERP
       {
         const token0 = "0x4200000000000000000000000000000000000006";
         const token1 = "0x9e1028f5f1d5ede59748ffcee5532509976840e0";
+        const feeTiers = [100n, 500n, 3000n, 10000n];
+        const result = await UniswapHelper.findV3DeepestPool(FactoryAddress, token0, token1, feeTiers);
+        expect(result.toLowerCase()).to.equal("0x535541F1aa08416e69Dc4D610131099FA2Ae7222".toLowerCase());
+      }
+    });
+
+    it("should return deepest pool address with opposite tokens ordering", async function () {
+      // USDC/BOB
+      {
+        const token0 = "0xb0b195aefa3650a6908f15cdac7d92f8a5791b0b";
+        const token1 = "0x7f5c764cbc14f9669b88837ca1490cca17c31607";
+        const feeTiers = [100n, 500n, 3000n, 10000n];
+        const result = await UniswapHelper.findV3DeepestPool(FactoryAddress, token0, token1, feeTiers);
+        expect(result.toLowerCase()).to.equal("0x7b17Fc02d85Cb5589EC1d1C3dB507dC557590c79".toLowerCase());
+      }
+
+      // WETH/PERP
+      {
+        const token0 = "0x9e1028f5f1d5ede59748ffcee5532509976840e0";
+        const token1 = "0x4200000000000000000000000000000000000006";
         const feeTiers = [100n, 500n, 3000n, 10000n];
         const result = await UniswapHelper.findV3DeepestPool(FactoryAddress, token0, token1, feeTiers);
         expect(result.toLowerCase()).to.equal("0x535541F1aa08416e69Dc4D610131099FA2Ae7222".toLowerCase());
@@ -197,113 +228,113 @@ describe("SwapHelper.sol", function () {
       {
         const currentTick = 276229;
         const fee = 100n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(currentTick);
       }
       {
         const currentTick = -276229;
         const fee = 100n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(currentTick);
       }
       {
         const currentTick = 0;
         const fee = 500n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(currentTick);
       }
 
       {
         const currentTick = 15;
         const fee = 500n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(20);
       }
       {
         const currentTick = 14;
         const fee = 500n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(10);
       }
 
       {
         const currentTick = -1;
         const fee = 500n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(0);
       }
 
       {
         const currentTick = -6;
         const fee = 500n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(-10);
       }
 
       {
         const currentTick = -5;
         const fee = 500n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(-10);
       }
 
       {
         const currentTick = -4;
         const fee = 500n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(0);
       }
 
       {
         const currentTick = -6;
         const fee = 3000n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(0);
       }
 
       {
         const currentTick = -30;
         const fee = 3000n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(-60);
       }
 
       {
         const currentTick = 100;
         const fee = 3000n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(120);
       }
 
       {
         const currentTick = 89;
         const fee = 3000n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(60);
       }
       {
         const currentTick = 120;
         const fee = 3000n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(120);
       }
       {
         const currentTick = -60;
         const fee = 3000n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(-60);
       }
 
       {
         const currentTick = 89;
         const fee = 10000n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(0);
       }
       {
         const currentTick = 100;
         const fee = 10000n;
-        const adjustedTick = await UniswapHelper._adjustDepositTick(FactoryAddress, currentTick, fee);
+        const adjustedTick = await UniswapHelper.adjustDepositTick(FactoryAddress, currentTick, fee);
         expect(adjustedTick).to.equal(200);
       }
     });

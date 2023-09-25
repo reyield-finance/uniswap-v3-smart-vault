@@ -15,26 +15,7 @@ contract MockERC20Helper {
     ///@param spender address of the spender
     ///@param amount amount to be approved
     function approveToken(address token, address spender, uint256 amount) public {
-        ERC20Helper._approveToken(token, spender, amount);
-    }
-
-    ///@notice transfer the token to the spender
-    ///@dev _getBalance(address token, address account)
-    ///@param token address of the token
-    ///@param account address of the owner
-    ///@return uint256 amount of the balance
-    function getBalance(address token, address account) public view returns (uint256) {
-        return ERC20Helper._getBalance(token, account);
-    }
-
-    ///@notice return the allowance of the token that spender is able to spend
-    ///@dev _getAllowance(address token, address owner, address spender)
-    ///@param token address of the token
-    ///@param owner address of the owner
-    ///@param spender address of the spender
-    ///@return uint256 amount of the allowance
-    function getAllowance(address token, address owner, address spender) public view returns (uint256) {
-        return ERC20Helper._getAllowance(token, owner, spender);
+        ERC20Helper.approveToken(token, spender, amount);
     }
 
     ///@notice withdraw the tokens from the vault and send them to the user
@@ -43,11 +24,6 @@ contract MockERC20Helper {
     ///@param to address of the user
     ///@param amount address of the balance
     function withdrawTokens(address token, address to, uint256 amount) public {
-        ERC20Helper._withdrawTokens(token, to, amount);
-    }
-
-    function approve(address token, address to) public {
-        IERC20(token).approve(to, type(uint256).max);
-        IERC20(token).approve(address(this), type(uint256).max);
+        ERC20Helper.withdrawTokens(token, to, amount);
     }
 }

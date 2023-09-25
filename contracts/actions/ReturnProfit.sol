@@ -26,9 +26,10 @@ contract ReturnProfit is IReturnProfit {
         IReturnProfit.ReturnProfitInput calldata inputs
     ) external override returns (IReturnProfit.ReturnProfitOutput memory outputs) {
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
-        uint24[] memory allowableFeeTiers = Storage.registry.getAllowableFeeTiers();
+        IRegistry registry = IRegistry(Storage.registryAddressHolder.registry());
+        uint24[] memory allowableFeeTiers = registry.getAllowableFeeTiers();
 
-        address token0token1DeepestPool = UniswapHelper._findV3DeepestPool(
+        address token0token1DeepestPool = UniswapHelper.findV3DeepestPool(
             Storage.uniswapAddressHolder.uniswapV3FactoryAddress(),
             inputs.token0,
             inputs.token1,
@@ -88,14 +89,11 @@ contract ReturnProfit is IReturnProfit {
         uint256 amountIn
     ) internal returns (uint256 amountOut) {
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
+        IRegistry registry = IRegistry(Storage.registryAddressHolder.registry());
 
-        SwapHelper.checkDeviation(
-            IUniswapV3Pool(deepestPool),
-            Storage.registry.maxTwapDeviation(),
-            Storage.registry.twapDuration()
-        );
+        SwapHelper.checkDeviation(IUniswapV3Pool(deepestPool), registry.maxTwapDeviation(), registry.twapDuration());
 
-        ERC20Helper._approveToken(tokenIn, Storage.uniswapAddressHolder.swapRouterAddress(), amountIn);
+        ERC20Helper.approveToken(tokenIn, Storage.uniswapAddressHolder.swapRouterAddress(), amountIn);
 
         //snapshot balance before swap
         uint256 tokenInBalanceBeforeSwap = IERC20(tokenIn).balanceOf(address(this));

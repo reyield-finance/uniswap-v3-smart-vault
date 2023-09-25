@@ -16,10 +16,12 @@ import {
   PositionManager,
   PositionManagerFactory,
   Registry,
+  RegistryAddressHolder,
   StrategyProviderWalletFactory,
 } from "../../types";
 import { token } from "../../types/@openzeppelin/contracts";
 import {
+  RegistryAddressHolderFixture,
   RegistryFixture,
   deployContract,
   deployPositionManagerFactoryAndActions,
@@ -45,6 +47,7 @@ describe("SwapToPositionRatio.sol", function () {
   let serviceFeeRecipient: SignerWithAddress;
   let strategyProvider: SignerWithAddress;
   let registry: Registry;
+  let registryAddressHolder: RegistryAddressHolder;
 
   //all the token used globally
   let tokenWETH9: MockWETH9;
@@ -111,24 +114,25 @@ describe("SwapToPositionRatio.sol", function () {
         tokenWETH.address,
       )
     ).registryFixture;
+    registryAddressHolder = (await RegistryAddressHolderFixture(registry.address)).registryAddressHolderFixture;
     const uniswapAddressHolder = await deployContract("UniswapAddressHolder", [
+      registryAddressHolder.address,
       nonFungiblePositionManager.address,
       uniswapV3Factory.address,
       swapRouter.address,
-      registry.address,
     ]);
     const diamondCutFacet = await deployContract("DiamondCutFacet");
     //deploy the PositionManagerFactory => deploy PositionManager
     const positionManagerFactory = (await deployPositionManagerFactoryAndActions(
-      registry.address,
-      diamondCutFacet.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
+      diamondCutFacet.address,
       ["SwapToPositionRatio"],
     )) as PositionManagerFactory;
 
     const strategyProviderWalletFactoryFactory = await ethers.getContractFactory("StrategyProviderWalletFactory");
     const strategyProviderWalletFactory = (await strategyProviderWalletFactoryFactory.deploy(
-      registry.address,
+      registryAddressHolder.address,
       uniswapAddressHolder.address,
     )) as StrategyProviderWalletFactory;
     await strategyProviderWalletFactory.deployed();
@@ -170,8 +174,8 @@ describe("SwapToPositionRatio.sol", function () {
       // give pool some liquidity
       const txMint = await nonFungiblePositionManager.connect(liquidityProvider).mint(
         {
-          token0: tokenOP.address,
-          token1: tokenUSDT.address,
+          token0: tokenOP.address < tokenUSDT.address ? tokenOP.address : tokenUSDT.address,
+          token1: tokenUSDT.address > tokenOP.address ? tokenUSDT.address : tokenOP.address,
           fee: 500,
           tickLower: 0 - 20,
           tickUpper: 0 + 20,
