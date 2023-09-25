@@ -8,15 +8,23 @@ interface IIdleLiquidityModule {
     ///@param positionManager address of the called position manager
     ///@param closedTokenId closed tokenId
     ///@param mintedTokenId minted tokenId
+    ///@param removed0 amount of token0 removed
+    ///@param removed1 amount of token1 removed
     ///@param collectedFee0 amount of token0 collected
     ///@param collectedFee1 amount of token1 collected
+    ///@param repaid0 amount of token0 repaid
+    ///@param repaid1 amount of token1 repaid
     event PositionRebalanced(
         address indexed positionManager,
         uint256 positionId,
         uint256 closedTokenId,
         uint256 mintedTokenId,
+        uint256 removed0,
+        uint256 removed1,
         uint256 collectedFee0,
-        uint256 collectedFee1
+        uint256 collectedFee1,
+        uint256 repaid0,
+        uint256 repaid1
     );
 
     ///@notice struct for rebalance input
@@ -71,11 +79,15 @@ interface IIdleLiquidityModule {
     ///@param amount1CollectedFee amount of token1 collected fee
     ///@param amount0Removed amount of token0 removed
     ///@param amount1Removed amount of token1 removed
+    ///@param amount0Repaid amount of token0 repaid
+    ///@param amount1Repaid amount of token1 repaid
     struct _CloseAndRepayRebalanceResult {
         uint256 amount0CollectedFee;
         uint256 amount1CollectedFee;
         uint256 amount0Removed;
         uint256 amount1Removed;
+        uint256 amount0Repaid;
+        uint256 amount1Repaid;
     }
 
     ///@notice struct of the swap and mint input
