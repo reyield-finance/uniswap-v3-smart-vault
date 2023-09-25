@@ -50,7 +50,7 @@ export const Config: DeployConfig = {
     swapRouter: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
   },
   "80001": {
-    sleep: 25000,
+    sleep: 5000,
     gasLimit: "10000000",
     gasPrice: "1520000000",
     usdcAddress: "0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747",

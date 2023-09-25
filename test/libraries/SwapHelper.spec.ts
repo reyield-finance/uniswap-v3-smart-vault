@@ -8,12 +8,12 @@ import { MockSwapHelper } from "../../types";
 
 describe("SwapHelper.sol", function () {
   //GLOBAL VARIABLE - USE THIS
-
+  const FactoryAddress: string = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
   let SwapHelper: MockSwapHelper;
 
   before(async function () {
     // NOTE: block gas limit may not enough so we need to reset
-    await reset(process.env.ALCHEMY_OPTIMISM_MAINNET, 107735214);
+    await reset(process.env.ALCHEMY_OPTIMISM_MAINNET, 109860327);
     const MockSwapHelperFactory = await ethers.getContractFactory("MockSwapHelper");
     SwapHelper = (await MockSwapHelperFactory.deploy()) as MockSwapHelper;
     await SwapHelper.deployed();
@@ -344,6 +344,45 @@ describe("SwapHelper.sol", function () {
       const amount1In = 0n;
       await expect(SwapHelper.calcAmountToSwap(sqrtRatioX96, tickLower, tickUpper, sqrtPriceX96, amount0In, amount1In))
         .to.be.reverted;
+    });
+  });
+
+  describe("getQuoteFromDeepestPool", function () {
+    it("should quote from deepest pool correctly when token0Decimals = 8, token1Decimals = 18", async function () {
+      const sqrtPriceX96 = 79243916550834871226325367686436565n;
+      const token0Decimals = 8n;
+      const token1Decimals = 18n;
+      const token0Address = "0x7f5c764cbc14f9669b88837ca1490cca17c31607";
+      const token1Address = "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1";
+      const feeTiers = [100n, 500n, 3000n, 10000n];
+      const token0AsBasePrice = await SwapHelper.getQuoteFromDeepestPool(
+        FactoryAddress,
+        token0Address,
+        token1Address,
+        10n ** token0Decimals,
+        feeTiers,
+      );
+      const token1AsBasePrice = await SwapHelper.getQuoteFromDeepestPool(
+        FactoryAddress,
+        token1Address,
+        token0Address,
+        10n ** token1Decimals,
+        feeTiers,
+      );
+      const expectedPrice = bigDecimal.floor(
+        bigDecimal.multiply(
+          await getPriceFromSqrtPriceX96(token0Decimals, token1Decimals, sqrtPriceX96),
+          10n ** token1Decimals,
+        ),
+      );
+      expect(token0AsBasePrice.toString()).to.equal(expectedPrice.toString());
+
+      const expectedPrice2 = bigDecimal.floor(
+        bigDecimal.divide(10n ** (token0Decimals + token1Decimals), expectedPrice, 100),
+      );
+      expect(
+        Number(bigDecimal.divide(bigDecimal.subtract(expectedPrice2, token1AsBasePrice), expectedPrice2)),
+      ).to.be.closeTo(0, 0.00001);
     });
   });
 

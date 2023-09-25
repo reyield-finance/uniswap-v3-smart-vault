@@ -28,8 +28,8 @@ contract IncreaseLiquidity is IIncreaseLiquidity {
 
         address nonfungiblePositionManagerAddress = Storage.uniswapAddressHolder.nonfungiblePositionManagerAddress();
 
-        ERC20Helper._approveToken(inputs.token0Address, nonfungiblePositionManagerAddress, inputs.amount0Desired);
-        ERC20Helper._approveToken(inputs.token1Address, nonfungiblePositionManagerAddress, inputs.amount1Desired);
+        ERC20Helper.approveToken(inputs.token0Address, nonfungiblePositionManagerAddress, inputs.amount0Desired);
+        ERC20Helper.approveToken(inputs.token1Address, nonfungiblePositionManagerAddress, inputs.amount1Desired);
 
         INonfungiblePositionManager.IncreaseLiquidityParams memory params = INonfungiblePositionManager
             .IncreaseLiquidityParams({

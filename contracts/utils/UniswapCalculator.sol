@@ -50,11 +50,18 @@ contract UniswapCalculator {
         uint256 amount0Desired,
         uint256 amount1Desired
     ) external view returns (uint128 liquidity, uint256 amount0, uint256 amount1) {
+        bool isOrderChanged;
+        (token0, token1, isOrderChanged) = UniswapHelper.reorderTokens(token0, token1);
+
+        (amount0Desired, amount1Desired) = isOrderChanged
+            ? (amount1Desired, amount0Desired)
+            : (amount0Desired, amount1Desired);
+
         address pool = IUniswapV3Factory(uniswapAddressHolder.uniswapV3FactoryAddress()).getPool(token0, token1, fee);
 
         require(pool != address(0), "UCP0");
 
-        int24 currentTick = UniswapHelper._getDepositCurrentTick(
+        int24 currentTick = UniswapHelper.getDepositCurrentTick(
             uniswapAddressHolder.uniswapV3FactoryAddress(),
             token0,
             token1,
@@ -77,7 +84,7 @@ contract UniswapCalculator {
     ///@param token1 address of the token1
     ///@param fee fee tier of the pool
     function getPool(address token0, address token1, uint24 fee) external view returns (address pool) {
-        pool = UniswapHelper._getPool(uniswapAddressHolder.uniswapV3FactoryAddress(), token0, token1, fee);
+        pool = UniswapHelper.getPool(uniswapAddressHolder.uniswapV3FactoryAddress(), token0, token1, fee);
     }
 
     ///@notice reorder tokens to be in the same order as in the pool
@@ -90,7 +97,7 @@ contract UniswapCalculator {
         address token0,
         address token1
     ) external pure returns (address token0Reordered, address token1Reordered, bool isOrderChanged) {
-        (token0Reordered, token1Reordered, isOrderChanged) = UniswapHelper._reorderTokens(token0, token1);
+        (token0Reordered, token1Reordered, isOrderChanged) = UniswapHelper.reorderTokens(token0, token1);
     }
 
     ///@notice validate if a pool is valid
@@ -100,41 +107,15 @@ contract UniswapCalculator {
     ///@return true if the pool is valid
     function validatePool(address token0, address token1, uint24 fee) external view returns (bool) {
         address pool = IUniswapV3Factory(uniswapAddressHolder.uniswapV3FactoryAddress()).getPool(token0, token1, fee);
-
+        IRegistry r = registry();
         return (token0 < token1 &&
             pool != address(0) &&
-            checkTokenCanBeSwapToWETH9(token0) &&
-            checkTokenCanBeSwapToWETH9(token1));
-    }
-
-    function checkTokenCanBeSwapToWETH9(address token) internal view returns (bool) {
-        address weth = registry().weth9();
-        address usdValueTokenAddress = registry().usdValueTokenAddress();
-
-        if (token == weth || token == usdValueTokenAddress) {
-            return true;
-        }
-
-        return isPoolExist(token, usdValueTokenAddress);
-    }
-
-    function isPoolExist(address token0, address token1) internal view returns (bool) {
-        (token0, token1) = token0 < token1 ? (token0, token1) : (token1, token0);
-        uint24[] memory feeTiers = registry().getFeeTiers();
-
-        for (uint256 i = 0; i < feeTiers.length; ++i) {
-            if (!registry().isAllowableFeeTier(feeTiers[i])) {
-                continue;
-            }
-            address pool = IUniswapV3Factory(uniswapAddressHolder.uniswapV3FactoryAddress()).getPool(
-                token0,
-                token1,
-                feeTiers[i]
-            );
-            if (pool != address(0)) {
-                return true;
-            }
-        }
-        return false;
+            UniswapHelper.isPoolValid(
+                uniswapAddressHolder.uniswapV3FactoryAddress(),
+                pool,
+                r.weth9(),
+                r.usdValueTokenAddress(),
+                r.getAllowableFeeTiers()
+            ));
     }
 }

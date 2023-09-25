@@ -11,23 +11,23 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { deployer } = await getNamedAccounts();
 
-  const UniswapAddressHolder = await deployments.get("UniswapAddressHolder");
-  const registry = await deployments.get("Registry");
+  const registryAddressHolder = await deployments.get("RegistryAddressHolder");
+  const uniswapAddressHolder = await deployments.get("UniswapAddressHolder");
 
-  await deploy("PositionHelper", {
+  await deploy("UniswapCalculator", {
     from: deployer,
-    args: [registry.address, UniswapAddressHolder.address],
+    args: [registryAddressHolder.address, uniswapAddressHolder.address],
     log: true,
     autoMine: true,
     gasLimit: Config[chainId].gasLimit,
     gasPrice: Config[chainId].gasPrice,
-    nonce: 19,
+    nonce: 21,
   });
 
   await new Promise((resolve) => setTimeout(resolve, Config[chainId].sleep));
-  console.log(":: Deployed PositionHelper: ", (await deployments.get("PositionHelper")).address);
+  console.log(":: Deployed UniswapCalculator: ", (await deployments.get("UniswapCalculator")).address);
 };
 
 export default func;
-func.tags = ["SmartVault", "Utils", "PositionHelper"];
+func.tags = ["SmartVault", "Utils", "UniswapCalculator"];
 func.dependencies = ["UniswapAddressHolder", "Registry"];

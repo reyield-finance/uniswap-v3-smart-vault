@@ -58,40 +58,6 @@ describe("ERC20Helper", () => {
     });
   });
 
-  describe("TestERC20Helper - getBalance", function () {
-    it("gets balance of owner's token", async function () {
-      await mintSTDAmount(WETH);
-      const balance = await TestERC20Helper.getBalance(WETH.address, owner.address);
-      expect(balance.toString()).to.equal((await WETH.balanceOf(owner.address)).toString());
-    });
-    it("Should fail to get balance of random's address", async function () {
-      let errorMessage;
-      try {
-        await TestERC20Helper.getBalance(WETH.address, "0x0");
-      } catch (e: any) {
-        errorMessage = e.reason;
-      }
-
-      expect(errorMessage).to.equal("invalid address");
-    });
-  });
-
-  describe("TestERC20Helper - getAllowance", function () {
-    it("gets allowance of owner's token", async function () {
-      await mintSTDAmount(WETH);
-      await WETH.connect(owner).approve(TestERC20Helper.address, ethers.utils.parseEther("100000000000000"));
-      const allowance = await TestERC20Helper.getAllowance(WETH.address, owner.address, spender.address);
-      expect(allowance.toString()).to.equal((await WETH.allowance(owner.address, spender.address)).toString());
-    });
-
-    it("gets allowance of owner's token with approve amount equal 0", async function () {
-      await mintSTDAmount(WETH);
-      await WETH.connect(owner).approve(TestERC20Helper.address, ethers.utils.parseEther("0"));
-      const allowance = await TestERC20Helper.getAllowance(WETH.address, owner.address, spender.address);
-      expect(allowance.toString()).to.equal((await WETH.allowance(owner.address, spender.address)).toString());
-    });
-  });
-
   describe("TestERC20Helper - withdrawTokens", function () {
     it("withdraws tokens from owner to ", async function () {
       await mintSTDAmount(WETH);
@@ -99,9 +65,7 @@ describe("ERC20Helper", () => {
       await WETH.connect(owner).transfer(TestERC20Helper.address, "100000000000000");
 
       const ownerBalanceBefore = await WETH.balanceOf(owner.address);
-
-      await TestERC20Helper.connect(owner).approve(WETH.address, owner.address);
-
+      await WETH.approve(TestERC20Helper.address, "1");
       await TestERC20Helper.connect(owner).withdrawTokens(WETH.address, owner.address, "1");
       const ownerBalanceAfter = await WETH.balanceOf(owner.address);
 

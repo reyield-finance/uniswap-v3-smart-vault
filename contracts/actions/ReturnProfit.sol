@@ -29,7 +29,7 @@ contract ReturnProfit is IReturnProfit {
         IRegistry registry = IRegistry(Storage.registryAddressHolder.registry());
         uint24[] memory allowableFeeTiers = registry.getAllowableFeeTiers();
 
-        address token0token1DeepestPool = UniswapHelper._findV3DeepestPool(
+        address token0token1DeepestPool = UniswapHelper.findV3DeepestPool(
             Storage.uniswapAddressHolder.uniswapV3FactoryAddress(),
             inputs.token0,
             inputs.token1,
@@ -93,7 +93,7 @@ contract ReturnProfit is IReturnProfit {
 
         SwapHelper.checkDeviation(IUniswapV3Pool(deepestPool), registry.maxTwapDeviation(), registry.twapDuration());
 
-        ERC20Helper._approveToken(tokenIn, Storage.uniswapAddressHolder.swapRouterAddress(), amountIn);
+        ERC20Helper.approveToken(tokenIn, Storage.uniswapAddressHolder.swapRouterAddress(), amountIn);
 
         //snapshot balance before swap
         uint256 tokenInBalanceBeforeSwap = IERC20(tokenIn).balanceOf(address(this));

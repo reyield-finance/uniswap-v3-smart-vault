@@ -15,7 +15,7 @@ contract MockUniswapHelper {
     ///@param fee fee tier of the pool
     ///@return address address of the pool
     function getPool(address factory, address token0, address token1, uint24 fee) public view returns (address) {
-        return UniswapHelper._getPool(factory, token0, token1, fee);
+        return UniswapHelper.getPool(factory, token0, token1, fee);
     }
 
     ///@notice get the address of the tpkens from the tokenId
@@ -30,7 +30,12 @@ contract MockUniswapHelper {
         uint256 tokenId,
         INonfungiblePositionManager nonfungiblePositionManager
     ) public view returns (address token0address, address token1address, uint24 fee, int24 tickLower, int24 tickUpper) {
-        return UniswapHelper._getTokens(tokenId, nonfungiblePositionManager);
+        UniswapHelper.getTokensOutput memory output = UniswapHelper.getTokens(tokenId, nonfungiblePositionManager);
+        token0address = output.token0;
+        token1address = output.token1;
+        fee = output.fee;
+        tickLower = output.tickLower;
+        tickUpper = output.tickUpper;
     }
 
     ///@notice Reorder tokens to be in the correct order for the pool
@@ -39,11 +44,11 @@ contract MockUniswapHelper {
     ///@return token0 address of token0 after reordering
     ///@return token1 address of token1 after reordering
     ///@return isOrderChanged bool if the order was changed
-    function _reorderTokens(
+    function reorderTokens(
         address _token0,
         address _token1
     ) public pure returns (address token0, address token1, bool isOrderChanged) {
-        return UniswapHelper._reorderTokens(_token0, _token1);
+        return UniswapHelper.reorderTokens(_token0, _token1);
     }
 
     ///@notice Calculates the liquidity and amounts for a given position
@@ -84,7 +89,7 @@ contract MockUniswapHelper {
         address token1,
         uint24[] memory feeTiers
     ) public view returns (address deepestPool) {
-        return UniswapHelper._findV3DeepestPool(factoryAddress, token0, token1, feeTiers);
+        return UniswapHelper.findV3DeepestPool(factoryAddress, token0, token1, feeTiers);
     }
 
     function isPoolExist(
@@ -93,7 +98,7 @@ contract MockUniswapHelper {
         address token1,
         uint24[] memory feeTiers
     ) public view returns (bool) {
-        return UniswapHelper._isPoolExist(factoryAddress, token0, token1, feeTiers);
+        return UniswapHelper.isPoolExist(factoryAddress, token0, token1, feeTiers);
     }
 
     function getCurrentTick(
@@ -102,14 +107,14 @@ contract MockUniswapHelper {
         address token1,
         uint24 fee
     ) public view returns (int24 currentTick) {
-        return UniswapHelper._getCurrentTick(factoryAddress, token0, token1, fee);
+        return UniswapHelper.getCurrentTick(factoryAddress, token0, token1, fee);
     }
 
-    function _adjustDepositTick(
+    function adjustDepositTick(
         address factoryAddress,
         int24 currentTick,
         uint24 fee
     ) external view returns (int24 currentTickAdjusted) {
-        return UniswapHelper._adjustDepositTick(factoryAddress, currentTick, fee);
+        return UniswapHelper.adjustDepositTick(factoryAddress, currentTick, fee);
     }
 }

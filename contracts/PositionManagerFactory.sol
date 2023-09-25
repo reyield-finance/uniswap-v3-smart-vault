@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./interfaces/IStrategyProviderWalletFactory.sol";
 import "./interfaces/IRegistry.sol";
+import "./libraries/ArrayHelper.sol";
 
 contract PositionManagerFactory is Pausable, IPositionManagerFactory {
     using SafeMath for uint256;
@@ -144,17 +145,7 @@ contract PositionManagerFactory is Pausable, IPositionManagerFactory {
         uint256 cursor,
         uint256 howMany
     ) public view returns (address[] memory managers, uint256 newCursor) {
-        uint256 length = howMany;
-        if (length > positionManagers.length - cursor) {
-            length = positionManagers.length - cursor;
-        }
-
-        managers = new address[](length);
-        for (uint256 i = 0; i < length; i++) {
-            managers[i] = positionManagers[cursor + i];
-        }
-
-        return (managers, cursor + length);
+        return ArrayHelper.sliceAddress(positionManagers, cursor, howMany);
     }
 
     ///@notice get the length of position manager array

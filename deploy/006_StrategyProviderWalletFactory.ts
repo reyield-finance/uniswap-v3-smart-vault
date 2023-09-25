@@ -9,12 +9,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const chainId = await getChainId();
   const { deployer } = await getNamedAccounts();
 
-  const registry = await deployments.get("Registry");
+  const registryAddressHolder = await deployments.get("RegistryAddressHolder");
   const uniAddressHolder = await deployments.get("UniswapAddressHolder");
 
   await deploy("StrategyProviderWalletFactory", {
     from: deployer,
-    args: [registry.address, uniAddressHolder.address],
+    args: [registryAddressHolder.address, uniAddressHolder.address],
     log: true,
     autoMine: true,
     gasLimit: Config[chainId].gasLimit,

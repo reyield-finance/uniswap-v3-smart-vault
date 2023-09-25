@@ -63,8 +63,10 @@ library PositionManagerStorage {
 
     ///@notice make sure that a function is called by the PositionManagerFactory contract
     function enforceIsGovernance() internal view {
-        StorageStruct storage ds = getStorage();
-        require(msg.sender == IRegistry(ds.registryAddressHolder.registry()).positionManagerFactoryAddress(), "SMF");
+        require(
+            msg.sender == IRegistry(getStorage().registryAddressHolder.registry()).positionManagerFactoryAddress(),
+            "SMF"
+        );
     }
 
     ///@notice emitted when a facet is cut into the diamond
@@ -86,7 +88,7 @@ library PositionManagerStorage {
             } else if (action == IDiamondCut.FacetCutAction.Replace) {
                 replaceFunctions(_diamondCut[facetIndex].facetAddress, _diamondCut[facetIndex].functionSelectors);
             } else if (action == IDiamondCut.FacetCutAction.Remove) {
-                removeFunctions(_diamondCut[facetIndex].facetAddress, _diamondCut[facetIndex].functionSelectors);
+                removeFunctions(_diamondCut[facetIndex].functionSelectors);
             } else {
                 revert("SIF");
             }
@@ -208,14 +210,11 @@ library PositionManagerStorage {
     }
 
     ///@notice remove functions in facet
-    ///@param _facetAddress address of the facet
     ///@param _functionSelectors function selectors to remove
-    function removeFunctions(address _facetAddress, bytes4[] memory _functionSelectors) internal {
+    function removeFunctions(bytes4[] memory _functionSelectors) internal {
         require(_functionSelectors.length != 0, "SES");
 
         StorageStruct storage ds = getStorage();
-
-        require(_facetAddress == address(0), "SE0");
 
         uint256 _functionSelectorsLength = _functionSelectors.length;
         for (uint256 selectorIndex; selectorIndex < _functionSelectorsLength; ++selectorIndex) {
@@ -244,47 +243,5 @@ library PositionManagerStorage {
                 }
             }
         }
-    }
-
-    ///@notice check to verify that the key is valid and already whitelisted by governance
-    ///@param hashedKey key to check
-    modifier verifyKey(bytes32 hashedKey) {
-        StorageStruct storage ds = getStorage();
-
-        bytes32 storageVariableHash = ds.storageVars[hashedKey];
-
-        require(storageVariableHash == bytes32(uint256(1)), "SDK");
-        _;
-    }
-
-    ///@notice get a specific slot of memory by the given key and read the first 32 bytes
-    ///@param hashedKey key to read from
-    function getDynamicStorageValue(bytes32 hashedKey) internal view verifyKey(hashedKey) returns (bytes32 value) {
-        assembly {
-            value := sload(hashedKey)
-        }
-    }
-
-    ///@dev supposing we've already set the key on the mapping, we can't insert a wrong key
-    ///@notice set a specific slot of memory by the given key and write the first 32 bytes
-    ///@param hashedKey key to write to
-    ///@param value value to write
-    function setDynamicStorageValue(bytes32 hashedKey, bytes32 value) internal verifyKey(hashedKey) {
-        assembly {
-            sstore(hashedKey, value)
-        }
-    }
-
-    ///@notice add a new hashedKey to the mapping in storage, sort of whitelist
-    ///@param hashedKey key to add to the mapping
-    function addDynamicStorageKey(bytes32 hashedKey) internal {
-        StorageStruct storage ds = getStorage();
-
-        bytes32 storageVariableHash = ds.storageVars[hashedKey];
-
-        ///@dev return if the key already exists
-        if (storageVariableHash != bytes32(0)) return;
-
-        ds.storageVars[hashedKey] = bytes32(uint256(1));
     }
 }

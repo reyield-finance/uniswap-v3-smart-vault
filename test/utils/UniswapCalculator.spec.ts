@@ -323,6 +323,7 @@ describe("UniswapCalculator.sol", function () {
           tokenIdInLog = BigNumber.from(hexToInt256(hexToBn(eventData[0])));
           amount0Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[1])));
           amount1Deposited = BigNumber.from(hexToInt256(hexToBn(eventData[2])));
+          break;
         }
       }
       expect(count).to.be.equal(1);
@@ -338,17 +339,21 @@ describe("UniswapCalculator.sol", function () {
       expect(positionInfo.tokenId).to.be.equal(tokenIdInLog);
       expect(positionInfo.strategyProvider).to.be.equal(zeroAddress);
       expect(positionInfo.strategyId).to.be.equal(strategyIdInLog);
-      expect(positionInfo.totalDepositUSDValue).to.be.greaterThan(0);
+      expect(positionInfo.amount0Deposited).to.be.equal(amount0Deposited);
+      expect(positionInfo.amount1Deposited).to.be.equal(amount1Deposited);
+      expect(positionInfo.amount0DepositedUsdValue).to.be.greaterThan(0);
+      expect(positionInfo.amount1DepositedUsdValue).to.be.greaterThan(0);
       expect(positionInfo.amount0CollectedFee).to.be.equal(0);
       expect(positionInfo.amount1CollectedFee).to.be.equal(0);
       expect(positionInfo.amount0Leftover).to.be.equal(0);
       expect(positionInfo.amount1Leftover).to.be.equal(0);
       expect(positionInfo.tickLowerDiff).to.be.equal(BigNumber.from(tickLowerDiff));
       expect(positionInfo.tickUpperDiff).to.be.equal(BigNumber.from(tickUpperDiff));
-      expect(positionInfo.amount0Returned).to.be.equal(0);
-      expect(positionInfo.amount1Returned).to.be.equal(0);
-      expect(positionInfo.amount0ReturnedUsdValue).to.be.equal(0);
-      expect(positionInfo.amount1ReturnedUsdValue).to.be.equal(0);
+      const positionSettlement = await positionManager.getPositionSettlement(positionIdInLog);
+      expect(positionSettlement.amount0Returned).to.be.equal(0);
+      expect(positionSettlement.amount1Returned).to.be.equal(0);
+      expect(positionSettlement.amount0ReturnedUsdValue).to.be.equal(0);
+      expect(positionSettlement.amount1ReturnedUsdValue).to.be.equal(0);
 
       const { liquidity } = await nonFungiblePositionManager.positions(tokenIdInLog);
       expect(liquidityAndAmounts.liquidity).to.be.equal(liquidity);

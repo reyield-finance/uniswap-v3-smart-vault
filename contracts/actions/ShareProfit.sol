@@ -39,7 +39,7 @@ contract ShareProfit is IShareProfit {
             uint256 token0UsdValue;
             uint256 token0UsdPrice;
             if (inputs.token0 != registry.usdValueTokenAddress()) {
-                address token0UsdValueTokenDeepestPool = UniswapHelper._findV3DeepestPool(
+                address token0UsdValueTokenDeepestPool = UniswapHelper.findV3DeepestPool(
                     Storage.uniswapAddressHolder.uniswapV3FactoryAddress(),
                     inputs.token0,
                     registry.usdValueTokenAddress(),
@@ -63,7 +63,7 @@ contract ShareProfit is IShareProfit {
             uint256 token1UsdValue;
             uint256 token1UsdPrice;
             if (inputs.token1 != registry.usdValueTokenAddress()) {
-                address token1UsdValueTokenDeepestPool = UniswapHelper._findV3DeepestPool(
+                address token1UsdValueTokenDeepestPool = UniswapHelper.findV3DeepestPool(
                     Storage.uniswapAddressHolder.uniswapV3FactoryAddress(),
                     inputs.token1,
                     registry.usdValueTokenAddress(),
@@ -165,7 +165,7 @@ contract ShareProfit is IShareProfit {
     ) internal returns (uint256 amount0Received, uint256 amount1Received) {
         StorageStruct storage Storage = PositionManagerStorage.getStorage();
 
-        address deepestPool = UniswapHelper._findV3DeepestPool(
+        address deepestPool = UniswapHelper.findV3DeepestPool(
             Storage.uniswapAddressHolder.uniswapV3FactoryAddress(),
             token0,
             token1,
@@ -260,7 +260,7 @@ contract ShareProfit is IShareProfit {
 
         SwapHelper.checkDeviation(IUniswapV3Pool(deepestPool), registry.maxTwapDeviation(), registry.twapDuration());
 
-        ERC20Helper._approveToken(tokenIn, Storage.uniswapAddressHolder.swapRouterAddress(), amountIn);
+        ERC20Helper.approveToken(tokenIn, Storage.uniswapAddressHolder.swapRouterAddress(), amountIn);
 
         //snapshot balance before swap
         uint256 tokenInBalanceBeforeSwap = IERC20(tokenIn).balanceOf(address(this));

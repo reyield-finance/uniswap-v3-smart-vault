@@ -9,6 +9,7 @@ import "./interfaces/IStrategyProviderWalletFactory.sol";
 import "./interfaces/IUniswapAddressHolder.sol";
 import "./interfaces/IRegistryAddressHolder.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "./libraries/ArrayHelper.sol";
 
 contract StrategyProviderWalletFactory is IStrategyProviderWalletFactory {
     using SafeMath for uint256;
@@ -26,6 +27,10 @@ contract StrategyProviderWalletFactory is IStrategyProviderWalletFactory {
     ///@param strategyProviderWallet address of StrategyProviderWallet
     ///@param provider address of provider
     event StrategyProviderWalletCreated(address indexed strategyProviderWallet, address creator, address provider);
+
+    ///@notice emitted when a creator is added to whitelist
+    ///@param creator address of creator
+    event CreatorWhitelistAdded(address indexed creator);
 
     modifier onlyGovernance() {
         require(msg.sender == registry().governance(), "SPWFOG");
@@ -57,6 +62,7 @@ contract StrategyProviderWalletFactory is IStrategyProviderWalletFactory {
         require(!isIncreatorWhitelist[_creator], "SPWFNICWL");
         isIncreatorWhitelist[_creator] = true;
         creatorWhitelist.push(_creator);
+        emit CreatorWhitelistAdded(_creator);
     }
 
     ///@notice create the strategy provider wallet
@@ -85,17 +91,7 @@ contract StrategyProviderWalletFactory is IStrategyProviderWalletFactory {
         uint256 cursor,
         uint256 howMany
     ) public view returns (address[] memory wallets, uint256 newCursor) {
-        uint256 length = howMany;
-        if (length > strategyProviderWallets.length - cursor) {
-            length = strategyProviderWallets.length - cursor;
-        }
-
-        wallets = new address[](length);
-        for (uint256 i = 0; i < length; i++) {
-            wallets[i] = strategyProviderWallets[cursor + i];
-        }
-
-        return (wallets, cursor + length);
+        return ArrayHelper.sliceAddress(strategyProviderWallets, cursor, howMany);
     }
 
     ///@notice get the length of the strategy provider wallet array

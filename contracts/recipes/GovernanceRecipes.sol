@@ -39,11 +39,11 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
         require(positionManager != address(0), "WRPM0");
 
         IPositionManager.PositionInfo memory pInfo = IPositionManager(positionManager).getPositionInfo(positionId);
-        (address token0, address token1, , , ) = UniswapHelper._getTokens(
+
+        UniswapHelper.getTokensOutput memory tokensOutput = UniswapHelper.getTokens(
             pInfo.tokenId,
             INonfungiblePositionManager(uniswapAddressHolder.nonfungiblePositionManagerAddress())
         );
-
         ///@dev close position
         (
             uint256 amount0CollectedFee,
@@ -55,8 +55,8 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
         IPositionManager.MiddlewareWithdrawInput memory mwInput;
         mwInput.positionId = positionId;
         IReturnProfit.ReturnProfitInput memory rpInput = IReturnProfit.ReturnProfitInput({
-            token0: token0,
-            token1: token1,
+            token0: tokensOutput.token0,
+            token1: tokensOutput.token1,
             amount0: amount0Removed.add(amount0CollectedFee).add(pInfo.amount0Leftover),
             amount1: amount1Removed.add(amount1CollectedFee).add(pInfo.amount1Leftover),
             returnedToken: address(0)
@@ -67,8 +67,8 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
         mwInput.amount0Returned = rpOutput.amount0Returned;
         mwInput.amount1Returned = rpOutput.amount1Returned;
         (mwInput.amount0ReturnedUsdValue, mwInput.amount1ReturnedUsdValue) = _calTokensUsdValue(
-            token0,
-            token1,
+            tokensOutput.token0,
+            tokensOutput.token1,
             rpOutput.amount0Returned,
             rpOutput.amount1Returned
         );
@@ -100,7 +100,7 @@ contract GovernanceRecipes is BaseRecipes, IGovernanceRecipes {
 
         if (tokenAddress == usdTokenAddress) return amount;
 
-        address deepestPool = UniswapHelper._findV3DeepestPool(
+        address deepestPool = UniswapHelper.findV3DeepestPool(
             uniswapAddressHolder.uniswapV3FactoryAddress(),
             tokenAddress,
             usdTokenAddress,
