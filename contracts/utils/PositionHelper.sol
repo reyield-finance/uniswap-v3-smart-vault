@@ -399,9 +399,14 @@ contract PositionHelper {
             IStrategyProviderWallet.StrategyInfo memory sInfo = IStrategyProviderWallet(strategyProviderWallet)
                 .getStrategyInfo(pInfo.strategyId);
 
-            uint160 token0UsdValueTokenSqrtPriceX96 = _getBestSqrtPriceX96(token0, registry().usdValueTokenAddress());
-            uint160 token1UsdValueTokenSqrtPriceX96 = _getBestSqrtPriceX96(token1, registry().usdValueTokenAddress());
-
+            uint160 token0UsdValueTokenSqrtPriceX96;
+            if (token0 != registry().usdValueTokenAddress()) {
+                token0UsdValueTokenSqrtPriceX96 = _getBestSqrtPriceX96(token0, registry().usdValueTokenAddress());
+            }
+            uint160 token1UsdValueTokenSqrtPriceX96;
+            if (token1 != registry().usdValueTokenAddress()) {
+                token1UsdValueTokenSqrtPriceX96 = _getBestSqrtPriceX96(token1, registry().usdValueTokenAddress());
+            }
             uint256 amount0ReturnedUsdValue;
             uint256 amount1ReturnedUsdValue;
             if (token0 == registry().usdValueTokenAddress()) {

@@ -61,8 +61,8 @@ const config: HardhatUserConfig = {
     polygon: {
       url: process.env.ALCHEMY_POLYGON_MAINNET || "",
       accounts: [process.env.TEST_PRIVATE_KEY || ""],
-      // gas: 10000000,
-      // gasPrice: 128000000000,
+      gas: 10000000,
+      gasPrice: 128000000000,
     },
     optimismGoerli: {
       url: process.env.ALCHEMY_OPTIMISM_GOERLI || "",
@@ -137,7 +137,7 @@ const config: HardhatUserConfig = {
       default: "0x565d490806A6D8eF532f4d29eC00EF6aAC71A17A",
     },
     keeper: {
-      default: "0xcafCE5363A2dEC41e0597B6B3c6c1A11ab219698",
+      default: "0x8d521dCae9C1f7353a96D1510B3B4F9f83413bC9",
     },
   },
 };

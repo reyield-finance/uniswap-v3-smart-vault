@@ -30,9 +30,9 @@ interface DeployConfig {
 
 export const Config: DeployConfig = {
   "10": {
-    sleep: 20000,
+    sleep: 5000,
     gasLimit: "10000000",
-    gasPrice: "8000000",
+    gasPrice: "125000000",
     usdcAddress: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
     wethAddress: "0x4200000000000000000000000000000000000006",
     nonfungiblePositionManager: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
@@ -40,11 +40,11 @@ export const Config: DeployConfig = {
     swapRouter: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
   },
   "137": {
-    sleep: 25000,
+    sleep: 5000,
     gasLimit: "10000000",
-    gasPrice: "120000000000",
+    gasPrice: "130000000000",
     usdcAddress: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
-    wethAddress: "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+    wethAddress: "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
     nonfungiblePositionManager: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
     uniswapV3Factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
     swapRouter: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
