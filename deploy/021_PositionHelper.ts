@@ -30,4 +30,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 export default func;
 func.tags = ["SmartVault", "Utils", "PositionHelper"];
-func.dependencies = ["UniswapAddressHolder", "Registry"];
+func.dependencies = ["UniswapAddressHolder", "RegistryAddressHolder"];
