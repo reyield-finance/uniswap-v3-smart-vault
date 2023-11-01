@@ -8,22 +8,26 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments;
 
   const chainId = await getChainId();
+
   const { deployer } = await getNamedAccounts();
 
-  await deploy("ZapIn", {
+  const registryAddressHolder = await deployments.get("RegistryAddressHolder");
+  const uniswapAddressHolder = await deployments.get("UniswapAddressHolder");
+
+  await deploy("UniswapCalculator", {
     from: deployer,
-    args: [],
+    args: [registryAddressHolder.address, uniswapAddressHolder.address],
     log: true,
     autoMine: true,
     gasLimit: Config[chainId].gasLimit,
     gasPrice: Config[chainId].gasPrice,
-    nonce: 14,
+    nonce: 25,
   });
 
   await new Promise((resolve) => setTimeout(resolve, Config[chainId].sleep));
-  console.log(":: Deployed ZapIn: ", (await deployments.get("ZapIn")).address);
+  console.log(":: Deployed UniswapCalculator: ", (await deployments.get("UniswapCalculator")).address);
 };
 
 export default func;
-func.tags = ["SmartVault", "Action", "ZapIn"];
-func.dependencies = ["PositionManagerFactory"];
+func.tags = ["SmartVault", "Utils", "UniswapCalculator"];
+func.dependencies = ["UniswapAddressHolder", "RegistryAddressHolder"];
