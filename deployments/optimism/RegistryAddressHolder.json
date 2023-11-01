@@ -1,0 +1,145 @@
+{
+  "address": "0xe5b481AFFFbfe1A61d762f42d4c630a5AAD388f9",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_registry",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "oldAddress",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "newAddress",
+          "type": "address"
+        }
+      ],
+      "name": "RegistryAddressChanged",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "registry",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newAddress",
+          "type": "address"
+        }
+      ],
+      "name": "setRegistryAddress",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0xa88fa3710a97476e71c543e8ee3ae22da364461bb7011fd570925cd7bebbdd8f",
+  "receipt": {
+    "to": null,
+    "from": "0x580d8b4918423E9d2964f936CbdC286eD6eF2011",
+    "contractAddress": "0xe5b481AFFFbfe1A61d762f42d4c630a5AAD388f9",
+    "transactionIndex": 3,
+    "gasUsed": "343887",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x9dd68e7c6ecd0238053d8b2df5f72b83c8755c9f007b9b4fc3d5cbe0dedbc0b1",
+    "transactionHash": "0xa88fa3710a97476e71c543e8ee3ae22da364461bb7011fd570925cd7bebbdd8f",
+    "logs": [],
+    "blockNumber": 110137834,
+    "cumulativeGasUsed": "908268",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0x621e848F39fb29843cf8b42c86Ff2558bCd6C327"
+  ],
+  "numDeployments": 1,
+  "solcInputHash": "dd6301e56a669096d4ac4bf415393c0f",
+  "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_registry\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"oldAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"RegistryAddressChanged\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"registry\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"setRegistryAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"events\":{\"RegistryAddressChanged(address,address)\":{\"params\":{\"newAddress\":\"new address of registry\",\"oldAddress\":\"old address of registry\"}}},\"kind\":\"dev\",\"methods\":{\"setRegistryAddress(address)\":{\"params\":{\"newAddress\":\"new address of registry\"}}},\"stateVariables\":{\"registry\":{\"return\":\"address The address of the registry\"}},\"version\":1},\"userdoc\":{\"events\":{\"RegistryAddressChanged(address,address)\":{\"notice\":\"emitted when the address of registry is changed\"}},\"kind\":\"user\",\"methods\":{\"registry()\":{\"notice\":\"default getter for regitsry address\"},\"setRegistryAddress(address)\":{\"notice\":\"Set the address of registry\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/utils/RegistryAddressHolder.sol\":\"RegistryAddressHolder\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/introspection/ERC165Checker.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.7.0;\\n\\n/**\\n * @dev Library used to query support of an interface declared via {IERC165}.\\n *\\n * Note that these functions return the actual result of the query: they do not\\n * `revert` if an interface is not supported. It is up to the caller to decide\\n * what to do in these cases.\\n */\\nlibrary ERC165Checker {\\n    // As per the EIP-165 spec, no interface should ever match 0xffffffff\\n    bytes4 private constant _INTERFACE_ID_INVALID = 0xffffffff;\\n\\n    /*\\n     * bytes4(keccak256('supportsInterface(bytes4)')) == 0x01ffc9a7\\n     */\\n    bytes4 private constant _INTERFACE_ID_ERC165 = 0x01ffc9a7;\\n\\n    /**\\n     * @dev Returns true if `account` supports the {IERC165} interface,\\n     */\\n    function supportsERC165(address account) internal view returns (bool) {\\n        // Any contract that implements ERC165 must explicitly indicate support of\\n        // InterfaceId_ERC165 and explicitly indicate non-support of InterfaceId_Invalid\\n        return _supportsERC165Interface(account, _INTERFACE_ID_ERC165) &&\\n            !_supportsERC165Interface(account, _INTERFACE_ID_INVALID);\\n    }\\n\\n    /**\\n     * @dev Returns true if `account` supports the interface defined by\\n     * `interfaceId`. Support for {IERC165} itself is queried automatically.\\n     *\\n     * See {IERC165-supportsInterface}.\\n     */\\n    function supportsInterface(address account, bytes4 interfaceId) internal view returns (bool) {\\n        // query support of both ERC165 as per the spec and support of _interfaceId\\n        return supportsERC165(account) &&\\n            _supportsERC165Interface(account, interfaceId);\\n    }\\n\\n    /**\\n     * @dev Returns a boolean array where each value corresponds to the\\n     * interfaces passed in and whether they're supported or not. This allows\\n     * you to batch check interfaces for a contract where your expectation\\n     * is that some interfaces may not be supported.\\n     *\\n     * See {IERC165-supportsInterface}.\\n     *\\n     * _Available since v3.4._\\n     */\\n    function getSupportedInterfaces(address account, bytes4[] memory interfaceIds) internal view returns (bool[] memory) {\\n        // an array of booleans corresponding to interfaceIds and whether they're supported or not\\n        bool[] memory interfaceIdsSupported = new bool[](interfaceIds.length);\\n\\n        // query support of ERC165 itself\\n        if (supportsERC165(account)) {\\n            // query support of each interface in interfaceIds\\n            for (uint256 i = 0; i < interfaceIds.length; i++) {\\n                interfaceIdsSupported[i] = _supportsERC165Interface(account, interfaceIds[i]);\\n            }\\n        }\\n\\n        return interfaceIdsSupported;\\n    }\\n\\n    /**\\n     * @dev Returns true if `account` supports all the interfaces defined in\\n     * `interfaceIds`. Support for {IERC165} itself is queried automatically.\\n     *\\n     * Batch-querying can lead to gas savings by skipping repeated checks for\\n     * {IERC165} support.\\n     *\\n     * See {IERC165-supportsInterface}.\\n     */\\n    function supportsAllInterfaces(address account, bytes4[] memory interfaceIds) internal view returns (bool) {\\n        // query support of ERC165 itself\\n        if (!supportsERC165(account)) {\\n            return false;\\n        }\\n\\n        // query support of each interface in _interfaceIds\\n        for (uint256 i = 0; i < interfaceIds.length; i++) {\\n            if (!_supportsERC165Interface(account, interfaceIds[i])) {\\n                return false;\\n            }\\n        }\\n\\n        // all interfaces supported\\n        return true;\\n    }\\n\\n    /**\\n     * @notice Query if a contract implements an interface, does not check ERC165 support\\n     * @param account The address of the contract to query for support of an interface\\n     * @param interfaceId The interface identifier, as specified in ERC-165\\n     * @return true if the contract at account indicates support of the interface with\\n     * identifier interfaceId, false otherwise\\n     * @dev Assumes that account contains a contract that supports ERC165, otherwise\\n     * the behavior of this method is undefined. This precondition can be checked\\n     * with {supportsERC165}.\\n     * Interface identification is specified in ERC-165.\\n     */\\n    function _supportsERC165Interface(address account, bytes4 interfaceId) private view returns (bool) {\\n        // success determines whether the staticcall succeeded and result determines\\n        // whether the contract at account indicates support of _interfaceId\\n        (bool success, bool result) = _callERC165SupportsInterface(account, interfaceId);\\n\\n        return (success && result);\\n    }\\n\\n    /**\\n     * @notice Calls the function with selector 0x01ffc9a7 (ERC165) and suppresses throw\\n     * @param account The address of the contract to query for support of an interface\\n     * @param interfaceId The interface identifier, as specified in ERC-165\\n     * @return success true if the STATICCALL succeeded, false otherwise\\n     * @return result true if the STATICCALL succeeded and the contract at account\\n     * indicates support of the interface with identifier interfaceId, false otherwise\\n     */\\n    function _callERC165SupportsInterface(address account, bytes4 interfaceId)\\n        private\\n        view\\n        returns (bool, bool)\\n    {\\n        bytes memory encodedParams = abi.encodeWithSelector(_INTERFACE_ID_ERC165, interfaceId);\\n        (bool success, bytes memory result) = account.staticcall{ gas: 30000 }(encodedParams);\\n        if (result.length < 32) return (false, false);\\n        return (success, abi.decode(result, (bool)));\\n    }\\n}\\n\",\"keccak256\":\"0xf5ac6899b73bdbd71ce519592013682b5df79ea3e0e59a6bdd26d15ff14974d7\",\"license\":\"MIT\"},\"contracts/interfaces/IRegistry.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-2.0\\npragma solidity 0.7.6;\\npragma abicoder v2;\\n\\ninterface IRegistry {\\n    ///@notice emitted when governance address is changed\\n    ///@param oldGovernance the old governance address\\n    ///@param newGovernance the new governance address\\n    event GovernanceChanged(address oldGovernance, address newGovernance);\\n\\n    ///@notice emitted when service fee recipient address is changed\\n    ///@param oldServiceFeeRecipient the old service fee recipient address\\n    ///@param newServiceFeeRecipient the new service fee recipient address\\n    event ServiceFeeRecipientChanged(address oldServiceFeeRecipient, address newServiceFeeRecipient);\\n\\n    ///@notice emitted when position manager factory address is changed\\n    ///@param oldPositionManagerFactory the old position manager factory address\\n    ///@param newPositionManagerFactory the new position manager factory address\\n    event PositionManagerFactoryChanged(address oldPositionManagerFactory, address newPositionManagerFactory);\\n\\n    ///@notice emitted when strategy provider wallet factory address is changed\\n    ///@param oldStrategyProviderWalletFactory the old strategy provider wallet factory address\\n    ///@param newStrategyProviderWalletFactory the new strategy provider wallet factory address\\n    event StrategyProviderWalletFactoryChanged(\\n        address oldStrategyProviderWalletFactory,\\n        address newStrategyProviderWalletFactory\\n    );\\n\\n    ///@notice emitted when official account address is changed\\n    ///@param newOfficialAccount the new official account address\\n    event OfficialAccountChanged(address oldOfficialAccount, address newOfficialAccount);\\n\\n    ///@notice emitted when a contract is added to registry\\n    ///@param newContract address of the new contract\\n    ///@param contractId keccak of contract name\\n    event ContractAdded(address newContract, bytes32 contractId);\\n\\n    ///@notice emitted when a contract address is updated\\n    ///@param oldContract address of the contract before update\\n    ///@param newContract address of the contract after update\\n    ///@param contractId keccak of contract name\\n    event ContractChanged(address oldContract, address newContract, bytes32 contractId);\\n\\n    ///@notice emitted when a contract address is removed\\n    ///@param contractAddress address of the removed contract\\n    ///@param contractId keccak of removed contract name\\n    event ContractRemoved(address contractAddress, bytes32 contractId);\\n\\n    ///@notice emitted when a keeper is added to whitelist\\n    ///@param keeper address of the added keeper\\n    event KeeperAdded(address keeper);\\n\\n    ///@notice emitted when a keeper is removed from whitelist\\n    ///@param keeper address of the removed keeper\\n    event KeeperRemoved(address keeper);\\n\\n    ///@notice emitted when a fee tier is activated\\n    ///@param feeTier fee tier activated\\n    event FeeTierActivated(uint24 feeTier);\\n\\n    ///@notice emitted when a fee tier is deactivated\\n    ///@param feeTier fee tier deactivated\\n    event FeeTierDeactivated(uint24 feeTier);\\n\\n    ///@notice emitted when service fee ratio is updated\\n    ///@param licenseAmount license amount to update service fee ratio\\n    ///@param serviceFeeRatio service fee ratio to update\\n    event ServiceFeeRatioUpdated(uint32 licenseAmount, uint32 serviceFeeRatio);\\n\\n    ///@notice emitted when usd value token address is updated\\n    ///@param oldUsdValueTokenAddress the old usd value token address\\n    ///@param newUsdValueTokenAddress the new usd value token address\\n    event UsdValueTokenAddressUpdated(address oldUsdValueTokenAddress, address newUsdValueTokenAddress);\\n\\n    ///@notice emitted when weth9 address is updated\\n    ///@param oldWeth9 the old weth9 address\\n    ///@param newWeth9 the new weth9 address\\n    event Weth9Updated(address oldWeth9, address newWeth9);\\n\\n    ///@notice emitted when max twap deviation is updated\\n    ///@param oldMaxTwapDeviation the old twap deviation\\n    ///@param newMaxTwapDeviation the new twap deviation\\n    event MaxTwapDeviationUpdated(int24 oldMaxTwapDeviation, int24 newMaxTwapDeviation);\\n\\n    ///@notice emitted when twap duration is updated\\n    ///@param oldTwapDuration the old twap duration\\n    ///@param newTwapDuration the new twap duration\\n    event TwapDurationUpdated(uint32 oldTwapDuration, uint32 newTwapDuration);\\n\\n    ///@notice emitted when module data is updated\\n    ///@param id keccak256 of module id string\\n    ///@param contractAddress address of the module\\n    ///@param defaultData default data of the module\\n    event ModuleDataUpdated(bytes32 id, address contractAddress, bytes32 defaultData);\\n\\n    struct Entry {\\n        bytes32 id;\\n        address contractAddress;\\n        bytes32 defaultData;\\n    }\\n\\n    ///@notice check if the fee tier is allowable\\n    ///@param feeTier the fee tier to check\\n    ///@return true if the fee tier is allowable, false otherwise\\n    function isAllowableFeeTier(uint24 feeTier) external view returns (bool);\\n\\n    ///@notice get the list of fee tiers\\n    ///@return array of fee tiers\\n    function getFeeTiers() external view returns (uint24[] memory);\\n\\n    ///@notice get the list of allowable fee tiers\\n    ///@return array of allowable fee tiers\\n    function getAllowableFeeTiers() external view returns (uint24[] memory);\\n\\n    ///@notice return the address of PositionManagerFactory\\n    ///@return address of PositionManagerFactory\\n    function positionManagerFactoryAddress() external view returns (address);\\n\\n    ///@notice return the address of StrategyProviderWalletFactory\\n    ///@return address of StrategyProviderWalletFactory\\n    function strategyProviderWalletFactoryAddress() external view returns (address);\\n\\n    ///@notice return the address of officialAccount\\n    ///@return address of officialAccount\\n    function officialAccount() external view returns (address);\\n\\n    ///@notice return the address of weth9\\n    ///@return address of weth9\\n    function weth9() external view returns (address);\\n\\n    ///@notice return the address of Governance\\n    ///@return address of Governance\\n    function governance() external view returns (address);\\n\\n    ///@notice return the address of recipient of service fee\\n    ///@return address of recipient of service fee\\n    function serviceFeeRecipient() external view returns (address);\\n\\n    ///@notice return the max twap deviation\\n    ///@return int24 max twap deviation\\n    function maxTwapDeviation() external view returns (int24);\\n\\n    ///@notice return the twap duration\\n    ///@return uint32 twap duration\\n    function twapDuration() external view returns (uint32);\\n\\n    ///@notice return the address of USD value token\\n    ///@return address of USD value token\\n    function usdValueTokenAddress() external view returns (address);\\n\\n    ///@notice return the denominator of service fee ratio\\n    ///@return uint32 denominator of service fee ratio\\n    function serviceFeeDenominator() external view returns (uint32);\\n\\n    ///@notice return the address of Governance\\n    ///@return address of Governance\\n    function getModuleKeys() external view returns (bytes32[] memory);\\n\\n    ///@notice checks if the address is whitelisted as a keeper\\n    ///@param _keeper address to check\\n    ///@return bool true if the address is withelisted, false otherwise\\n    function whitelistedKeepers(address _keeper) external view returns (bool);\\n\\n    ///@notice get the module info by id\\n    ///@param _id id of the module\\n    ///@return Entry module info\\n    function getModuleInfo(bytes32 _id) external view returns (Entry memory);\\n\\n    ///@notice check if the module is active\\n    ///@param _contractAddress address of the module\\n    ///@return bool true if the module is active, false otherwise\\n    function activeModule(address _contractAddress) external view returns (bool);\\n\\n    ///@notice get service fee ratio for a given license amount\\n    ///@param _licenseAmount license amount to get service fee ratio\\n    function getServiceFeeRatioFromLicenseAmount(uint32 _licenseAmount) external view returns (uint32 ratio);\\n}\\n\",\"keccak256\":\"0xcfdebc23759b625576394a17289e6690cd5e5d6da8699da8c6d36bcbc25b46ef\",\"license\":\"GPL-2.0\"},\"contracts/interfaces/IRegistryAddressHolder.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-2.0\\n\\npragma solidity 0.7.6;\\npragma abicoder v2;\\n\\ninterface IRegistryAddressHolder {\\n    ///@notice default getter for regitsry address\\n    ///@return address The address of the registry\\n    function registry() external view returns (address);\\n\\n    ///@notice Set the address of registry\\n    ///@param newAddress new address of registry\\n    function setRegistryAddress(address newAddress) external;\\n}\\n\",\"keccak256\":\"0x5eb7fcc946db90f955527b80acaf1dbb7ce4734c215ae6c38220ccf371b70d9d\",\"license\":\"GPL-2.0\"},\"contracts/utils/RegistryAddressHolder.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-2.0\\n\\npragma solidity 0.7.6;\\npragma abicoder v2;\\n\\nimport \\\"../interfaces/IRegistryAddressHolder.sol\\\";\\nimport \\\"../interfaces/IRegistry.sol\\\";\\nimport \\\"@openzeppelin/contracts/introspection/ERC165Checker.sol\\\";\\n\\ncontract RegistryAddressHolder is IRegistryAddressHolder {\\n    address public override registry;\\n\\n    ///@notice emitted when the address of registry is changed\\n    ///@param oldAddress old address of registry\\n    ///@param newAddress new address of registry\\n    event RegistryAddressChanged(address oldAddress, address newAddress);\\n\\n    ///@notice restrict some function called only by governance\\n    modifier onlyGovernance() {\\n        require(msg.sender == IRegistry(registry).governance(), \\\"RAHOG\\\");\\n        _;\\n    }\\n\\n    constructor(address _registry) {\\n        require(ERC165Checker.supportsInterface(_registry, type(IRegistry).interfaceId), \\\"RAHERC165\\\");\\n        registry = _registry;\\n    }\\n\\n    ///@notice Set the address of registry\\n    ///@param newAddress new address of registry\\n    function setRegistryAddress(address newAddress) external override onlyGovernance {\\n        require(ERC165Checker.supportsInterface(newAddress, type(IRegistry).interfaceId), \\\"RAHERC165\\\");\\n        address oldRegistry = registry;\\n        registry = newAddress;\\n        emit RegistryAddressChanged(oldRegistry, newAddress);\\n    }\\n}\\n\",\"keccak256\":\"0xe5ac6b02e7c5cab1eb10ecb92694a5a385899d0cfd1731e381d6b3f9375e6aaa\",\"license\":\"GPL-2.0\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b5060405161070838038061070883398101604081905261002f91610243565b61004a816341a5c86d60e11b61009460201b6101c61760201c565b61006f5760405162461bcd60e51b81526004016100669061026a565b60405180910390fd5b600080546001600160a01b0319166001600160a01b039290921691909117905561028d565b600061009f836100b7565b80156100b057506100b083836100eb565b9392505050565b60006100ca826301ffc9a760e01b6100eb565b80156100e557506100e3826001600160e01b03196100eb565b155b92915050565b600080806100f98585610110565b915091508180156101075750805b95945050505050565b604080516001600160e01b0319831660248083019190915282518083039091018152604490910182526020810180516001600160e01b03166301ffc9a760e01b17815291518151600093849392849283926001600160a01b038a169261753092879282918083835b602083106101975780518252601f199092019160209182019101610178565b6001836020036101000a0380198251168184511680821785525050505050509050019150506000604051808303818686fa925050503d80600081146101f8576040519150601f19603f3d011682016040523d82523d6000602084013e6101fd565b606091505b509150915060208151101561021b576000809450945050505061023c565b8181806020019051602081101561023157600080fd5b505190955093505050505b9250929050565b600060208284031215610254578081fd5b81516001600160a01b03811681146100b0578182fd5b60208082526009908201526852414845524331363560b81b604082015260600190565b61046c8061029c6000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c80637b1039991461003b578063ab7b499314610059575b600080fd5b61004361006e565b60405161005091906103ae565b60405180910390f35b61006c610067366004610376565b61007d565b005b6000546001600160a01b031681565b60008054906101000a90046001600160a01b03166001600160a01b0316635aa6e6756040518163ffffffff1660e01b815260040160206040518083038186803b1580156100c957600080fd5b505afa1580156100dd573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906101019190610392565b6001600160a01b0316336001600160a01b03161461013a5760405162461bcd60e51b8152600401610131906103dc565b60405180910390fd5b61014b816341a5c86d60e11b6101c6565b6101675760405162461bcd60e51b8152600401610131906103fb565b600080546001600160a01b038381166001600160a01b03198316179092556040519116907f8b2d5ac8df7d319c39cc72ef09cf22fca5e9cdc1852a538e44ae7fd1ad1c99b2906101ba90839085906103c2565b60405180910390a15050565b60006101d1836101e9565b80156101e257506101e2838361021d565b9392505050565b60006101fc826301ffc9a760e01b61021d565b80156102175750610215826001600160e01b031961021d565b155b92915050565b600080600061022c8585610243565b9150915081801561023a5750805b95945050505050565b604080516001600160e01b0319831660248083019190915282518083039091018152604490910182526020810180516001600160e01b03166301ffc9a760e01b17815291518151600093849392849283926001600160a01b038a169261753092879282918083835b602083106102ca5780518252601f1990920191602091820191016102ab565b6001836020036101000a0380198251168184511680821785525050505050509050019150506000604051808303818686fa925050503d806000811461032b576040519150601f19603f3d011682016040523d82523d6000602084013e610330565b606091505b509150915060208151101561034e576000809450945050505061036f565b8181806020019051602081101561036457600080fd5b505190955093505050505b9250929050565b600060208284031215610387578081fd5b81356101e28161041e565b6000602082840312156103a3578081fd5b81516101e28161041e565b6001600160a01b0391909116815260200190565b6001600160a01b0392831681529116602082015260400190565b6020808252600590820152645241484f4760d81b604082015260600190565b60208082526009908201526852414845524331363560b81b604082015260600190565b6001600160a01b038116811461043357600080fd5b5056fea2646970667358221220eb905acb7105889591912cb61b7adf0bef6151729e14038dfdfc963e972f85ac64736f6c63430007060033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100365760003560e01c80637b1039991461003b578063ab7b499314610059575b600080fd5b61004361006e565b60405161005091906103ae565b60405180910390f35b61006c610067366004610376565b61007d565b005b6000546001600160a01b031681565b60008054906101000a90046001600160a01b03166001600160a01b0316635aa6e6756040518163ffffffff1660e01b815260040160206040518083038186803b1580156100c957600080fd5b505afa1580156100dd573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906101019190610392565b6001600160a01b0316336001600160a01b03161461013a5760405162461bcd60e51b8152600401610131906103dc565b60405180910390fd5b61014b816341a5c86d60e11b6101c6565b6101675760405162461bcd60e51b8152600401610131906103fb565b600080546001600160a01b038381166001600160a01b03198316179092556040519116907f8b2d5ac8df7d319c39cc72ef09cf22fca5e9cdc1852a538e44ae7fd1ad1c99b2906101ba90839085906103c2565b60405180910390a15050565b60006101d1836101e9565b80156101e257506101e2838361021d565b9392505050565b60006101fc826301ffc9a760e01b61021d565b80156102175750610215826001600160e01b031961021d565b155b92915050565b600080600061022c8585610243565b9150915081801561023a5750805b95945050505050565b604080516001600160e01b0319831660248083019190915282518083039091018152604490910182526020810180516001600160e01b03166301ffc9a760e01b17815291518151600093849392849283926001600160a01b038a169261753092879282918083835b602083106102ca5780518252601f1990920191602091820191016102ab565b6001836020036101000a0380198251168184511680821785525050505050509050019150506000604051808303818686fa925050503d806000811461032b576040519150601f19603f3d011682016040523d82523d6000602084013e610330565b606091505b509150915060208151101561034e576000809450945050505061036f565b8181806020019051602081101561036457600080fd5b505190955093505050505b9250929050565b600060208284031215610387578081fd5b81356101e28161041e565b6000602082840312156103a3578081fd5b81516101e28161041e565b6001600160a01b0391909116815260200190565b6001600160a01b0392831681529116602082015260400190565b6020808252600590820152645241484f4760d81b604082015260600190565b60208082526009908201526852414845524331363560b81b604082015260600190565b6001600160a01b038116811461043357600080fd5b5056fea2646970667358221220eb905acb7105889591912cb61b7adf0bef6151729e14038dfdfc963e972f85ac64736f6c63430007060033",
+  "devdoc": {
+    "events": {
+      "RegistryAddressChanged(address,address)": {
+        "params": {
+          "newAddress": "new address of registry",
+          "oldAddress": "old address of registry"
+        }
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "setRegistryAddress(address)": {
+        "params": {
+          "newAddress": "new address of registry"
+        }
+      }
+    },
+    "stateVariables": {
+      "registry": {
+        "return": "address The address of the registry"
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "RegistryAddressChanged(address,address)": {
+        "notice": "emitted when the address of registry is changed"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "registry()": {
+        "notice": "default getter for regitsry address"
+      },
+      "setRegistryAddress(address)": {
+        "notice": "Set the address of registry"
+      }
+    },
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 23669,
+        "contract": "contracts/utils/RegistryAddressHolder.sol:RegistryAddressHolder",
+        "label": "registry",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      }
+    }
+  }
+}

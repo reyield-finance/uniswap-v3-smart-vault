@@ -31,7 +31,6 @@ const PostDeployScript: DeployFunction = async function (hre: HardhatRuntimeEnvi
   // 3. change governance from deployer on PM Factory
   const { deployments, getChainId, getNamedAccounts } = hre;
   const chainId = await getChainId();
-  const { deployer } = await getNamedAccounts();
 
   const { governance, serviceFeeRecipient, official, keeper } = await getNamedAccounts();
 
@@ -510,30 +509,30 @@ const PostDeployScript: DeployFunction = async function (hre: HardhatRuntimeEnvi
 };
 
 export default PostDeployScript;
-PostDeployScript.tags = ["SmartVault", "PostDeployScript"];
+PostDeployScript.tags = ["PostDeployScript"];
 PostDeployScript.dependencies = [
-  "Timelock",
-  "Registry",
-  "RegistryAddressHolder",
-  "DiamondCutFacet",
-  "UniswapAddressHolder",
-  "PositionManagerFactory",
-  "StrategyProviderWalletFactory",
-  "IdleLiquidityModule",
-  "DepositRecipes",
-  "IncreaseLiquidityRecipes",
-  "WithdrawRecipes",
-  "GovernanceRecipes",
-  "ClosePosition",
-  "IncreaseLiquidity",
-  "Mint",
-  "RepayRebalanceFee",
-  "ReturnProfit",
-  "ShareProfit",
-  "SingleTokenIncreaseLiquidity",
-  "SwapToPositionRatio",
-  "ZapIn",
-  "PositionHelper",
-  "UniswapCalculator",
-  "ERC20Extended",
+  // "Timelock",
+  // "Registry",
+  // "RegistryAddressHolder",
+  // "DiamondCutFacet",
+  // "UniswapAddressHolder",
+  // "PositionManagerFactory",
+  // "StrategyProviderWalletFactory",
+  // "IdleLiquidityModule",
+  // "DepositRecipes",
+  // "IncreaseLiquidityRecipes",
+  // "WithdrawRecipes",
+  // "GovernanceRecipes",
+  // "ClosePosition",
+  // "IncreaseLiquidity",
+  // "Mint",
+  // "RepayRebalanceFee",
+  // "ReturnProfit",
+  // "ShareProfit",
+  // "SingleTokenIncreaseLiquidity",
+  // "SwapToPositionRatio",
+  // "ZapIn",
+  // "PositionHelper",
+  // "UniswapCalculator",
+  // "ERC20Extended",
 ];

@@ -125,19 +125,19 @@ const config: HardhatUserConfig = {
   },
   namedAccounts: {
     deployer: {
-      default: "0xDedAd387474099d24F9489bCDD05C21F8A3245FC",
+      default: "0x565d490806A6D8eF532f4d29eC00EF6aAC71A17A",
     },
     governance: {
       default: "0x565d490806A6D8eF532f4d29eC00EF6aAC71A17A",
     },
     serviceFeeRecipient: {
-      default: "0x565d490806A6D8eF532f4d29eC00EF6aAC71A17A",
+      default: "0x63d89F8A05691d7D1f816293443C5c74Ef79aC73",
     },
     official: {
-      default: "0x565d490806A6D8eF532f4d29eC00EF6aAC71A17A",
+      default: "0xF769DFf3D3715a9773e00a9B0d62Dc754699b7CA",
     },
     keeper: {
-      default: "0x8d521dCae9C1f7353a96D1510B3B4F9f83413bC9",
+      default: "0x10cd85932c9e782b1d57fb3c4071a93b0224976b",
     },
   },
 };
