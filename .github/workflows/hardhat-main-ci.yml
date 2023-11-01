@@ -1,4 +1,4 @@
-name: Hardhat CI on main branch
+name: Tests
 
 on:
   pull_request:

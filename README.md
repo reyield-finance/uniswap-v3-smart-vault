@@ -1,4 +1,5 @@
 # Uniswap V3 Smart Vault
+[![Tests](https://github.com/reyield-finance/uniswap-v3-smart-vault/actions/workflows/hardhat-main-ci.yml/badge.svg)](https://github.com/reyield-finance/uniswap-v3-smart-vault/actions/workflows/hardhat-main-ci.yml)
 
 # Table of contents
 - [Flowchart](#flowchart)
