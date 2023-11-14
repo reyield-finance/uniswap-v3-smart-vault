@@ -36,14 +36,13 @@ contract ClosePositionOneShot is IClosePositionOneShot {
         }
 
         ///@dev collect
-        INonfungiblePositionManager.CollectParams memory secondCollectparams = INonfungiblePositionManager
-            .CollectParams({
-                tokenId: input.tokenId,
-                recipient: input.returnTokenToUser ? Storage.owner : address(this),
-                amount0Max: type(uint128).max,
-                amount1Max: type(uint128).max
-            });
-        (output.amount0Collected, output.amount1Collected) = nonfungiblePositionManager.collect(secondCollectparams);
+        INonfungiblePositionManager.CollectParams memory collectparams = INonfungiblePositionManager.CollectParams({
+            tokenId: input.tokenId,
+            recipient: input.returnTokenToUser ? Storage.owner : address(this),
+            amount0Max: type(uint128).max,
+            amount1Max: type(uint128).max
+        });
+        (output.amount0Collected, output.amount1Collected) = nonfungiblePositionManager.collect(collectparams);
 
         emit PositionClosed(address(this), input.tokenId, output.amount0Collected, output.amount1Collected);
     }
