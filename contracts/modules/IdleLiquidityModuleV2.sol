@@ -197,6 +197,8 @@ contract IdleLiquidityModuleV2 is BaseModule, IIdleLiquidityModuleV2, Multicall 
             );
         }
 
+        // total amount0 collected = amount0Removed(liquidity part) + amount0CollectedFee(fee part)
+        // total amount1 collected = amount1Removed(liquidity part) + amount1CollectedFee(fee part)
         res.amount0CollectedFee = ucfOutput.amount0;
         res.amount1CollectedFee = ucfOutput.amount1;
         res.amount0Removed = cposOutput.amount0Collected.sub(ucfOutput.amount0);

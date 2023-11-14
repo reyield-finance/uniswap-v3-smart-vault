@@ -12,7 +12,6 @@ interface IRefundGasExpenseRecipes {
     event GasExpenseRefunded(address indexed positionManager, address from, address receiver, uint256 amount);
 
     ///@notice refund gas expense
-    ///@param receiver address of the receiver
     ///@param amount amount of gas expense
-    function refundGasExpense(address payable receiver, uint256 amount) external;
+    function refundGasExpense(uint256 amount) external;
 }

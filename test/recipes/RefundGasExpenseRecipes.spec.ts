@@ -180,40 +180,43 @@ describe("RefundGasExpenseRecipes.sol", function () {
 
   describe("RefundGasExpense", function () {
     it("should refundGasExpense success", async function () {
-      const user2BeforeValue = await ethers.provider.getBalance(user2.address);
+      const userBeforeValue = await ethers.provider.getBalance(user.address);
       const amountToPM = BigNumber.from(1n * 10n ** 18n);
-      await user.sendTransaction({
+      await user2.sendTransaction({
         to: positionManager.address,
         value: amountToPM,
       });
 
       const amount = BigNumber.from(1n * 10n ** 18n);
-      const txRefund = await refundGasExpenseRecipes.connect(user).refundGasExpense(user2.address, amount);
+      const txRefund = await refundGasExpenseRecipes.connect(user).refundGasExpense(amount);
 
       const receipt = await txRefund.wait();
+
       const events: any = receipt.events;
       const fromInLog = events[events.length - 1].args.from;
       const receiverInLog = events[events.length - 1].args.receiver;
       const amountInLog = events[events.length - 1].args.amount;
 
       expect(fromInLog).to.be.equal(user.address);
-      expect(receiverInLog).to.be.equal(user2.address);
+      expect(receiverInLog).to.be.equal(user.address);
       expect(amountInLog).to.be.equal(amount);
 
-      expect(await ethers.provider.getBalance(user2.address)).to.equal(user2BeforeValue.add(amount));
+      expect(await ethers.provider.getBalance(user.address)).to.equal(
+        userBeforeValue.add(amount).sub(receipt.effectiveGasPrice.mul(receipt.gasUsed)),
+      );
       expect(await ethers.provider.getBalance(positionManager.address)).to.equal(0n);
     });
 
     it("should refundGasExpense with leftover in position manager success", async function () {
-      const user2BeforeValue = await ethers.provider.getBalance(user2.address);
+      const userBeforeValue = await ethers.provider.getBalance(user.address);
       const amountToPM = BigNumber.from(2n * 10n ** 18n);
-      await user.sendTransaction({
+      await user2.sendTransaction({
         to: positionManager.address,
         value: amountToPM,
       });
 
       const amount = BigNumber.from(1n * 10n ** 18n);
-      const txRefund = await refundGasExpenseRecipes.connect(user).refundGasExpense(user2.address, amount);
+      const txRefund = await refundGasExpenseRecipes.connect(user).refundGasExpense(amount);
 
       const receipt = await txRefund.wait();
       const events: any = receipt.events;
@@ -222,10 +225,12 @@ describe("RefundGasExpenseRecipes.sol", function () {
       const amountInLog = events[events.length - 1].args.amount;
 
       expect(fromInLog).to.be.equal(user.address);
-      expect(receiverInLog).to.be.equal(user2.address);
+      expect(receiverInLog).to.be.equal(user.address);
       expect(amountInLog).to.be.equal(amount);
 
-      expect(await ethers.provider.getBalance(user2.address)).to.equal(user2BeforeValue.add(amount));
+      expect(await ethers.provider.getBalance(user.address)).to.equal(
+        userBeforeValue.add(amount).sub(receipt.effectiveGasPrice.mul(receipt.gasUsed)),
+      );
       expect(await ethers.provider.getBalance(positionManager.address)).to.equal(1n * 10n ** 18n);
     });
 
@@ -237,23 +242,7 @@ describe("RefundGasExpenseRecipes.sol", function () {
       });
 
       const amount = BigNumber.from(2n * 10n ** 18n);
-      await expect(refundGasExpenseRecipes.connect(user).refundGasExpense(user2.address, amount)).to.be.revertedWith(
-        "WNTMIB",
-      );
-    });
-
-    it("should refundGasExpense reverted with RGERIC", async function () {
-      const amountToPM = BigNumber.from(1n * 10n ** 18n);
-      await user.sendTransaction({
-        to: positionManager.address,
-        value: amountToPM,
-      });
-
-      const dummyContractAddr = positionManager2.address;
-      const amount = BigNumber.from(1n * 10n ** 18n);
-      await expect(
-        refundGasExpenseRecipes.connect(user).refundGasExpense(dummyContractAddr, amount),
-      ).to.be.revertedWith("RGERIC");
+      await expect(refundGasExpenseRecipes.connect(user).refundGasExpense(amount)).to.be.revertedWith("WNTMIB");
     });
   });
 });
