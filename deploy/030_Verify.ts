@@ -120,7 +120,19 @@ const Verify: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     constructorArguments: [],
   });
   await run("verify:verify", {
+    address: (await deployments.get("ClosePositionOneShot")).address,
+    constructorArguments: [],
+  });
+  await run("verify:verify", {
+    address: (await deployments.get("WithdrawNativeToken")).address,
+    constructorArguments: [],
+  });
+  await run("verify:verify", {
     address: (await deployments.get("IdleLiquidityModule")).address,
+    constructorArguments: [RegistryAddressHolderD.address, UniswapAddressHolderD.address],
+  });
+  await run("verify:verify", {
+    address: (await deployments.get("IdleLiquidityModuleV2")).address,
     constructorArguments: [RegistryAddressHolderD.address, UniswapAddressHolderD.address],
   });
   await run("verify:verify", {
@@ -138,6 +150,10 @@ const Verify: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await run("verify:verify", {
     address: (await deployments.get("GovernanceRecipes")).address,
     constructorArguments: [RegistryAddressHolderD.address, UniswapAddressHolderD.address],
+  });
+  await run("verify:verify", {
+    address: (await deployments.get("RefundGasExpenseRecipes")).address,
+    constructorArguments: [RegistryAddressHolderD.address],
   });
   await run("verify:verify", {
     address: (await deployments.get("PositionHelper")).address,

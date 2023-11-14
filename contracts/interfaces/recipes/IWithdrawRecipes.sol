@@ -9,6 +9,5 @@ interface IWithdrawRecipes {
     ///@param from address of the user
     ///@param positionId ID of the position
     ///@param tokenId ID of the minted NFT
-    //TODO: correct it to Withdrawn
     event PositionWithdrawn(address indexed positionManager, address from, uint256 positionId, uint256 tokenId);
 }
