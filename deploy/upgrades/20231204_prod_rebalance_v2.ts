@@ -8,13 +8,12 @@ import deployWithdrawNativeToken from "../016_WithdrawNativeToken";
 import deployIdleLiquidityModuleV2 from "../019_IdleLiquidityModuleV2";
 import deployRefundGasExpenseRecipes from "../024_RefundGasExpenseRecipes";
 import { getSelectors } from "../../test/shared/fixtures";
-import { ClosePositionOneShot, PositionManagerFactory, WithdrawNativeToken } from "../../types";
+import { ClosePositionOneShot, PositionManagerFactory, Registry, WithdrawNativeToken } from "../../types";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const CONFIRMATIONS = 3;
   const { getChainId } = hre;
   const chainId = await getChainId();
-
   //!!!: deployer & governance must be different, otherwise one of them would be throw undefined error
   const signers = await ethers.getSigners();
   const deployer = signers[0];
@@ -31,8 +30,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   // contractAddrsses are string[]
   const contractAddrsses = [
-    { name: "IdleLiquidityModuleV2", address: "0x1c354B9cE94b19f620BEAeb0fBf1C13EAa0Bae13" },
-    { name: "RefundGasExpenseRecipes", address: "0x4A89f17109651C1216e93E058e285D6e74618C28" },
+    { name: "IdleLiquidityModuleV2", address: "0xC4DA35b4839fBa2E2dDAD9636127Dc6E7743d7c2" },
+    { name: "RefundGasExpenseRecipes", address: "0xb3796969Acc49AF0f4fa608DdfA264C3987c28B6" },
   ];
 
   // for each contract address
@@ -57,12 +56,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const positionManagerFactory = (await ethers.getContractAt(
     "PositionManagerFactory",
-    "0x9ff67463BDb860e51b8992ae35dee1896acDDd5b",
+    "0x3332Ae0fC25eF24352ca75c01A1fCfd9fc33EAca",
   )) as PositionManagerFactory;
 
   const closePositionOneShot = (await ethers.getContractAt(
     "ClosePositionOneShot",
-    "0xdD9fFcDA84C27b8f4e982559ca779df9Aeee1162",
+    "0x58230BAcF3acA32649CFeBBbe09889aF207E7363",
   )) as ClosePositionOneShot;
   // add actions to diamond cut
   let txn = await positionManagerFactory.connect(governance).updateActionData(
@@ -81,7 +80,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const withdrawNativeToken = (await ethers.getContractAt(
     "WithdrawNativeToken",
-    "0xE5ec876520e6a8c812aBb849d3c36fC463d58940",
+    "0x7893022Cc5997c52aF7497508067Df41eB94eECb",
   )) as WithdrawNativeToken;
   // add actions to diamond cut
   txn = await positionManagerFactory.connect(governance).updateActionData(
@@ -135,11 +134,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     );
 
     await txn.wait(CONFIRMATIONS);
-    console.log(":: Update Diamond ClosePositionOneShot & WithdrawNativeToken to PositionManager");
 
     console.log(">>>>managerCompleted: ", managerAddress);
   }
+  console.log(":: Update Diamond ClosePositionOneShot & WithdrawNativeToken to PositionManager");
 };
 
 export default func;
-func.tags = ["20231116_stage_rebalance_v2"];
+func.tags = ["20231204_prod_rebalance_v2"];

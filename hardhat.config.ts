@@ -3,6 +3,8 @@ import "dotenv/config";
 import "hardhat-deploy";
 import { HardhatUserConfig } from "hardhat/config";
 
+console.log("deployer", process.env.PRIVATE_KEY_DEPLOYER);
+console.log("governance", process.env.PRIVATE_KEY_GOVERNANCE);
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
@@ -54,27 +56,27 @@ const config: HardhatUserConfig = {
     },
     mumbai: {
       url: process.env.ALCHEMY_POLYGON_MUMBAI || "",
-      accounts: [process.env.TEST_PRIVATE_KEY || ""],
+      accounts: [process.env.PRIVATE_KEY_DEPLOYER || "", process.env.PRIVATE_KEY_GOVERNANCE || ""],
       gas: 10000000,
       gasPrice: 1520000000,
     },
     polygon: {
       url: process.env.ALCHEMY_POLYGON_MAINNET || "",
-      accounts: [process.env.TEST_PRIVATE_KEY || ""],
-      gas: 10000000,
-      gasPrice: 260000000000,
+      accounts: [process.env.PRIVATE_KEY_DEPLOYER || "", process.env.PRIVATE_KEY_GOVERNANCE || ""],
+      // gas: 10000000,
+      // gasPrice: 260000000000,
     },
     optimismGoerli: {
       url: process.env.ALCHEMY_OPTIMISM_GOERLI || "",
-      accounts: [process.env.TEST_PRIVATE_KEY || ""],
+      accounts: [process.env.PRIVATE_KEY_DEPLOYER || "", process.env.PRIVATE_KEY_GOVERNANCE || ""],
       gas: 10000000,
       gasPrice: 30000000,
     },
     optimism: {
       url: process.env.ALCHEMY_OPTIMISM_MAINNET || "",
-      accounts: [process.env.TEST_PRIVATE_KEY || ""],
-      gas: 10000000,
-      gasPrice: 30000000,
+      accounts: [process.env.PRIVATE_KEY_DEPLOYER || "", process.env.PRIVATE_KEY_GOVERNANCE || ""],
+      // gas: 10000000,
+      // gasPrice: 30000000,
     },
   },
   etherscan: {
