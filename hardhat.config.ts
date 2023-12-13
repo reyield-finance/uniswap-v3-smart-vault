@@ -3,8 +3,6 @@ import "dotenv/config";
 import "hardhat-deploy";
 import { HardhatUserConfig } from "hardhat/config";
 
-console.log("deployer", process.env.PRIVATE_KEY_DEPLOYER);
-console.log("governance", process.env.PRIVATE_KEY_GOVERNANCE);
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
