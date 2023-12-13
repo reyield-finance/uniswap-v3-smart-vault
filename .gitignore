@@ -5,10 +5,13 @@ coverage.json
 types
 typechain-types
 
+
 # Hardhat files
 cache
 artifacts
 out
+deployments
+
 # custom
 _*
 .DS_Store
