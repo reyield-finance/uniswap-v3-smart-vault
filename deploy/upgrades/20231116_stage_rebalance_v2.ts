@@ -6,7 +6,7 @@ import config, { Config } from "../000_Config";
 import deployClosePositionOneShot from "../015_ClosePositionOneShot";
 import deployWithdrawNativeToken from "../016_WithdrawNativeToken";
 import deployIdleLiquidityModuleV2 from "../019_IdleLiquidityModuleV2";
-import deployRefundGasExpenseRecipes from "../024_RefundGasExpenseRecipes";
+import deployRefundGasExpenseRecipes from "../025_RefundGasExpenseRecipes";
 import { getSelectors } from "../../test/shared/fixtures";
 import { ClosePositionOneShot, PositionManagerFactory, WithdrawNativeToken } from "../../types";
 
