@@ -42,7 +42,7 @@ export const Config: DeployConfig = {
   "137": {
     sleep: 5000,
     gasLimit: "10000000",
-    gasPrice: "120000000000",
+    gasPrice: "400000000000",
     usdcAddress: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
     wethAddress: "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
     nonfungiblePositionManager: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",

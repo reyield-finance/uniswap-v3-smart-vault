@@ -15,7 +15,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { getChainId } = hre;
   const chainId = await getChainId();
 
-  //!!!: deployer & governance must be different, otherwise one of them would be throw undefined error
+  //!!! deployer & governance must be different, otherwise one of them would be throw undefined error
   const signers = await ethers.getSigners();
   const deployer = signers[0];
   const governance = signers[1];
