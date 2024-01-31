@@ -1,14 +1,10 @@
 import { ethers, network, run } from "hardhat";
 
 async function main() {
-  const contractAddress = "0x308A5de3D59Ff76f67b0BA4656B8cD3408a31D0D";
+  const contractAddress = "0x521bf547Ce62ce0fd84A171A6704F64F663543ee";
   await run("verify:verify", {
     address: contractAddress,
-    constructorArguments: [
-      "0x565d490806A6D8eF532f4d29eC00EF6aAC71A17A",
-      "0x2833242BAC2E2a196d240ADe39ff6D2b912D9edb",
-      "0x99c4bEa3DbC7C2670B0D781946071cAC215aC86D",
-    ],
+    constructorArguments: ["0x1BdcF8Fea00691B61a1fA48c4785A23E9a6b4180", "0xC847FD0bFADCAb154FDFAD397BA236280C45239E"],
   });
 }
 

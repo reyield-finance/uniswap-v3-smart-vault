@@ -75,7 +75,7 @@ describe("SwapHelper.sol", function () {
       expect(token0In).to.equal(false);
     });
 
-    it("should swap all to one token if poolTick is over tickUpper", async function () {
+    it("should swap all to one token if poolTick is above tickUpper", async function () {
       //range is under the pool tick => after swap, all my position should be in token1
       const sqrtRatioX96 = "84436263667623614766280323984";
       const tickLower = 1000;

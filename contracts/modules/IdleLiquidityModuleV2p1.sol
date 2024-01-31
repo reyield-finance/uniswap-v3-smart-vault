@@ -11,7 +11,7 @@ import "../libraries/SafeInt24Math.sol";
 import "../libraries/UniswapHelper.sol";
 import "../libraries/UniswapUncollectedFeeHelper.sol";
 import "../libraries/MathHelper.sol";
-import "../interfaces/modules/IIdleLiquidityModuleV2.sol";
+import "../interfaces/modules/IIdleLiquidityModuleV2p1.sol";
 import "../interfaces/IPositionManagerFactory.sol";
 import "../interfaces/IPositionManager.sol";
 import "../interfaces/IUniswapAddressHolder.sol";
@@ -23,7 +23,7 @@ import "../base/Multicall.sol";
 
 ///@title Idle Liquidity Module to manage liquidity for a user position
 ///@notice 2p1 is the version of rebalance without check if it's out of range
-contract IdleLiquidityModuleV2p1 is BaseModule, IIdleLiquidityModuleV2, Multicall {
+contract IdleLiquidityModuleV2p1 is BaseModule, IIdleLiquidityModuleV2p1, Multicall {
     ///@notice uniswap address holder
     IUniswapAddressHolder public immutable uniswapAddressHolder;
     using SafeMath for uint256;
